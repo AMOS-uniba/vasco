@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 
-import argparser
+import argparsedirs
 from utilities import by_azimuth, polar_to_cart
 
 
@@ -34,7 +34,7 @@ class Corrector():
     def __init__(self):
         self.argparser = argparse.ArgumentParser("Virtual corrector plate")
         self.argparser.add_argument('infile', type=argparse.FileType('r'), help="input file")
-        self.argparser.add_argument('outdir', action=argparser.WriteableDir, help="output directory")
+        self.argparser.add_argument('outdir', action=argparsedirs.WriteableDir, help="output directory")
         self.argparser.add_argument('method', type=str, choices=Corrector.METHODS)
         self.args = self.argparser.parse_args()
         self.outdir = Path(self.args.outdir)

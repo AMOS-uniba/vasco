@@ -8,6 +8,9 @@ pyqt6 = "*"
 numpy = "*"
 scipy = "*"
 matplotlib = "*"
+pandas = "*"
+argparsedirs = "*"
+physics-fields = "*"
 
 [dev-packages]
 
