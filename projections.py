@@ -28,10 +28,19 @@ class BorovickaProjection(Projection):
     def __init__(self, *, a0: float=0, x0: float=0, y0: float=0, A: float=0, F: float=0, V: float=1,
             S: float=0, D: float=0, P: float=0, Q: float=0, epsilon: float=0, E: float=0):
         assert(epsilon >= 0 and V > 0)
+        self.a0 = a0
+        self.x0 = x0
+        self.y0 = y0
+        self.A = A
+        self.F = F
+        self.V = V
+        self.S = S
+        self.D = D
+        self.P = P
+        self.Q = Q
         self.epsilon = epsilon                              # zenith angle of centre of FoV
         self.E = E                                          # azimuth angle of centre of FoV
-        self.a0 = a0
-        self.axis_shifter = EllipticShifter(a0, x0, y0, A, F, E)
+        self.axis_shifter = EllipticShifter(x0=x0, y0=y0, a0=a0, A=A, F=F, E=E)
         self.radial_transform = BiexponentialTransformer(V, S, D, P, Q)
 
     def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -53,3 +62,18 @@ class BorovickaProjection(Projection):
 
     def inverse(self, z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         a -= self.E
+
+    def __str__(self):
+        return f"Borovička projection with " \
+            f"x0 = {self.x0:.6f}, " \
+            f"y0 = {self.y0:.6f}, " \
+            f"a0 = {self.a0:.6f}, " \
+            f"V = {self.V:.6f}, " \
+            f"S = {self.S:.6f}, " \
+            f"D = {self.D:.6f}, " \
+            f"P = {self.P:.6f}, " \
+            f"Q = {self.Q:.6f}, " \
+            f"A = {self.A:.6f}, " \
+            f"F = {self.F:.6f}, " \
+            f"epsilon = {self.epsilon:.6f}, " \
+            f"E = {self.E:.6f}"

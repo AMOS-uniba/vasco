@@ -3,14 +3,17 @@
 import sys
 import numpy as np
 import scipy as sp
+import pandas as pd
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 
 from typing import Tuple, Type, Optional
+from utilities import by_azimuth, polar_to_cart
 
 import PyQt6
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QApplication, QMainWindow
+from PyQt6.uic import loadUi
 
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 from matplotlib.figure import Figure
@@ -19,6 +22,7 @@ from shifters import OpticalAxisShifter, EllipticShifter
 from transformers import LinearTransformer, ExponentialTransformer, BiexponentialTransformer
 from projections import Projection, BorovickaProjection
 
+from main_ui import Ui_MainWindow
 
 mpl.use('Qt5Agg')
 
@@ -42,104 +46,103 @@ class Fitter():
 class Vascop():
     """ Virtual All-Sky CorrectOr Plate """
     def __init__(self):
-        self.argparser = argparse.ArgumentParser("Virtual all-sky corrector plate")
-        self.argparser.add_argument('infile', type=argparse.FileType('r'), help="input file")
-        self.argparser.add_argument('outdir', action=argparser.WriteableDir, help="output directory")
-        self.argparser.add_argument('method', type=str, choices=Corrector.METHODS)
-        self.args = self.argparser.parse_args()
-        self.outdir = Path(self.args.outdir)
+        pass
+#        self.argparser = argparse.ArgumentParser("Virtual all-sky corrector plate")
+#        self.argparser.add_argument('infile', type=argparse.FileType('r'), help="input file")
+#        self.argparser.add_argument('outdir', action=argparser.WriteableDir, help="output directory")
+#        self.argparser.add_argument('method', type=str, choices=Corrector.METHODS)
+#        self.args = self.argparser.parse_args()
+#        self.outdir = Path(self.args.outdir)
+
+    def load(self, filename):
+        df = pd.read_csv(filename, sep='\t', header=0, nrows=500)
+        df['a_cat_rad'] = np.radians(df['acat'])
+        df['z_cat_rad'] = df['zcat'] / 90
+        df['x_cat'], df['y_cat'] = polar_to_cart(df['z_cat_rad'], df['a_cat_rad'])
+        df['a_com_rad'] = np.radians(df['acom'])
+        df['z_com_rad'] = df['zcom'] / 90
+        df['x_com'], df['y_com'] = polar_to_cart(df['z_com_rad'], df['a_com_rad'])
+        df['dx'], df['dy'] = df['x_cat'] - df['x_com'], df['y_cat'] - df['y_com']
+        self.data = df
+        self.points = self.data[['x_cat', 'y_cat']].to_numpy()
+        self.values = self.data[['dx', 'dy']].to_numpy()
 
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Virtual All-Sky CorrectOr Plate")
+class MainWindow(QMainWindow, Ui_MainWindow):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.connectSignalSlots()
 
-        self.spinBox = QtWidgets.QDoubleSpinBox()
-        self.spinBox.setMinimum(-1)
-        self.spinBox.setSingleStep(0.001)
-        self.spinBox.setMaximum(1)
+        self.vascop = Vascop()
+        self.vascop.load('data/borr-01.tsv')
 
-        self.figure = Figure(figsize=(5, 5))
-        self.canvas = FigureCanvas(self.figure)
-        self.ax = self.figure.subplots(1, 2)
-        self.figure.tight_layout()
+        self.sensorFigure = Figure(figsize=(5, 5))
+        self.sensorCanvas = FigureCanvas(self.sensorFigure)
+        self.sensorAxis = self.sensorFigure.add_subplot()
+        self.sensorFigure.tight_layout()
+
+        self.skyFigure = Figure(figsize=(5, 5))
+        self.skyCanvas = FigureCanvas(self.skyFigure)
+        self.skyAxis = self.skyFigure.add_subplot(projection='polar')
+        self.skyFigure.tight_layout()
+
+        self.sensorAxis.set_xlim([-1, 1])
+        self.sensorAxis.set_ylim([-1, 1])
+        self.sensorAxis.grid()
+        self.sensorAxis.set_aspect('equal')
+
+        self.skyAxis.set_ylim([0, 90])
+        self.skyAxis.set_theta_offset(3 * np.pi / 2)
+        self.sensorScatter = self.sensorAxis.scatter([0], [0])
+        self.skyScatter = self.skyAxis.scatter([0], [0])
+
+        self.sensorScatter.set_offsets(np.stack((self.vascop.points[:, 0], self.vascop.points[:, 1]), axis=1))
+        self.sensorCanvas.draw()
+
         self.plot()
 
-        self.entire = QtWidgets.QWidget()
-        self.globalLayout = QtWidgets.QGridLayout()
-        self.entire.setLayout(self.globalLayout)
-        self.setCentralWidget(self.entire)
+        self.gb_plots.layout().addWidget(self.sensorCanvas)
+        self.gb_plots.layout().addWidget(self.skyCanvas)
 
-        self.control = QtWidgets.QGroupBox(self)
-        self.control.setTitle("Controls")
-        self.controlLayout = QtWidgets.QHBoxLayout()
-
-        self.controlLayout.addWidget(self.build_group_box(self.control, "Sensor", params=[
-            {'title': 'x0', 'kwargs': dict(minimum=-1000, maximum=1000, value=0, step=0.1)},
-            {'title': 'y0', 'kwargs': dict(minimum=-1000, maximum=1000, value=0, step=0.1)},
-            {'title': 'a0', 'kwargs': dict(minimum=0, maximum=2 * np.pi, value=0, step=0.001)},
-        ]))
-
-        self.controlLayout.addWidget(self.build_group_box(self.control, "Elliptic distortion", params=[
-            {'title': 'A', 'kwargs': dict(minimum=0, maximum=1, value=0, step=0.001)},
-            {'title': 'F', 'kwargs': dict(minimum=0, maximum=2 * np.pi, value=0, step=0.001)},
-        ]))
-
-        self.controlLayout.addWidget(self.build_group_box(self.control, "Lens", params=[
-            {'title': 'V', 'kwargs': dict(minimum=0, maximum=2, value=1, step=0.001)},
-            {'title': 'S', 'kwargs': dict(minimum=-1, maximum=1, value=0, step=0.001)},
-            {'title': 'D', 'kwargs': dict(minimum=0, maximum=5, value=0, step=0.001)},
-            {'title': 'P', 'kwargs': dict(minimum=-1, maximum=1, value=0, step=0.001)},
-            {'title': 'Q', 'kwargs': dict(minimum=0, maximum=5, value=0, step=0.001)},
-        ]))
-
-        self.controlLayout.addWidget(self.build_group_box(self.control, "Zenith", params=[
-            {'title': 'epsilon', 'kwargs': dict(minimum=0, maximum=np.pi, value=0, step=0.001)},
-            {'title': 'E', 'kwargs': dict(minimum=0, maximum=2 * np.pi, value=0, step=0.001)},
-        ]))
-
-        self.control.setLayout(self.controlLayout)
-        self.globalLayout.addWidget(self.control)
-
-    def build_group_box(self, parent, title, params):
-        groupbox = QtWidgets.QGroupBox()
-        groupbox.setTitle(title)
-        layout = QtWidgets.QHBoxLayout(groupbox)
-
-        for param in params:
-            layout.addWidget(self.build_parameter_box(groupbox, param['title'], **param['kwargs']), len(param['kwargs']))
-
-        groupbox.setLayout(layout)
-
-        return groupbox
-
-
-    def build_parameter_box(self, parent, title, **kwargs):
-        box = QtWidgets.QWidget(parent)
-        layout = QtWidgets.QVBoxLayout(box)
-
-        label = QtWidgets.QLabel(box)
-        label.setText(title)
-        spinbox = QtWidgets.QDoubleSpinBox(box)
-        spinbox.setMinimum(kwargs.get('minimum', -100))
-        spinbox.setMaximum(kwargs.get('maximum', 100))
-        spinbox.setValue(kwargs.get('value', 0))
-        spinbox.setSingleStep(kwargs.get('step', 0.01))
-        spinbox.setDecimals(kwargs.get('decimals', 6))
-
-        layout.addWidget(label)
-        layout.addWidget(spinbox)
-        box.setLayout(layout)
-
-        return box
-
+    def connectSignalSlots(self):
+        self.dsb_x0.valueChanged.connect(self.plot)
+        self.dsb_y0.valueChanged.connect(self.plot)
+        self.dsb_a0.valueChanged.connect(self.plot)
+        self.dsb_V.valueChanged.connect(self.plot)
+        self.dsb_S.valueChanged.connect(self.plot)
+        self.dsb_D.valueChanged.connect(self.plot)
+        self.dsb_P.valueChanged.connect(self.plot)
+        self.dsb_Q.valueChanged.connect(self.plot)
+        self.dsb_A.valueChanged.connect(self.plot)
+        self.dsb_F.valueChanged.connect(self.plot)
+        self.dsb_eps.valueChanged.connect(self.plot)
+        self.dsb_E.valueChanged.connect(self.plot)
 
     def plot(self):
-        x = np.random.normal(0, 0.3, size=COUNT)
-        y = np.random.normal(0, 0.3, size=COUNT)
-        self.ax[0].scatter(x, y)
+        proj = BorovickaProjection(
+            x0=self.dsb_x0.value(),
+            y0=self.dsb_y0.value(),
+            a0=np.radians(self.dsb_a0.value()),
+            V=self.dsb_V.value(),
+            S=self.dsb_S.value(),
+            D=self.dsb_D.value(),
+            P=self.dsb_P.value(),
+            Q=self.dsb_Q.value(),
+            A=self.dsb_A.value(),
+            F=np.radians(self.dsb_F.value()),
+            epsilon=np.radians(self.dsb_eps.value()),
+            E=np.radians(self.dsb_E.value()),
+        )
 
+#        print(proj)
+
+        x, y = self.vascop.points[:, 0], self.vascop.points[:, 1]
+        z, a = proj(x, y)
+        z = np.degrees(z)
+
+        self.skyScatter.set_offsets(np.stack((a, z), axis=1))
+        self.skyCanvas.draw()
 
 
 app = QApplication(sys.argv)

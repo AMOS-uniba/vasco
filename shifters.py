@@ -4,10 +4,10 @@ from typing import Tuple
 
 class OpticalAxisShifter():
     """ Shifts and derotates the optical axis of the sensor """
-    def __init__(self, x0: float=0, y0: float=0, a0: float=0, E: float=0):
-        self.a0 = a0                # rotation of the optical axis
+    def __init__(self, *, x0: float=0, y0: float=0, a0: float=0, E: float=0):
         self.x0 = x0                # x position of the centre of optical axis
         self.y0 = y0                # y position of the centre of optical axis
+        self.a0 = a0                # rotation of the optical axis
         self.E = E                  # azimuth of centre of FoV
 
     def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -25,8 +25,8 @@ class OpticalAxisShifter():
 
 
 class EllipticShifter(OpticalAxisShifter):
-    def __init__(self, x0: float=0, y0: float=0, a0: float=0, A: float=0, F: float=0, E: float=0):
-        super().__init__(x0, y0, a0, E)
+    def __init__(self, *, x0: float=0, y0: float=0, a0: float=0, A: float=0, F: float=0, E: float=0):
+        super().__init__(x0=x0, y0=y0, a0=a0, E=E)
         self.A = A                  # elliptic stretch, amplitude
         self.F = F                  # elliptic stretch, phase
 

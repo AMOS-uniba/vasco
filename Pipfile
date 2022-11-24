@@ -11,8 +11,9 @@ matplotlib = "*"
 pandas = "*"
 argparsedirs = "*"
 physics-fields = "*"
+pyqt6-tools = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.11"
+python_version = "3.9"
