@@ -4,17 +4,22 @@ import sys
 import numpy as np
 import scipy as sp
 import pandas as pd
-import matplotlib as mpl
-from matplotlib import pyplot as plt
 
 from typing import Tuple, Type, Optional
 from utilities import by_azimuth, polar_to_cart
+
+import astropy
+from astropy import units as u
+from astropy.coordinates import EarthLocation, SkyCoord, AltAz
+from astropy.time import Time
 
 import PyQt6
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.uic import loadUi
 
+import matplotlib as mpl
+from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 from matplotlib.figure import Figure
 
@@ -23,6 +28,8 @@ from transformers import LinearTransformer, ExponentialTransformer, Biexponentia
 from projections import Projection, BorovickaProjection
 
 from main_ui import Ui_MainWindow
+
+from amos import AMOS
 
 mpl.use('Qt5Agg')
 
@@ -43,7 +50,11 @@ class Fitter():
         return cls(params)
 
 
-class Vascop():
+def spherical(x: AltAz, y: AltAz) -> u.Quantity:
+    return 2 * np.sin(np.sqrt(np.sin(0.5 * (y.alt - x.alt))**2 + np.cos(x.alt) * np.cos(y.alt) * np.sin(0.5 * (y.az - x.az))**2) * u.rad)
+
+
+class Vasco():
     """ Virtual All-Sky CorrectOr Plate """
     def __init__(self):
         pass
@@ -64,8 +75,18 @@ class Vascop():
         df['x_com'], df['y_com'] = polar_to_cart(df['z_com_rad'], df['a_com_rad'])
         df['dx'], df['dy'] = df['x_cat'] - df['x_com'], df['y_cat'] - df['y_com']
         self.data = df
-        self.points = self.data[['x_cat', 'y_cat']].to_numpy()
+        self.points = self.data[['x_com', 'y_com']].to_numpy()
         self.values = self.data[['dx', 'dy']].to_numpy()
+
+    def load_catalogue(self, filename):
+        df = pd.read_csv(filename, sep='\t', header=1)
+        self.catalogue = df[df.vmag < 5]
+        self.stars = SkyCoord(self.catalogue.ra * u.deg, self.catalogue.dec * u.deg)
+
+    def catalogue_az(self, location, time):
+        self.altaz = AltAz(location=location, obstime=time, pressure=75000 * u.pascal, obswl=500 * u.nm)
+        altaz = self.stars.transform_to(self.altaz)
+        return np.stack((altaz.alt.degree, altaz.az.degree))
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -74,38 +95,49 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.connectSignalSlots()
 
-        self.vascop = Vascop()
-        self.vascop.load('data/borr-01.tsv')
+        self.vasco = Vasco()
+        self.vasco.load('data/20161123.tsv')
+        self.vasco.load_catalogue('catalogue/HYG30.tsv')
+        self.location = AMOS.stations.sp.earth_location()
 
+        self.setupSensorPlot()
+        self.setupSkyPlot()
+
+        self.sensorScatter = self.sensorAxis.scatter([0], [0])
+        self.skyScatter = self.skyAxis.scatter([0], [0])
+        self.starsScatter = self.skyAxis.scatter([0], [0])
+
+        self.sensorScatter.set_offsets(np.stack((self.vasco.points[:, 0], self.vasco.points[:, 1]), axis=1))
+        self.sensorCanvas.draw()
+
+        self.gb_plots.layout().addWidget(self.sensorCanvas)
+        self.gb_plots.layout().addWidget(self.skyCanvas)
+
+        self.plot()
+        self.plot_stars()
+
+    def setupSensorPlot(self):
         self.sensorFigure = Figure(figsize=(5, 5))
         self.sensorCanvas = FigureCanvas(self.sensorFigure)
         self.sensorAxis = self.sensorFigure.add_subplot()
         self.sensorFigure.tight_layout()
-
-        self.skyFigure = Figure(figsize=(5, 5))
-        self.skyCanvas = FigureCanvas(self.skyFigure)
-        self.skyAxis = self.skyFigure.add_subplot(projection='polar')
-        self.skyFigure.tight_layout()
 
         self.sensorAxis.set_xlim([-1, 1])
         self.sensorAxis.set_ylim([-1, 1])
         self.sensorAxis.grid()
         self.sensorAxis.set_aspect('equal')
 
+    def setupSkyPlot(self):
+        self.skyFigure = Figure(figsize=(5, 5))
+        self.skyCanvas = FigureCanvas(self.skyFigure)
+        self.skyAxis = self.skyFigure.add_subplot(projection='polar')
+        self.skyFigure.tight_layout()
+
         self.skyAxis.set_ylim([0, 90])
         self.skyAxis.set_theta_offset(3 * np.pi / 2)
-        self.sensorScatter = self.sensorAxis.scatter([0], [0])
-        self.skyScatter = self.skyAxis.scatter([0], [0])
-
-        self.sensorScatter.set_offsets(np.stack((self.vascop.points[:, 0], self.vascop.points[:, 1]), axis=1))
-        self.sensorCanvas.draw()
-
-        self.plot()
-
-        self.gb_plots.layout().addWidget(self.sensorCanvas)
-        self.gb_plots.layout().addWidget(self.skyCanvas)
 
     def connectSignalSlots(self):
+        self.pb_plot.clicked.connect(self.plot)
         self.dsb_x0.valueChanged.connect(self.plot)
         self.dsb_y0.valueChanged.connect(self.plot)
         self.dsb_a0.valueChanged.connect(self.plot)
@@ -118,6 +150,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dsb_F.valueChanged.connect(self.plot)
         self.dsb_eps.valueChanged.connect(self.plot)
         self.dsb_E.valueChanged.connect(self.plot)
+
+        self.dt_time.dateTimeChanged.connect(self.plot_stars)
 
     def plot(self):
         proj = BorovickaProjection(
@@ -135,19 +169,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             E=np.radians(self.dsb_E.value()),
         )
 
-#        print(proj)
-
-        x, y = self.vascop.points[:, 0], self.vascop.points[:, 1]
+        x, y = self.vasco.points[:, 0], self.vasco.points[:, 1]
         z, a = proj(x, y)
         z = np.degrees(z)
 
+        print(proj)
+
         self.skyScatter.set_offsets(np.stack((a, z), axis=1))
+        self.skyCanvas.draw()
+
+        del proj
+
+    def plot_stars(self):
+        z, a = self.vasco.catalogue_az(self.location, self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss'))
+        a = np.radians(a)
+        z = 90 - z
+
+        s = np.exp(-0.666 * (self.vasco.catalogue['vmag'] - 5))
+        self.starsScatter.set_offsets(np.stack((a, z), axis=1))
+        self.starsScatter.set_sizes(s)
         self.skyCanvas.draw()
 
 
 app = QApplication(sys.argv)
 
 window = MainWindow()
-window.show()
+window.showMaximized()
 
 app.exec()

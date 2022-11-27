@@ -12,6 +12,9 @@ pandas = "*"
 argparsedirs = "*"
 physics-fields = "*"
 pyqt6-tools = "*"
+astropy = "*"
+dotmap = "*"
+vptree = "*"
 
 [dev-packages]
 
