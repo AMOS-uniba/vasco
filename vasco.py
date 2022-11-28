@@ -96,7 +96,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.connectSignalSlots()
 
         self.vasco = Vasco()
-        self.vasco.load('data/20161123.tsv')
+        self.vasco.load('data/2016-11-23-084800.tsv')
         self.vasco.load_catalogue('catalogue/HYG30.tsv')
         self.location = AMOS.stations.sp.earth_location()
 
@@ -138,18 +138,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def connectSignalSlots(self):
         self.pb_plot.clicked.connect(self.plot)
-        self.dsb_x0.valueChanged.connect(self.plot)
-        self.dsb_y0.valueChanged.connect(self.plot)
-        self.dsb_a0.valueChanged.connect(self.plot)
-        self.dsb_V.valueChanged.connect(self.plot)
-        self.dsb_S.valueChanged.connect(self.plot)
-        self.dsb_D.valueChanged.connect(self.plot)
-        self.dsb_P.valueChanged.connect(self.plot)
-        self.dsb_Q.valueChanged.connect(self.plot)
-        self.dsb_A.valueChanged.connect(self.plot)
-        self.dsb_F.valueChanged.connect(self.plot)
-        self.dsb_eps.valueChanged.connect(self.plot)
-        self.dsb_E.valueChanged.connect(self.plot)
+        #self.dsb_x0.valueChanged.connect(self.plot)
+        #self.dsb_y0.valueChanged.connect(self.plot)
+        #self.dsb_a0.valueChanged.connect(self.plot)
+        #self.dsb_V.valueChanged.connect(self.plot)
+        #self.dsb_S.valueChanged.connect(self.plot)
+        #self.dsb_D.valueChanged.connect(self.plot)
+        #self.dsb_P.valueChanged.connect(self.plot)
+        #self.dsb_Q.valueChanged.connect(self.plot)
+        #self.dsb_A.valueChanged.connect(self.plot)
+        #self.dsb_F.valueChanged.connect(self.plot)
+        #self.dsb_eps.valueChanged.connect(self.plot)
+        #self.dsb_E.valueChanged.connect(self.plot)
 
         self.dt_time.dateTimeChanged.connect(self.plot_stars)
 
@@ -173,12 +173,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         z, a = proj(x, y)
         z = np.degrees(z)
 
-        print(proj)
-
         self.skyScatter.set_offsets(np.stack((a, z), axis=1))
         self.skyCanvas.draw()
 
-        del proj
+        metric = self.find_nearest(np.stack((z, a), axis=1), np.stack(self.vasco.catalogue_az(self.location, self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss')), axis=1))
+        self.lb_error.setText(f'{metric}')
 
     def plot_stars(self):
         z, a = self.vasco.catalogue_az(self.location, self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss'))
@@ -189,6 +188,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.starsScatter.set_offsets(np.stack((a, z), axis=1))
         self.starsScatter.set_sizes(s)
         self.skyCanvas.draw()
+
+    def find_nearest(self, stars, catalogue):
+        stars = np.expand_dims(stars, 0)
+        catalogue = np.expand_dims(catalogue, 1)
+
+        dist = distance(stars, catalogue)
+        print(dist.shape)
+        nearest = np.min(dist, axis=0)
+        print(nearest)
+
+        return np.sum(nearest)
+
+
+def distance(x, y):
+    return 2 * np.sin(
+        np.sqrt(
+            np.sin(0.5 * (y[:, :, 0] - x[:, :, 0]))**2 +
+            np.cos(x[:, :, 0]) * np.cos(y[:, :, 0]) * np.sin(0.5 * (y[:, :, 1] - x[:, :, 1]))**2.0
+        )
+    )
 
 
 app = QApplication(sys.argv)

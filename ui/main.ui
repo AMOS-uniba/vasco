@@ -21,6 +21,24 @@
      </widget>
     </item>
     <item>
+     <widget class="QLabel" name="lb_error">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>0</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QGroupBox" name="gb_time">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -68,11 +86,64 @@
            <day>1</day>
           </date>
          </property>
+         <property name="currentSection">
+          <enum>QDateTimeEdit::HourSection</enum>
+         </property>
          <property name="displayFormat">
           <string notr="true">yyyy-MM-dd HH:mm:ss</string>
          </property>
          <property name="timeSpec">
           <enum>Qt::UTC</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="dsb_lat">
+         <property name="wrapping">
+          <bool>true</bool>
+         </property>
+         <property name="suffix">
+          <string>°</string>
+         </property>
+         <property name="decimals">
+          <number>6</number>
+         </property>
+         <property name="minimum">
+          <double>-90.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>90.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>1.000000000000000</double>
+         </property>
+         <property name="value">
+          <double>-22.953410000000002</double>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="dsb_lon">
+         <property name="wrapping">
+          <bool>true</bool>
+         </property>
+         <property name="suffix">
+          <string>°</string>
+         </property>
+         <property name="decimals">
+          <number>6</number>
+         </property>
+         <property name="minimum">
+          <double>-179.999999000000003</double>
+         </property>
+         <property name="maximum">
+          <double>180.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>1.000000000000000</double>
+         </property>
+         <property name="value">
+          <double>-68.179339999999996</double>
          </property>
         </widget>
        </item>
@@ -155,7 +226,7 @@
              <item>
               <widget class="QLabel" name="lb_x0">
                <property name="text">
-                <string>H shift (x0)</string>
+                <string>H shift (x&lt;sub&gt;0&lt;/sub&gt;)</string>
                </property>
               </widget>
              </item>
@@ -199,7 +270,7 @@
              <item>
               <widget class="QLabel" name="lb_y0">
                <property name="text">
-                <string>V shift (y0)</string>
+                <string>V shift (y&lt;sub&gt;0&lt;/sub&gt;)</string>
                </property>
               </widget>
              </item>
@@ -243,7 +314,7 @@
              <item>
               <widget class="QLabel" name="lb_a0">
                <property name="text">
-                <string>Rotation (a0)</string>
+                <string>Rotation (a&lt;sub&gt;0&lt;/sub&gt;)</string>
                </property>
               </widget>
              </item>

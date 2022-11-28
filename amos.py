@@ -16,7 +16,9 @@ class Station:
 
 AMOS = dotmap.DotMap({
     'stations': {
-        'sp': Station(-22.95341, -68.17934, 2403),
-        'pc': Station(-22.7, -68.5, 2535),
+        'sp': Station(-22.95341,  -68.17934, 2403),
+        'pc': Station(-22.33535,  -68.64417, 2535),
+        'hk': Station( 20.70740,  156.25615, 3068),
+        'mk': Station( 19.82366,  155.47717, 4126),
     }
 })
