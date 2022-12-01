@@ -80,10 +80,10 @@ class Vasco():
 
     def load_catalogue(self, filename):
         df = pd.read_csv(filename, sep='\t', header=1)
-        self.catalogue = df[df.vmag < 5]
+        self.catalogue = df[df.vmag < 4.5]
         self.stars = SkyCoord(self.catalogue.ra * u.deg, self.catalogue.dec * u.deg)
 
-    def catalogue_az(self, location, time):
+    def catalogue_altaz(self, location, time):
         self.altaz = AltAz(location=location, obstime=time, pressure=75000 * u.pascal, obswl=500 * u.nm)
         altaz = self.stars.transform_to(self.altaz)
         return np.stack((altaz.alt.degree, altaz.az.degree))
@@ -98,7 +98,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vasco = Vasco()
         self.vasco.load('data/2016-11-23-084800.tsv')
         self.vasco.load_catalogue('catalogue/HYG30.tsv')
-        self.location = AMOS.stations.sp.earth_location()
+        self.populateStations()
 
         self.setupSensorPlot()
         self.setupSkyPlot()
@@ -110,11 +110,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sensorScatter.set_offsets(np.stack((self.vasco.points[:, 0], self.vasco.points[:, 1]), axis=1))
         self.sensorCanvas.draw()
 
-        self.gb_plots.layout().addWidget(self.sensorCanvas)
-        self.gb_plots.layout().addWidget(self.skyCanvas)
+        self.w_plots.layout().addWidget(self.sensorCanvas)
+        self.w_plots.layout().addWidget(self.skyCanvas)
+
+        self.update_projection()
 
         self.plot()
         self.plot_stars()
+
+    def populateStations(self):
+        for name, station in AMOS.stations.items():
+            self.cb_stations.addItem(station.name)
+
+        self.cb_stations.currentIndexChanged.connect(self.selectStation)
+
+    def selectStation(self, index):
+        station = list(AMOS.stations.values())[index]
+        self.dsb_lat.setValue(station.latitude)
+        self.dsb_lon.setValue(station.longitude)
 
     def setupSensorPlot(self):
         self.sensorFigure = Figure(figsize=(5, 5))
@@ -137,24 +150,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.skyAxis.set_theta_offset(3 * np.pi / 2)
 
     def connectSignalSlots(self):
-        self.pb_plot.clicked.connect(self.plot)
-        #self.dsb_x0.valueChanged.connect(self.plot)
-        #self.dsb_y0.valueChanged.connect(self.plot)
-        #self.dsb_a0.valueChanged.connect(self.plot)
-        #self.dsb_V.valueChanged.connect(self.plot)
-        #self.dsb_S.valueChanged.connect(self.plot)
-        #self.dsb_D.valueChanged.connect(self.plot)
-        #self.dsb_P.valueChanged.connect(self.plot)
-        #self.dsb_Q.valueChanged.connect(self.plot)
-        #self.dsb_A.valueChanged.connect(self.plot)
-        #self.dsb_F.valueChanged.connect(self.plot)
-        #self.dsb_eps.valueChanged.connect(self.plot)
-        #self.dsb_E.valueChanged.connect(self.plot)
+        self.pb_plot.clicked.connect(self.on_parameters_changed)
+        self.dsb_x0.valueChanged.connect(self.on_parameters_changed)
+        self.dsb_y0.valueChanged.connect(self.on_parameters_changed)
+        self.dsb_a0.valueChanged.connect(self.on_parameters_changed)
+        self.dsb_V.valueChanged.connect(self.on_parameters_changed)
+        self.dsb_S.valueChanged.connect(self.on_parameters_changed)
+        self.dsb_D.valueChanged.connect(self.on_parameters_changed)
+        self.dsb_P.valueChanged.connect(self.on_parameters_changed)
+        self.dsb_Q.valueChanged.connect(self.on_parameters_changed)
+        self.dsb_A.valueChanged.connect(self.on_parameters_changed)
+        self.dsb_F.valueChanged.connect(self.on_parameters_changed)
+        self.dsb_eps.valueChanged.connect(self.on_parameters_changed)
+        self.dsb_E.valueChanged.connect(self.on_parameters_changed)
 
         self.dt_time.dateTimeChanged.connect(self.plot_stars)
+        self.pb_plot.clicked.connect(self.plot_stars)
+        self.pb_identify.clicked.connect(self.identify)
 
-    def plot(self):
-        proj = BorovickaProjection(
+    def get_location(self):
+        return EarthLocation(self.dsb_lon.value() * u.deg, self.dsb_lat.value() * u.deg)
+
+    def on_parameters_changed(self):
+        self.update_projection()
+        self.plot()
+
+    def update_projection(self):
+        self.proj = BorovickaProjection(
             x0=self.dsb_x0.value(),
             y0=self.dsb_y0.value(),
             a0=np.radians(self.dsb_a0.value()),
@@ -169,18 +191,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             E=np.radians(self.dsb_E.value()),
         )
 
+    def plot(self):
         x, y = self.vasco.points[:, 0], self.vasco.points[:, 1]
-        z, a = proj(x, y)
-        z = np.degrees(z)
+        z, a = self.proj(x, y)
 
-        self.skyScatter.set_offsets(np.stack((a, z), axis=1))
+        self.skyScatter.set_offsets(np.stack((a, np.degrees(z)), axis=1))
         self.skyCanvas.draw()
 
-        metric = self.find_nearest(np.stack((z, a), axis=1), np.stack(self.vasco.catalogue_az(self.location, self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss')), axis=1))
-        self.lb_error.setText(f'{metric}')
-
     def plot_stars(self):
-        z, a = self.vasco.catalogue_az(self.location, self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss'))
+        z, a = self.vasco.catalogue_altaz(self.get_location(), self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss'))
         a = np.radians(a)
         z = 90 - z
 
@@ -189,14 +208,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.starsScatter.set_sizes(s)
         self.skyCanvas.draw()
 
+    def identify(self):
+        x, y = self.vasco.points[:, 0], self.vasco.points[:, 1]
+
+        metric = self.find_nearest(
+            np.stack(self.proj(x, y), axis=1),
+            np.stack(self.vasco.catalogue_altaz(self.get_location(), self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss')), axis=1)
+        )
+        self.lb_error.setText(f'{metric:.8f}')
+
     def find_nearest(self, stars, catalogue):
         stars = np.expand_dims(stars, 0)
         catalogue = np.expand_dims(catalogue, 1)
+        catalogue = np.radians(catalogue)
+        stars[:, :, 0] = np.pi / 2 - stars[:, :, 0]
 
         dist = distance(stars, catalogue)
-        print(dist.shape)
-        nearest = np.min(dist, axis=0)
-        print(nearest)
+        nearest = np.min(np.square(dist), axis=0)
 
         return np.sum(nearest)
 
