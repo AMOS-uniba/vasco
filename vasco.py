@@ -20,7 +20,7 @@ from PyQt6.uic import loadUi
 
 import matplotlib as mpl
 from matplotlib import pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
 from shifters import OpticalAxisShifter, EllipticShifter
@@ -80,7 +80,7 @@ class Vasco():
 
     def load_catalogue(self, filename):
         df = pd.read_csv(filename, sep='\t', header=1)
-        self.catalogue = df[df.vmag < 4.5]
+        self.catalogue = df[df.vmag < 5]
         self.stars = SkyCoord(self.catalogue.ra * u.deg, self.catalogue.dec * u.deg)
 
     def catalogue_altaz(self, location, time):
@@ -91,6 +91,7 @@ class Vasco():
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
+        print("Init")
         super().__init__(parent)
         self.setupUi(self)
         self.connectSignalSlots()
@@ -130,8 +131,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dsb_lon.setValue(station.longitude)
 
     def setupSensorPlot(self):
-        self.sensorFigure = Figure(figsize=(5, 5))
-        self.sensorCanvas = FigureCanvas(self.sensorFigure)
+        self.sensorFigure = Figure(figsize=(6, 6))
+        self.sensorCanvas = FigureCanvasQTAgg(self.sensorFigure)
         self.sensorAxis = self.sensorFigure.add_subplot()
         self.sensorFigure.tight_layout()
 
@@ -141,8 +142,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sensorAxis.set_aspect('equal')
 
     def setupSkyPlot(self):
-        self.skyFigure = Figure(figsize=(5, 5))
-        self.skyCanvas = FigureCanvas(self.skyFigure)
+        self.skyFigure = Figure(figsize=(6, 6))
+        self.skyCanvas = FigureCanvasQTAgg(self.skyFigure)
         self.skyAxis = self.skyFigure.add_subplot(projection='polar')
         self.skyFigure.tight_layout()
 
@@ -150,7 +151,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.skyAxis.set_theta_offset(3 * np.pi / 2)
 
     def connectSignalSlots(self):
-        self.pb_plot.clicked.connect(self.on_parameters_changed)
+        print("Connecting signals")
+        self.pb_plot.clicked.connect(self.plot)
         self.dsb_x0.valueChanged.connect(self.on_parameters_changed)
         self.dsb_y0.valueChanged.connect(self.on_parameters_changed)
         self.dsb_a0.valueChanged.connect(self.on_parameters_changed)
@@ -190,6 +192,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             epsilon=np.radians(self.dsb_eps.value()),
             E=np.radians(self.dsb_E.value()),
         )
+        print(f"New proj: {self.proj}")
 
     def plot(self):
         x, y = self.vasco.points[:, 0], self.vasco.points[:, 1]
@@ -199,6 +202,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.skyCanvas.draw()
 
     def plot_stars(self):
+        print("Plotting stars")
         z, a = self.vasco.catalogue_altaz(self.get_location(), self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss'))
         a = np.radians(a)
         z = 90 - z
@@ -218,6 +222,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lb_error.setText(f'{metric:.8f}')
 
     def find_nearest(self, stars, catalogue):
+        print(f"Finding nearest stars...")
         stars = np.expand_dims(stars, 0)
         catalogue = np.expand_dims(catalogue, 1)
         catalogue = np.radians(catalogue)
