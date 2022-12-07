@@ -77,6 +77,7 @@ class Vasco():
         self.data = df
         self.points = self.data[['x_com', 'y_com']].to_numpy()
         self.values = self.data[['dx', 'dy']].to_numpy()
+        self.count = len(self.data)
 
     def load_catalogue(self, filename):
         df = pd.read_csv(filename, sep='\t', header=1)
@@ -104,8 +105,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupSensorPlot()
         self.setupSkyPlot()
 
-        self.sensorScatter = self.sensorAxis.scatter([0], [0])
-        self.skyScatter = self.skyAxis.scatter([0], [0])
+        self.sensorScatter = self.sensorAxis.scatter([0], [0], s=50, c='red', marker='x')
+        self.skyScatter = self.skyAxis.scatter([0], [0], s=50, c='red', marker='x')
         self.starsScatter = self.skyAxis.scatter([0], [0])
 
         self.sensorScatter.set_offsets(np.stack((self.vasco.points[:, 0], self.vasco.points[:, 1]), axis=1))
@@ -129,6 +130,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         station = list(AMOS.stations.values())[index]
         self.dsb_lat.setValue(station.latitude)
         self.dsb_lon.setValue(station.longitude)
+        self.plot_stars()
 
     def setupSensorPlot(self):
         self.sensorFigure = Figure(figsize=(6, 6))
@@ -151,7 +153,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.skyAxis.set_theta_offset(3 * np.pi / 2)
 
     def connectSignalSlots(self):
-        print("Connecting signals")
         self.pb_plot.clicked.connect(self.plot)
         self.dsb_x0.valueChanged.connect(self.on_parameters_changed)
         self.dsb_y0.valueChanged.connect(self.on_parameters_changed)
@@ -175,6 +176,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def on_parameters_changed(self):
         self.update_projection()
+        self.identify()
         self.plot()
 
     def update_projection(self):
@@ -202,7 +204,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.skyCanvas.draw()
 
     def plot_stars(self):
-        print("Plotting stars")
         z, a = self.vasco.catalogue_altaz(self.get_location(), self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss'))
         a = np.radians(a)
         z = 90 - z
@@ -215,14 +216,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def identify(self):
         x, y = self.vasco.points[:, 0], self.vasco.points[:, 1]
 
-        metric = self.find_nearest(
+        metric = np.sqrt(self.find_nearest(
             np.stack(self.proj(x, y), axis=1),
             np.stack(self.vasco.catalogue_altaz(self.get_location(), self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss')), axis=1)
-        )
-        self.lb_error.setText(f'{metric:.8f}')
+        ) / (self.vasco.count))
+        self.lb_error.setText(f'Mean error: {np.degrees(metric):.6f}°')
 
     def find_nearest(self, stars, catalogue):
-        print(f"Finding nearest stars...")
         stars = np.expand_dims(stars, 0)
         catalogue = np.expand_dims(catalogue, 1)
         catalogue = np.radians(catalogue)
