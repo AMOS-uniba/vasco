@@ -25,12 +25,12 @@ class EquidistantProjection(Projection):
 
 
 class BorovickaProjection(Projection):
-    def __init__(self, *, a0: float=0, x0: float=0, y0: float=0, A: float=0, F: float=0, V: float=1,
-            S: float=0, D: float=0, P: float=0, Q: float=0, epsilon: float=0, E: float=0):
-        assert(epsilon >= 0 and V > 0)
-        self.a0 = a0
+    def __init__(self, x0: float=0, y0: float=0, a0: float=0, A: float=0, F: float=0,
+            V: float=1, S: float=0, D: float=0, P: float=0, Q: float=0, epsilon: float=0, E: float=0):
+#        assert(epsilon >= 0 and V >= 0)
         self.x0 = x0
         self.y0 = y0
+        self.a0 = a0
         self.A = A
         self.F = F
         self.V = V

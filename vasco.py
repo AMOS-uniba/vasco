@@ -53,6 +53,14 @@ class Fitter():
 def spherical(x: AltAz, y: AltAz) -> u.Quantity:
     return 2 * np.sin(np.sqrt(np.sin(0.5 * (y.alt - x.alt))**2 + np.cos(x.alt) * np.cos(y.alt) * np.sin(0.5 * (y.az - x.az))**2) * u.rad)
 
+def distance(x, y):
+    return 2 * np.sin(
+        np.sqrt(
+            np.sin(0.5 * (y[:, :, 0] - x[:, :, 0]))**2 +
+            np.cos(x[:, :, 0]) * np.cos(y[:, :, 0]) * np.sin(0.5 * (y[:, :, 1] - x[:, :, 1]))**2.0
+        )
+    )
+
 
 class Vasco():
     """ Virtual All-Sky CorrectOr Plate """
@@ -88,6 +96,36 @@ class Vasco():
         self.altaz = AltAz(location=location, obstime=time, pressure=75000 * u.pascal, obswl=500 * u.nm)
         altaz = self.stars.transform_to(self.altaz)
         return np.stack((altaz.alt.degree, altaz.az.degree))
+
+    def sensor_to_sky(self, projection):
+        return projection(self.points[:, 0], self.points[:, 1])
+
+    def identify(self, projection, location, time):
+        return np.sqrt(self.find_nearest(
+            np.stack(projection(self.points[:, 0], self.points[:, 1]), axis=1),
+            np.stack(self.catalogue_altaz(location, time), axis=1)
+        ) / (self.count))
+
+    def find_nearest(self, stars, catalogue):
+        stars = np.expand_dims(stars, 0)
+        catalogue = np.expand_dims(catalogue, 1)
+        catalogue = np.radians(catalogue)
+        stars[:, :, 0] = np.pi / 2 - stars[:, :, 0]
+
+        dist = distance(stars, catalogue)
+        nearest = np.min(np.square(dist), axis=0)
+
+        return np.sum(nearest)
+
+    def mean_error(self, x, *args):
+        projection = BorovickaProjection(*x)
+        return self.identify(projection, *args)
+
+    def minimize(self, location, time, x0=(0, 0, 0, 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0)):
+        return sp.optimize.minimize(self.mean_error, x0, args=(location, time), method='Nelder-Mead',
+            bounds=((None, None), (None, None), (None, None), (None, None), (None, None), (0, None), (None, None), (None, None), (None, None), (None, None), (0, None), (None, None)),
+            options=dict(maxiter=100, disp=True),
+        )
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -171,6 +209,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pb_plot.clicked.connect(self.plot_stars)
         self.pb_identify.clicked.connect(self.identify)
 
+        self.pb_optimize.clicked.connect(self.minimize)
+
     def get_location(self):
         return EarthLocation(self.dsb_lon.value() * u.deg, self.dsb_lat.value() * u.deg)
 
@@ -179,26 +219,44 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.identify()
         self.plot()
 
-    def update_projection(self):
-        self.proj = BorovickaProjection(
-            x0=self.dsb_x0.value(),
-            y0=self.dsb_y0.value(),
-            a0=np.radians(self.dsb_a0.value()),
-            V=self.dsb_V.value(),
-            S=self.dsb_S.value(),
-            D=self.dsb_D.value(),
-            P=self.dsb_P.value(),
-            Q=self.dsb_Q.value(),
-            A=self.dsb_A.value(),
-            F=np.radians(self.dsb_F.value()),
-            epsilon=np.radians(self.dsb_eps.value()),
-            E=np.radians(self.dsb_E.value()),
+    def get_tuple(self):
+        return (self.dsb_x0.value(),
+            self.dsb_y0.value(),
+            np.radians(self.dsb_a0.value()),
+            self.dsb_A.value(),
+            np.radians(self.dsb_F.value()),
+            self.dsb_V.value(),
+            self.dsb_S.value(),
+            self.dsb_D.value(),
+            self.dsb_P.value(),
+            self.dsb_Q.value(),
+            np.radians(self.dsb_eps.value()),
+            np.radians(self.dsb_E.value()),
         )
-        print(f"New proj: {self.proj}")
+
+    def update_projection(self):
+        self.projection = BorovickaProjection(*self.get_tuple())
+
+    def minimize(self):
+        result = self.vasco.minimize(self.get_location(), self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss'), x0=self.get_tuple())
+        x0, y0, a0, A, F, V, S, D, P, Q, e, E = tuple(result.x)
+        self.dsb_x0.setValue(x0)
+        self.dsb_y0.setValue(y0)
+        self.dsb_a0.setValue(np.degrees(a0))
+        self.dsb_A.setValue(A)
+        self.dsb_F.setValue(np.degrees(F))
+        self.dsb_V.setValue(V)
+        self.dsb_S.setValue(S)
+        self.dsb_D.setValue(D)
+        self.dsb_P.setValue(P)
+        self.dsb_Q.setValue(Q)
+        self.dsb_eps.setValue(np.degrees(e))
+        self.dsb_E.setValue(np.degrees(E))
+        print(result.x, np.degrees(result.fun))
+
 
     def plot(self):
-        x, y = self.vasco.points[:, 0], self.vasco.points[:, 1]
-        z, a = self.proj(x, y)
+        z, a = self.vasco.sensor_to_sky(self.projection)
 
         self.skyScatter.set_offsets(np.stack((a, np.degrees(z)), axis=1))
         self.skyCanvas.draw()
@@ -214,33 +272,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.skyCanvas.draw()
 
     def identify(self):
-        x, y = self.vasco.points[:, 0], self.vasco.points[:, 1]
+        error = self.vasco.identify(self.projection, self.get_location(), self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss'))
+        self.lb_error.setText(f'Mean error: {np.degrees(error):.6f}°')
 
-        metric = np.sqrt(self.find_nearest(
-            np.stack(self.proj(x, y), axis=1),
-            np.stack(self.vasco.catalogue_altaz(self.get_location(), self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss')), axis=1)
-        ) / (self.vasco.count))
-        self.lb_error.setText(f'Mean error: {np.degrees(metric):.6f}°')
-
-    def find_nearest(self, stars, catalogue):
-        stars = np.expand_dims(stars, 0)
-        catalogue = np.expand_dims(catalogue, 1)
-        catalogue = np.radians(catalogue)
-        stars[:, :, 0] = np.pi / 2 - stars[:, :, 0]
-
-        dist = distance(stars, catalogue)
-        nearest = np.min(np.square(dist), axis=0)
-
-        return np.sum(nearest)
-
-
-def distance(x, y):
-    return 2 * np.sin(
-        np.sqrt(
-            np.sin(0.5 * (y[:, :, 0] - x[:, :, 0]))**2 +
-            np.cos(x[:, :, 0]) * np.cos(y[:, :, 0]) * np.sin(0.5 * (y[:, :, 1] - x[:, :, 1]))**2.0
-        )
-    )
 
 
 app = QApplication(sys.argv)

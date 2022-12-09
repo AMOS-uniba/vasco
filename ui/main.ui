@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1099</width>
-    <height>837</height>
+    <height>893</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -274,11 +274,17 @@
                <property name="decimals">
                 <number>6</number>
                </property>
+               <property name="minimum">
+                <double>-5.000000000000000</double>
+               </property>
                <property name="maximum">
                 <double>5.000000000000000</double>
                </property>
                <property name="singleStep">
-                <double>0.010000000000000</double>
+                <double>0.001000000000000</double>
+               </property>
+               <property name="stepType">
+                <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
                </property>
               </widget>
              </item>
@@ -297,11 +303,17 @@
                <property name="decimals">
                 <number>6</number>
                </property>
+               <property name="minimum">
+                <double>-0.100000000000000</double>
+               </property>
                <property name="maximum">
-                <double>5.000000000000000</double>
+                <double>0.100000000000000</double>
                </property>
                <property name="singleStep">
                 <double>0.010000000000000</double>
+               </property>
+               <property name="stepType">
+                <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
                </property>
               </widget>
              </item>
@@ -320,11 +332,17 @@
                <property name="decimals">
                 <number>6</number>
                </property>
+               <property name="minimum">
+                <double>-5.000000000000000</double>
+               </property>
                <property name="maximum">
                 <double>5.000000000000000</double>
                </property>
                <property name="singleStep">
                 <double>0.010000000000000</double>
+               </property>
+               <property name="stepType">
+                <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
                </property>
               </widget>
              </item>
@@ -343,11 +361,17 @@
                <property name="decimals">
                 <number>6</number>
                </property>
+               <property name="minimum">
+                <double>-0.100000000000000</double>
+               </property>
                <property name="maximum">
-                <double>5.000000000000000</double>
+                <double>0.100000000000000</double>
                </property>
                <property name="singleStep">
                 <double>0.010000000000000</double>
+               </property>
+               <property name="stepType">
+                <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
                </property>
               </widget>
              </item>
@@ -388,7 +412,7 @@
                 <double>90.000000000000000</double>
                </property>
                <property name="singleStep">
-                <double>0.100000000000000</double>
+                <double>0.010000000000000</double>
                </property>
               </widget>
              </item>
@@ -436,13 +460,6 @@
           <string>Time and position</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
-          <item row="2" column="0">
-           <widget class="QLabel" name="lb_latitude">
-            <property name="text">
-             <string>Latitude</string>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="1">
            <widget class="QDateTimeEdit" name="dt_time">
             <property name="wrapping">
@@ -480,13 +497,76 @@
              </date>
             </property>
             <property name="currentSection">
-             <enum>QDateTimeEdit::HourSection</enum>
+             <enum>QDateTimeEdit::YearSection</enum>
             </property>
             <property name="displayFormat">
              <string notr="true">yyyy-MM-dd HH:mm:ss</string>
             </property>
             <property name="timeSpec">
              <enum>Qt::UTC</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="lb_longitude">
+            <property name="text">
+             <string>Longitude</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QComboBox" name="cb_stations"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="lb_time">
+            <property name="text">
+             <string>Time</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QLabel" name="lb_error">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>14</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QDoubleSpinBox" name="dsb_lon">
+            <property name="wrapping">
+             <bool>true</bool>
+            </property>
+            <property name="suffix">
+             <string>°</string>
+            </property>
+            <property name="decimals">
+             <number>6</number>
+            </property>
+            <property name="minimum">
+             <double>-179.999999000000003</double>
+            </property>
+            <property name="maximum">
+             <double>180.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>1.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>-68.179339999999996</double>
             </property>
            </widget>
           </item>
@@ -515,66 +595,10 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="lb_longitude">
+          <item row="2" column="0">
+           <widget class="QLabel" name="lb_latitude">
             <property name="text">
-             <string>Longitude</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0" colspan="2">
-           <widget class="QComboBox" name="cb_stations"/>
-          </item>
-          <item row="3" column="1">
-           <widget class="QDoubleSpinBox" name="dsb_lon">
-            <property name="wrapping">
-             <bool>true</bool>
-            </property>
-            <property name="suffix">
-             <string>°</string>
-            </property>
-            <property name="decimals">
-             <number>6</number>
-            </property>
-            <property name="minimum">
-             <double>-179.999999000000003</double>
-            </property>
-            <property name="maximum">
-             <double>180.000000000000000</double>
-            </property>
-            <property name="singleStep">
-             <double>1.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>-68.179339999999996</double>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0" colspan="2">
-           <widget class="QLabel" name="lb_error">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>14</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="lb_time">
-            <property name="text">
-             <string>Time</string>
+             <string>Latitude</string>
             </property>
            </widget>
           </item>
@@ -588,6 +612,19 @@
             </property>
             <property name="text">
              <string>Identify</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0" colspan="2">
+           <widget class="QPushButton" name="pb_optimize">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Optimize</string>
             </property>
            </widget>
           </item>
