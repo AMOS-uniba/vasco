@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 import sys
+import yaml
 import numpy as np
 import scipy as sp
 import pandas as pd
 
 from typing import Tuple, Type, Optional
-from utilities import by_azimuth, polar_to_cart
 
 import astropy
 from astropy import units as u
@@ -23,9 +23,8 @@ from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
-from shifters import OpticalAxisShifter, EllipticShifter
-from transformers import LinearTransformer, ExponentialTransformer, BiexponentialTransformer
-from projections import Projection, BorovickaProjection
+from matchers import StarMatcher
+from projections import Projection, EquidistantProjection, BorovickaProjection
 
 from main_ui import Ui_MainWindow
 
@@ -50,84 +49,6 @@ class Fitter():
         return cls(params)
 
 
-def spherical(x: AltAz, y: AltAz) -> u.Quantity:
-    return 2 * np.sin(np.sqrt(np.sin(0.5 * (y.alt - x.alt))**2 + np.cos(x.alt) * np.cos(y.alt) * np.sin(0.5 * (y.az - x.az))**2) * u.rad)
-
-def distance(x, y):
-    return 2 * np.sin(
-        np.sqrt(
-            np.sin(0.5 * (y[:, :, 0] - x[:, :, 0]))**2 +
-            np.cos(x[:, :, 0]) * np.cos(y[:, :, 0]) * np.sin(0.5 * (y[:, :, 1] - x[:, :, 1]))**2.0
-        )
-    )
-
-
-class Vasco():
-    """ Virtual All-Sky CorrectOr Plate """
-    def __init__(self):
-        pass
-#        self.argparser = argparse.ArgumentParser("Virtual all-sky corrector plate")
-#        self.argparser.add_argument('infile', type=argparse.FileType('r'), help="input file")
-#        self.argparser.add_argument('outdir', action=argparser.WriteableDir, help="output directory")
-#        self.argparser.add_argument('method', type=str, choices=Corrector.METHODS)
-#        self.args = self.argparser.parse_args()
-#        self.outdir = Path(self.args.outdir)
-
-    def load(self, filename):
-        df = pd.read_csv(filename, sep='\t', header=0, nrows=500)
-        df['a_cat_rad'] = np.radians(df['acat'])
-        df['z_cat_rad'] = df['zcat'] / 90
-        df['x_cat'], df['y_cat'] = polar_to_cart(df['z_cat_rad'], df['a_cat_rad'])
-        df['a_com_rad'] = np.radians(df['acom'])
-        df['z_com_rad'] = df['zcom'] / 90
-        df['x_com'], df['y_com'] = polar_to_cart(df['z_com_rad'], df['a_com_rad'])
-        df['dx'], df['dy'] = df['x_cat'] - df['x_com'], df['y_cat'] - df['y_com']
-        self.data = df
-        self.points = self.data[['x_com', 'y_com']].to_numpy()
-        self.values = self.data[['dx', 'dy']].to_numpy()
-        self.count = len(self.data)
-
-    def load_catalogue(self, filename):
-        df = pd.read_csv(filename, sep='\t', header=1)
-        self.catalogue = df[df.vmag < 5]
-        self.stars = SkyCoord(self.catalogue.ra * u.deg, self.catalogue.dec * u.deg)
-
-    def catalogue_altaz(self, location, time):
-        self.altaz = AltAz(location=location, obstime=time, pressure=75000 * u.pascal, obswl=500 * u.nm)
-        altaz = self.stars.transform_to(self.altaz)
-        return np.stack((altaz.alt.degree, altaz.az.degree))
-
-    def sensor_to_sky(self, projection):
-        return projection(self.points[:, 0], self.points[:, 1])
-
-    def identify(self, projection, location, time):
-        return np.sqrt(self.find_nearest(
-            np.stack(projection(self.points[:, 0], self.points[:, 1]), axis=1),
-            np.stack(self.catalogue_altaz(location, time), axis=1)
-        ) / (self.count))
-
-    def find_nearest(self, stars, catalogue):
-        stars = np.expand_dims(stars, 0)
-        catalogue = np.expand_dims(catalogue, 1)
-        catalogue = np.radians(catalogue)
-        stars[:, :, 0] = np.pi / 2 - stars[:, :, 0]
-
-        dist = distance(stars, catalogue)
-        nearest = np.min(np.square(dist), axis=0)
-
-        return np.sum(nearest)
-
-    def mean_error(self, x, *args):
-        projection = BorovickaProjection(*x)
-        return self.identify(projection, *args)
-
-    def minimize(self, location, time, x0=(0, 0, 0, 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0)):
-        return sp.optimize.minimize(self.mean_error, x0, args=(location, time), method='Nelder-Mead',
-            bounds=((None, None), (None, None), (None, None), (None, None), (None, None), (0, None), (None, None), (None, None), (None, None), (None, None), (0, None), (None, None)),
-            options=dict(maxiter=100, disp=True),
-        )
-
-
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         print("Init")
@@ -135,9 +56,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.connectSignalSlots()
 
-        self.vasco = Vasco()
-        self.vasco.load('data/2016-11-23-084800.tsv')
-        self.vasco.load_catalogue('catalogue/HYG30.tsv')
         self.populateStations()
 
         self.setupSensorPlot()
@@ -147,14 +65,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.skyScatter = self.skyAxis.scatter([0], [0], s=50, c='red', marker='x')
         self.starsScatter = self.skyAxis.scatter([0], [0])
 
-        self.sensorScatter.set_offsets(np.stack((self.vasco.points[:, 0], self.vasco.points[:, 1]), axis=1))
-        self.sensorCanvas.draw()
-
         self.w_plots.layout().addWidget(self.sensorCanvas)
         self.w_plots.layout().addWidget(self.skyCanvas)
 
         self.update_projection()
+        self.update_time()
+        self.update_location()
 
+        self.matcher = StarMatcher(self.location, self.time)
+        self.matcher.load_sensor('data/2016-11-23-084800.tsv')
+        self.matcher.load_catalogue('catalogue/HYG30.tsv', lmag=4.5)
+        self.update_matcher()
+
+        self.sensorScatter.set_offsets(np.stack((self.matcher.points[:, 0], self.matcher.points[:, 1]), axis=1))
+        self.sensorCanvas.draw()
+
+        self.compute_error()
         self.plot()
         self.plot_stars()
 
@@ -205,19 +131,56 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dsb_eps.valueChanged.connect(self.on_parameters_changed)
         self.dsb_E.valueChanged.connect(self.on_parameters_changed)
 
+        self.dt_time.dateTimeChanged.connect(self.update_time)
+        self.dt_time.dateTimeChanged.connect(self.update_matcher)
         self.dt_time.dateTimeChanged.connect(self.plot_stars)
+
+        self.dsb_lat.valueChanged.connect(self.update_location)
+        self.dsb_lat.valueChanged.connect(self.update_matcher)
+        self.dsb_lon.valueChanged.connect(self.update_location)
+        self.dsb_lon.valueChanged.connect(self.update_matcher)
         self.pb_plot.clicked.connect(self.plot_stars)
-        self.pb_identify.clicked.connect(self.identify)
 
         self.pb_optimize.clicked.connect(self.minimize)
+        self.pb_pair.clicked.connect(self.pair)
+        self.pb_export.clicked.connect(self.export)
 
-    def get_location(self):
-        return EarthLocation(self.dsb_lon.value() * u.deg, self.dsb_lat.value() * u.deg)
+    def update_location(self):
+        self.location = EarthLocation(self.dsb_lon.value() * u.deg, self.dsb_lat.value() * u.deg)
+
+    def update_time(self):
+        self.time = self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss')
+
+    def update_matcher(self):
+        self.matcher.update(self.location, self.time)
+
+    def update_projection(self):
+        self.projection = BorovickaProjection(*self.get_tuple())
 
     def on_parameters_changed(self):
         self.update_projection()
-        self.identify()
+        self.compute_error()
         self.plot()
+
+    def export(self):
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export constants")
+        with open(filename, 'w+') as file:
+            yaml.dump(dict(
+                proj='Borovicka',
+                params=dict(
+                    x0=self.dsb_x0.value(),
+                    y0=self.dsb_y0.value(),
+                    a0=self.dsb_a0.value(),
+                    F=self.dsb_F.value(),
+                    V=self.dsb_V.value(),
+                    S=self.dsb_S.value(),
+                    D=self.dsb_D.value(),
+                    P=self.dsb_P.value(),
+                    Q=self.dsb_Q.value(),
+                    eps=self.dsb_eps.value(),
+                    E=self.dsb_E.value(),
+                )
+            ), file)
 
     def get_tuple(self):
         return (self.dsb_x0.value(),
@@ -234,11 +197,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             np.radians(self.dsb_E.value()),
         )
 
-    def update_projection(self):
-        self.projection = BorovickaProjection(*self.get_tuple())
-
     def minimize(self):
-        result = self.vasco.minimize(self.get_location(), self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss'), x0=self.get_tuple())
+        result = self.matcher.minimize(x0=self.get_tuple(), maxiter=self.sb_maxiter.value())
         x0, y0, a0, A, F, V, S, D, P, Q, e, E = tuple(result.x)
         self.dsb_x0.setValue(x0)
         self.dsb_y0.setValue(y0)
@@ -254,26 +214,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dsb_E.setValue(np.degrees(E))
         print(result.x, np.degrees(result.fun))
 
-
     def plot(self):
-        z, a = self.vasco.sensor_to_sky(self.projection)
+        z, a = self.matcher.sensor_to_sky(self.projection)
 
         self.skyScatter.set_offsets(np.stack((a, np.degrees(z)), axis=1))
         self.skyCanvas.draw()
 
     def plot_stars(self):
-        z, a = self.vasco.catalogue_altaz(self.get_location(), self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss'))
+        z, a = self.matcher.catalogue_altaz
         a = np.radians(a)
         z = 90 - z
 
-        s = np.exp(-0.666 * (self.vasco.catalogue['vmag'] - 5))
+        s = np.exp(-0.666 * (self.matcher.catalogue['vmag'] - 5))
         self.starsScatter.set_offsets(np.stack((a, z), axis=1))
         self.starsScatter.set_sizes(s)
         self.skyCanvas.draw()
 
-    def identify(self):
-        error = self.vasco.identify(self.projection, self.get_location(), self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss'))
+    def compute_error(self):
+        error = self.matcher.mean_error(self.projection)
         self.lb_error.setText(f'Mean error: {np.degrees(error):.6f}°')
+
+    def pair(self):
+        self.matcher.pair(self.projection, self.location, self.time)
 
 
 

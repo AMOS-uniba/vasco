@@ -1,27 +1,9 @@
 import numpy as np
 from typing import Tuple
 
-from shifters import OpticalAxisShifter, EllipticShifter
-from transformers import LinearTransformer, ExponentialTransformer, BiexponentialTransformer
-
-
-class Projection():
-    def __init__(self):
-        pass
-
-
-class EquidistantProjection(Projection):
-    """ Equidistant projection that is perfectly aligned to zenith-north """
-    def __init__(self):
-        pass
-
-    def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        z = np.sqrt(np.square(x) + np.square(y))
-        a = np.arctan2(y, x)
-        return z, a
-
-    def invert(self, z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        return z * np.sin(a), z * np.cos(a)
+from .base import Projection
+from .shifters import OpticalAxisShifter, EllipticShifter
+from .transformers import LinearTransformer, ExponentialTransformer, BiexponentialTransformer
 
 
 class BorovickaProjection(Projection):
@@ -57,7 +39,7 @@ class BorovickaProjection(Projection):
             cna = (np.cos(u) - np.cos(self.epsilon) * cosz) / np.sin(self.epsilon)
             a = self.E + np.arctan2(sna, cna)
 
-        a = np.fmod(a, 2 * np.pi)                           # wrap around to [0, 2pi)
+        a = np.fmod(a + 2 * np.pi, 2 * np.pi)                           # wrap around to [0, 2pi)
         return z, a
 
     def inverse(self, z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:

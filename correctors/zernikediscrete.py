@@ -8,7 +8,7 @@ from physfields import ZernikeVector, VectorField
 
 class ZernikeDiscreteExpander(BaseCorrector):
     vs = {}
-    """ Does not work as expected """
+    """ Does not work as expected, probably not at all """
 
     for n in range(1, 3):
         for l in range(-n, n + 1, 2):

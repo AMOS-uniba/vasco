@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1099</width>
-    <height>893</height>
+    <height>964</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -61,6 +61,21 @@
              <string>Sensor alignment</string>
             </property>
             <layout class="QGridLayout" name="gridLayout">
+             <property name="leftMargin">
+              <number>3</number>
+             </property>
+             <property name="topMargin">
+              <number>3</number>
+             </property>
+             <property name="rightMargin">
+              <number>3</number>
+             </property>
+             <property name="bottomMargin">
+              <number>3</number>
+             </property>
+             <property name="verticalSpacing">
+              <number>0</number>
+             </property>
              <item row="2" column="0">
               <widget class="QLabel" name="lb_a0">
                <property name="text">
@@ -160,6 +175,21 @@
              <string>Elliptic distortion</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_2">
+             <property name="leftMargin">
+              <number>3</number>
+             </property>
+             <property name="topMargin">
+              <number>3</number>
+             </property>
+             <property name="rightMargin">
+              <number>3</number>
+             </property>
+             <property name="bottomMargin">
+              <number>3</number>
+             </property>
+             <property name="verticalSpacing">
+              <number>0</number>
+             </property>
              <item row="0" column="0">
               <widget class="QLabel" name="lb_A">
                <property name="text">
@@ -230,6 +260,21 @@
              <string>Radial distance</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_3">
+             <property name="leftMargin">
+              <number>3</number>
+             </property>
+             <property name="topMargin">
+              <number>3</number>
+             </property>
+             <property name="rightMargin">
+              <number>3</number>
+             </property>
+             <property name="bottomMargin">
+              <number>3</number>
+             </property>
+             <property name="verticalSpacing">
+              <number>0</number>
+             </property>
              <item row="0" column="0">
               <widget class="QLabel" name="lb_V">
                <property name="text">
@@ -390,6 +435,21 @@
              <string>Offset</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_4">
+             <property name="leftMargin">
+              <number>3</number>
+             </property>
+             <property name="topMargin">
+              <number>3</number>
+             </property>
+             <property name="rightMargin">
+              <number>3</number>
+             </property>
+             <property name="bottomMargin">
+              <number>3</number>
+             </property>
+             <property name="verticalSpacing">
+              <number>0</number>
+             </property>
              <item row="0" column="0">
               <widget class="QLabel" name="lb_eps">
                <property name="text">
@@ -443,6 +503,13 @@
               </widget>
              </item>
             </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pb_export">
+            <property name="text">
+             <string>Export</string>
+            </property>
            </widget>
           </item>
          </layout>
@@ -524,27 +591,6 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="0" colspan="2">
-           <widget class="QLabel" name="lb_error">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>14</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
           <item row="3" column="1">
            <widget class="QDoubleSpinBox" name="dsb_lon">
             <property name="wrapping">
@@ -602,20 +648,19 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="0" colspan="2">
-           <widget class="QPushButton" name="pb_identify">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Identify</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0" colspan="2">
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spinBox"/>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="gb_identify">
+         <property name="title">
+          <string>Identify stars</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="1" column="0">
            <widget class="QPushButton" name="pb_optimize">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
@@ -628,8 +673,77 @@
             </property>
            </widget>
           </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="sb_maxiter">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string> iterations</string>
+            </property>
+            <property name="minimum">
+             <number>10</number>
+            </property>
+            <property name="maximum">
+             <number>200</number>
+            </property>
+            <property name="singleStep">
+             <number>10</number>
+            </property>
+            <property name="value">
+             <number>50</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0" colspan="2">
+           <widget class="QLabel" name="lb_error">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>14</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="QPushButton" name="pb_pair">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Pair</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
