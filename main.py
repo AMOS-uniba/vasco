@@ -74,7 +74,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.matcher = StarMatcher(self.location, self.time)
         self.matcher.load_sensor('data/2016-11-23-084800.tsv')
-        self.matcher.load_catalogue('catalogue/HYG30.tsv', lmag=4.5)
+        self.matcher.load_catalogue('catalogue/HYG30.tsv', lmag=5)
         self.update_matcher()
 
         self.sensorScatter.set_offsets(np.stack((self.matcher.points[:, 0], self.matcher.points[:, 1]), axis=1))

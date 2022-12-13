@@ -58,10 +58,11 @@ class StarMatcher():
         return np.sqrt(np.sum(self.find_nearest_value(self.sensor_to_sky(projection), self.catalogue_altaz)) / (self.count))
 
     def compute_distance(self, stars, catalogue):
-        stars = np.expand_dims(stars, 0)
-        catalogue = np.expand_dims(catalogue, 1)
+        stars = np.expand_dims(stars, 1)
+        catalogue = np.expand_dims(catalogue, 2)
         catalogue = np.radians(catalogue)
-        stars[:, :, 0] = np.pi / 2 - stars[:, :, 0]
+        print(stars.shape, catalogue.shape)
+        stars[0, :, :] = np.pi / 2 - stars[0, :, :]
         print(stars, catalogue)
         return distance(stars, catalogue)
 
