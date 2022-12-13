@@ -1,10 +1,10 @@
 import scipy as sp
 
 
-class VascoPaired(Vasco):
+class Fitter():
     def __init__(self, sensor, catalogue):
-        self.sensor = sensor
-        self.catalogue = catalogue
+        self.xy = sensor
+        self.za = catalogue
 
     def compute_distances(self, stars, catalogue):
         catalogue = np.radians(catalogue)

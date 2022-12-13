@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "69bcdee92762ef589d00adfbac70bef8a09e77176ef3350633c3bfc1f586f89b"
+            "sha256": "33854b617ad0dc75dd564d42ab1b7623a6e3c9c80edbd293bff28681459cc160"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -183,6 +183,14 @@
             "markers": "python_version < '3.11'",
             "version": "==1.0.4"
         },
+        "flake8": {
+            "hashes": [
+                "sha256:3833794e27ff64ea4e9cf5d410082a8b97ff1a06c16aa3d2027339cd0f1195c7",
+                "sha256:c61007e76655af75e6785a931f452915b371dc48f56efd765247c8fe68f2b181"
+            ],
+            "index": "pypi",
+            "version": "==6.0.0"
+        },
         "fonttools": {
             "hashes": [
                 "sha256:2bb244009f9bf3fa100fc3ead6aeb99febe5985fa20afbfbaa2f8946c2fbdaf1",
@@ -318,6 +326,14 @@
             ],
             "index": "pypi",
             "version": "==3.6.2"
+        },
+        "mccabe": {
+            "hashes": [
+                "sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325",
+                "sha256:6c2d30ab6be0e4a46919781807b4f0d834ebdd6c6e3dca0bda5a15f863427b6e"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==0.7.0"
         },
         "numpy": {
             "hashes": [
@@ -477,6 +493,14 @@
             "markers": "python_version >= '3.6'",
             "version": "==1.0.0"
         },
+        "pycodestyle": {
+            "hashes": [
+                "sha256:347187bdb476329d98f695c213d7295a846d1152ff4fe9bacb8a9590b8ee7053",
+                "sha256:8a4eaf0d0495c7395bdab3589ac2db602797d76207242c17d470186815706610"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==2.10.0"
+        },
         "pyerfa": {
             "hashes": [
                 "sha256:041939a7554a98b72885904ffddd8882567191bee62358727679448480174c31",
@@ -511,6 +535,14 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==2.0.0.1"
+        },
+        "pyflakes": {
+            "hashes": [
+                "sha256:ec55bf7fe21fff7f1ad2f7da62363d749e2a470500eab1b555334b67aa1ef8cf",
+                "sha256:ec8b276a6b60bd80defed25add7e439881c19e64850afd9b346283d4165fd0fd"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==3.0.1"
         },
         "pyparsing": {
             "hashes": [

@@ -2,7 +2,7 @@ import numpy as np
 from typing import Tuple
 
 from .base import Projection
-from .shifters import OpticalAxisShifter, EllipticShifter
+from .shifters import OpticalAxisShifter, TiltShifter
 from .transformers import LinearTransformer, ExponentialTransformer, BiexponentialTransformer
 
 
@@ -22,7 +22,7 @@ class BorovickaProjection(Projection):
         self.Q = Q
         self.epsilon = epsilon                              # zenith angle of centre of FoV
         self.E = E                                          # azimuth angle of centre of FoV
-        self.axis_shifter = EllipticShifter(x0=x0, y0=y0, a0=a0, A=A, F=F, E=E)
+        self.axis_shifter = TiltShifter(x0=x0, y0=y0, a0=a0, A=A, F=F, E=E)
         self.radial_transform = BiexponentialTransformer(V, S, D, P, Q)
 
     def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -42,7 +42,7 @@ class BorovickaProjection(Projection):
         a = np.fmod(a + 2 * np.pi, 2 * np.pi)                           # wrap around to [0, 2pi)
         return z, a
 
-    def inverse(self, z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def invert(self, z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         a -= self.E
 
     def __str__(self):

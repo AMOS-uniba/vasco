@@ -55,26 +55,36 @@ class StarMatcher():
         return np.stack(projection(self.points[:, 0], self.points[:, 1]), axis=0)
 
     def mean_error(self, projection) -> float:
-        return np.sqrt(np.sum(self.find_nearest_value(self.sensor_to_sky(projection), self.catalogue_altaz)) / (self.count))
+        return np.sqrt(np.sum(np.square(self.errors(projection))) / self.count)
+
+    def max_error(self, projection) -> float:
+        return np.max(self.errors(projection))
+
+    def errors(self, projection) -> np.ndarray:
+        return self.find_nearest_value(self.sensor_to_sky(projection), self.catalogue_altaz)
 
     def compute_distance(self, stars, catalogue):
+        stars = stars[stars[:, 0] < np.pi / 2]
         stars = np.expand_dims(stars, 1)
         catalogue = np.expand_dims(catalogue, 2)
         catalogue = np.radians(catalogue)
-        print(stars.shape, catalogue.shape)
         stars[0, :, :] = np.pi / 2 - stars[0, :, :]
-        print(stars, catalogue)
         return distance(stars, catalogue)
 
     def find_nearest_value(self, stars, catalogue):
         dist = self.compute_distance(stars, catalogue)
-        nearest = np.min(np.square(dist), axis=0)
+        nearest = np.min(dist, axis=0)
         return nearest
 
     def find_nearest_index(self, stars, catalogue):
         dist = self.compute_distance(stars, catalogue)
         nearest = np.argmin(dist, axis=0)
         return nearest
+
+    def pair(self, projection):
+        nearest = self.find_nearest_index(self.sensor_to_sky(projection), self.catalogue_altaz)
+        self.stars = np.take(self.stars, nearest)
+        self.update_altaz()
 
     def func(self, x):
         return self.mean_error(self.projection_cls(*x))

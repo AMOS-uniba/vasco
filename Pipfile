@@ -17,6 +17,7 @@ dotmap = "*"
 vptree = "*"
 pytest = "*"
 pyyaml = "*"
+flake8 = "*"
 
 [dev-packages]
 

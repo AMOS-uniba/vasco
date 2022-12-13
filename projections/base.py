@@ -13,5 +13,5 @@ class Projection(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def inverse(self, z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def invert(self, z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         pass
