@@ -1,29 +1,35 @@
+import numpy as np
+import pandas as pd
 
-
-
-
-class SkyStarSet():
-    """ A set of stars in alt-az format """
-
-
-    def numpy(self):
-        return np.stack()
-
-    def altaz(self, location, time):
-        altaz = AltAz(location=location, obstime=time, pressure=75000 * u.pascal, obswl=500 * u.nm)
-        stars = self.stars.transform_to(altaz)
-        return = np.stack((stars.alt.degree, stars.az.degree))
+from astropy import units as u
+from astropy.coordinates import EarthLocation, SkyCoord, AltAz
 
 
 class Catalogue():
-    def __init__():
-        pass
+    def __init__(self, filename=None):
+        self.stars = None
+        self.skycoords = None
+
+        if filename is not None:
+            self.load(filename)
 
     def load(self, filename):
-        self.stars = pd.read_csv(filename, sep='\t', header=1)
-        self.skycoords = SkyCoord(self.catalogue.ra * u.deg, self.catalogue.dec * u.deg)
+        self.set_stars(pd.read_csv(filename, sep='\t', header=1))
 
-    def filter(self, vmag)
+    def set_stars(self, stars):
+        self.stars = stars
+        self.skycoords = SkyCoord(self.stars.ra * u.deg, self.stars.dec * u.deg)
 
+    def filter(self, vmag):
+        catalogue = Catalogue()
+        catalogue.set_stars(self.stars[self.stars.vmag <= vmag])
+        return catalogue
 
-    
+    def to_altaz(self, location, time):
+        altaz = AltAz(location=location, obstime=time, pressure=101325 * u.pascal, obswl=500 * u.nm)
+        stars = self.skycoords.transform_to(altaz)
+        return np.stack((stars.alt.degree, stars.az.degree))
+
+    @property
+    def vmag(self):
+        return self.stars.vmag

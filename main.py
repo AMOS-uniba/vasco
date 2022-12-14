@@ -73,15 +73,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.matcher = StarMatcher(self.location, self.time)
         self.matcher.load_sensor('data/2016-11-23-084800.tsv')
-        self.matcher.load_catalogue('catalogue/HYG30.tsv', lmag=5)
+        self.matcher.load_catalogue('catalogue/HYG30.tsv')
+        self.matcher.catalogue.filter(5)
         self.update_matcher()
 
-        self.sensorScatter.set_offsets(np.stack((self.matcher.points[:, 0], self.matcher.points[:, 1]), axis=1))
+        self.sensorScatter.set_offsets(self.matcher.sensor_data.points)
         self.sensorCanvas.draw()
 
         self.compute_error()
         self.plot_observed_stars()
         self.plot_catalogue_stars()
+        self.plot_errors()
 
     def populateStations(self):
         for name, station in AMOS.stations.items():
@@ -94,7 +96,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dsb_lat.setValue(station.latitude)
         self.dsb_lon.setValue(station.longitude)
         self.update_matcher()
-        self.plot_stars()
+        self.plot_catalogue_stars()
         self.compute_error()
 
     def setupSensorPlot(self):
@@ -170,7 +172,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.matcher.update(self.location, self.time)
 
     def update_projection(self):
-        self.projection = BorovickaProjection(*self.get_tuple())
+        self.projection = BorovickaProjection(*self.get_constants_tuple())
 
     def on_parameters_changed(self):
         self.update_projection()
@@ -232,7 +234,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except FileNotFoundError as exc:
             print(f"Could not import constants: {exc}")
 
-    def get_tuple(self):
+    def get_constants_tuple(self):
         return (self.dsb_x0.value(),
             self.dsb_y0.value(),
             np.radians(self.dsb_a0.value()),
@@ -254,7 +256,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         result = self.matcher.minimize(
         #    location=self.location,
         #    time=self.time,
-            x0=self.get_tuple(),
+            x0=self.get_constants_tuple(),
             maxiter=self.sb_maxiter.value()
         )
 
@@ -277,23 +279,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.plot_errors()
 
     def plot_observed_stars(self):
-        z, a = self.matcher.sensor_to_sky(self.projection)
+        z, a = self.matcher.sensor_data.project(self.projection)
         self.skyScatter.set_offsets(np.stack((a, np.degrees(z)), axis=1))
         self.skyCanvas.draw()
 
     def plot_catalogue_stars(self):
-        z, a = self.matcher.catalogue_altaz
+        z, a = self.matcher.catalogue.to_altaz(self.location, self.time)
         a = np.radians(a)
         offsets = np.stack((a, 90 - z), axis=1)
         self.starsScatter.set_offsets(offsets)
 
-        s = np.exp(-0.666 * (self.matcher.catalogue['vmag'] - 5))
+        s = np.exp(-0.666 * (self.matcher.catalogue.vmag - 5))
         self.starsScatter.set_sizes(s)
 
         self.skyCanvas.draw()
 
     def plot_quiver(self):
-        z, a = self.matcher.sensor_to_sky(self.projection)
+        return
+        z, a = self.matcher.sensor_data.project(self.projection)
         offsets = np.stack((a, np.degrees(z)), axis=1)
         self.skyQuiver.set_offsets(offsets)
 
@@ -305,7 +308,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.skyCanvas.draw()
 
     def plot_errors(self):
-        alt = self.matcher.catalogue_altaz[0, :]
+        alt = np.degrees(self.matcher.sensor_data.project(self.projection)[0, :])
         err = np.degrees(self.matcher.errors(self.projection))
         self.errorScatter.set_offsets(np.stack((alt, err), axis=1))
         self.errorAxis.set_ylim([0, 0.2])

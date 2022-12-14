@@ -4,9 +4,13 @@ import pandas as pd
 
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord, AltAz
+from typing import Optional
 
-from utilities import by_azimuth, polar_to_cart, distance
 from projections import BorovickaProjection
+
+from models import SensorData, Catalogue
+
+from utilities import spherical_distance
 
 
 class StarMatcher():
@@ -17,51 +21,34 @@ class StarMatcher():
 
     def __init__(self, location, time, projection_cls=BorovickaProjection):
         self.projection_cls = projection_cls
-        self.stars = None
+        self.catalogue = None
+        self.sky = None
         self.update(location, time)
+
+    def load_catalogue(self, filename: str):
+        self.catalogue = Catalogue(filename)
+
+    def load_sensor(self, filename: str):
+        self.sensor_data = SensorData(filename)
 
     def update(self, location, time):
         self.location = location
         self.time = time
-        if self.stars is not None:
-            self.update_altaz()
 
-    def update_altaz(self):
-        self.altaz = AltAz(location=self.location, obstime=self.time, pressure=75000 * u.pascal, obswl=500 * u.nm)
-        altaz = self.stars.transform_to(self.altaz)
-        self.catalogue_altaz = np.stack((altaz.alt.degree, altaz.az.degree))
+        if self.catalogue is not None:
+            self.update_sky()
 
-    def load_sensor(self, filename):
-        df = pd.read_csv(filename, sep='\t', header=0)
-        df['a_cat_rad'] = np.radians(df['acat'])
-        df['z_cat_rad'] = df['zcat'] / 90
-        df['x_cat'], df['y_cat'] = polar_to_cart(df['z_cat_rad'], df['a_cat_rad'])
-        df['a_com_rad'] = np.radians(df['acom'])
-        df['z_com_rad'] = df['zcom'] / 90
-        df['x_com'], df['y_com'] = polar_to_cart(df['z_com_rad'], df['a_com_rad'])
-        df['dx'], df['dy'] = df['x_cat'] - df['x_com'], df['y_cat'] - df['y_com']
-        self.data = df
-        self.points = self.data[['x_com', 'y_com']].to_numpy()
-        self.values = self.data[['dx', 'dy']].to_numpy()
-        self.count = len(self.data)
-
-    def load_catalogue(self, filename: str, lmag: float=10):
-        self.catalogue = pd.read_csv(filename, sep='\t', header=1)
-        self.catalogue = self.catalogue[self.catalogue.vmag < lmag]
-        self.stars = SkyCoord(self.catalogue.ra * u.deg, self.catalogue.dec * u.deg)
-        self.update_altaz()
-
-    def sensor_to_sky(self, projection):
-        return np.stack(projection(self.points[:, 0], self.points[:, 1]), axis=0)
+    def update_sky(self):
+        self.sky = self.catalogue.to_altaz(self.location, self.time)
 
     def mean_error(self, projection) -> float:
-        return np.sqrt(np.sum(np.square(self.errors(projection))) / self.count)
+        return np.sqrt(np.sum(np.square(self.errors(projection))) / self.sensor_data.count)
 
     def max_error(self, projection) -> float:
         return np.max(self.errors(projection))
 
     def errors(self, projection) -> np.ndarray:
-        return self.find_nearest_value(self.sensor_to_sky(projection), self.catalogue_altaz)
+        return self.find_nearest_value(self.sensor_data.project(projection), self.sky)
 
     def compute_distance(self, stars, catalogue):
         stars = stars[stars[:, 0] < np.pi / 2]
@@ -69,7 +56,8 @@ class StarMatcher():
         catalogue = np.expand_dims(catalogue, 2)
         catalogue = np.radians(catalogue)
         stars[0, :, :] = np.pi / 2 - stars[0, :, :]
-        return distance(stars, catalogue)
+        print(stars.shape, catalogue.shape)
+        return spherical_distance(stars, catalogue)
 
     def find_nearest_value(self, stars, catalogue):
         dist = self.compute_distance(stars, catalogue)
@@ -83,8 +71,7 @@ class StarMatcher():
 
     def pair(self, projection):
         nearest = self.find_nearest_index(self.sensor_to_sky(projection), self.catalogue_altaz)
-        self.stars = np.take(self.stars, nearest)
-        self.update_altaz()
+        return np.take(self.stars, nearest)
 
     def func(self, x):
         return self.mean_error(self.projection_cls(*x))

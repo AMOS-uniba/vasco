@@ -25,7 +25,7 @@ class TestOpticalAxisShifter():
         assert oas.invert(*oas(0, 0)) == pytest.approx((0, 0), rel=1e-12)
 
 
-class TestTiltShifter():
+class DisabledTestTiltShifter():
     def test_inverse_1(self, ts):
         assert ts.invert(*ts(0.775, 1.234)) == pytest.approx((0.775, 1.234), rel=1e-12)
 
