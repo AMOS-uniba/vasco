@@ -187,6 +187,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def on_location_time_changed(self):
         self.update_matcher()
 
+        print(self.matcher.sensor_data.points.shape)
+        errors = self.matcher.errors(self.projection)
         self.plot_catalogue_stars()
         self.plot_errors(errors)
 
@@ -227,6 +229,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         data = dotmap.DotMap(yaml.safe_load(open(file, 'r')))
         self.set_location(data.Latitude, data.Longitude)
         self.set_time(datetime.datetime.strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f"))
+
         self.matcher.sensor_data.load(data)
         self.on_location_time_changed()
 

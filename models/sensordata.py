@@ -30,6 +30,8 @@ class SensorData():
     def load(self, data):
         w, h = tuple(map(int, data.Resolution.split('x')))
         self.rect = dotmap.DotMap(dict(left=0, top=0, right=w, bottom=h))
+        self.points = np.asarray([[star.x, star.y] for star in data.Refstars])
+        self.count = len(self.data)
 
     @property
     def x(self):

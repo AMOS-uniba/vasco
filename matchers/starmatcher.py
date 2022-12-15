@@ -50,10 +50,11 @@ class StarMatcher(Comparator):
         return self.find_nearest_value(self.sensor_data.project(projection), self.sky)
 
     def compute_distances(self, observed, catalogue):
-        observed = observed[observed[:, 0] < np.pi / 2]     # Cull stars that are below the horizon
+        #observed = observed[observed[:, 0] < np.pi / 2]     # Cull stars that are below the horizon
         observed = np.expand_dims(observed, 1)
         catalogue = np.expand_dims(catalogue, 2)
         catalogue = np.radians(catalogue)
+        print(observed.shape, catalogue.shape)
         observed[0, :, :] = np.pi / 2 - observed[0, :, :]   # Convert observed altitude to zenith distance
         return spherical_distance(observed, catalogue)
 
