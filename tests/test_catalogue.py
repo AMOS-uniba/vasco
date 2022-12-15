@@ -10,7 +10,7 @@ def hyg30():
 
 @pytest.fixture
 def sd():
-    return SensorData('data/')
+    return SensorData('data/20220531_055655.yaml')
 
 
 class TestCatalogue():
@@ -19,4 +19,5 @@ class TestCatalogue():
 
 
 class TestSensorData():
-    def test_dimensions()
+    def test_dimensions(self):
+        pass

@@ -1,3 +1,4 @@
+import dotmap
 import numpy as np
 import pandas as pd
 
@@ -8,9 +9,11 @@ from utilities import polar_to_cart
 
 
 class SensorData():
-    """ A set of stars in alt-az format """
+    """ A set of stars in xy format """
 
     def __init__(self, filename):
+        self.rect = dotmap.DotMap(left=-1, right=1, bottom=-1, top=1)
+
         df = pd.read_csv(filename, sep='\t', header=0)
         df['a_cat_rad'] = np.radians(df['acat'])
         df['z_cat_rad'] = df['zcat'] / 90
@@ -23,6 +26,10 @@ class SensorData():
         self.points = self.data[['x_com', 'y_com']].to_numpy()
         self.values = self.data[['dx', 'dy']].to_numpy()
         self.count = len(self.data)
+
+    def load(self, data):
+        w, h = tuple(map(int, data.Resolution.split('x')))
+        self.rect = dotmap.DotMap(dict(left=0, top=0, right=w, bottom=h))
 
     @property
     def x(self):

@@ -3,6 +3,7 @@
 import sys
 import yaml
 import dotmap
+import datetime
 import numpy as np
 
 from typing import Tuple, Type, Optional
@@ -23,25 +24,13 @@ from projections import Projection, EquidistantProjection, BorovickaProjection
 
 from main_ui import Ui_MainWindow
 
-from amos import AMOS
+from amos import AMOS, Station
 
 mpl.use('Qt5Agg')
 
 COUNT = 100
 
 
-class Fitter():
-    def __init__(self):
-        pass
-
-    def __call__(self, xy: Tuple[np.ndarray, np.ndarray], za: Tuple[np.ndarray, np.ndarray], cls: Type[Projection], *, params: Optional[dict]=None) -> Projection:
-        """
-            xy      a 2-tuple of x and y coordinates on the sensor
-            za      a 2-tuple of z and a coordinates in the sky catalogue
-            cls     a subclass of Projection that is used to transform xy onto za
-            Returns an instance of cls with parameters set to values that result in minimal deviation
-        """
-        return cls(params)
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -49,6 +38,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print("Init")
         super().__init__(parent)
         self.setupUi(self)
+
+        self.settings = dotmap.DotMap(dict(
+            resolution=dict(left=-1, bottom=-1, right=1, top=1)
+        ))
+
         self.connectSignalSlots()
 
         self.populateStations()
@@ -61,7 +55,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.skyScatter = self.skyAxis.scatter([0], [0], s=50, c='red', marker='x')
         self.starsScatter = self.skyAxis.scatter([0], [0], marker='o', c='white')
         self.errorScatter = self.errorAxis.scatter([0], [0], marker='x', c='cyan')
-        self.skyQuiver = self.skyAxis.quiver([0], [0], [0], [0])
+#        self.skyQuiver = self.skyAxis.quiver([0], [0], [0], [0])
 
         self.tab_sensor.layout().addWidget(self.sensorCanvas)
         self.tab_sky.layout().addWidget(self.skyCanvas)
@@ -75,15 +69,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.matcher.load_sensor('data/2016-11-23-084800.tsv')
         self.matcher.load_catalogue('catalogue/HYG30.tsv')
         self.matcher.catalogue.filter(5)
-        self.update_matcher()
 
-        self.sensorScatter.set_offsets(self.matcher.sensor_data.points)
-        self.sensorCanvas.draw()
-
-        self.compute_error()
-        self.plot_observed_stars()
+        self.on_parameters_changed()
+        self.plot_sensor_data()
         self.plot_catalogue_stars()
-        self.plot_errors()
 
     def populateStations(self):
         for name, station in AMOS.stations.items():
@@ -92,12 +81,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.cb_stations.currentIndexChanged.connect(self.selectStation)
 
     def selectStation(self, index):
-        station = list(AMOS.stations.values())[index]
-        self.dsb_lat.setValue(station.latitude)
-        self.dsb_lon.setValue(station.longitude)
+        if index == 0:
+            station = Station("custom", self.dsb_lat.value(), self.dsb_lon.value(), 0)
+        else:
+            station = list(AMOS.stations.values())[index - 1]
+            self.dsb_lat.setValue(station.latitude)
+            self.dsb_lon.setValue(station.longitude)
+
         self.update_matcher()
         self.plot_catalogue_stars()
-        self.compute_error()
+        self.plot_errors()
 
     def setupSensorPlot(self):
         plt.style.use('dark_background')
@@ -135,6 +128,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.errorAxis.set_ylim([0, None])
 
     def connectSignalSlots(self):
+        self.ac_load.triggered.connect(self.load_yaml_file)
+
         self.dsb_x0.valueChanged.connect(self.on_parameters_changed)
         self.dsb_y0.valueChanged.connect(self.on_parameters_changed)
         self.dsb_a0.valueChanged.connect(self.on_parameters_changed)
@@ -149,8 +144,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dsb_E.valueChanged.connect(self.on_parameters_changed)
 
         self.dt_time.dateTimeChanged.connect(self.update_time)
-        self.dt_time.dateTimeChanged.connect(self.update_matcher)
-        self.dt_time.dateTimeChanged.connect(self.plot_catalogue_stars)
+        self.dt_time.dateTimeChanged.connect(self.on_location_time_changed)
 
         self.dsb_lat.valueChanged.connect(self.update_location)
         self.dsb_lat.valueChanged.connect(self.update_matcher)
@@ -162,8 +156,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pb_export.clicked.connect(self.export_file)
         self.pb_import.clicked.connect(self.import_file)
 
+    def set_location(self, lat, lon):
+        self.dsb_lat.setValue(lat)
+        self.dsb_lon.setValue(lon)
+        self.update_location()
+        self.plot_catalogue_stars()
+
     def update_location(self):
         self.location = EarthLocation(self.dsb_lon.value() * u.deg, self.dsb_lat.value() * u.deg)
+
+    def set_time(self, time):
+        self.dt_time.setDateTime(time)
 
     def update_time(self):
         self.time = self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss')
@@ -176,9 +179,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def on_parameters_changed(self):
         self.update_projection()
-        self.compute_error()
-        self.plot_observed_stars()
-        self.plot_errors()
+
+        errors = self.matcher.errors(self.projection)
+        self.plot_observed_stars(errors)
+        self.plot_errors(errors)
+
+    def on_location_time_changed(self):
+        self.update_matcher()
+
+        self.plot_catalogue_stars()
+        self.plot_errors(errors)
 
     def export_file(self):
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export constants to file", ".", "YAML files (*.yaml)")
@@ -206,6 +216,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ), file)
         except FileNotFoundError as exc:
             print(f"Could not export constants: {exc}")
+
+    def load_yaml_file(self):
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data", "YAML files (*.yml *.yaml)")
+        if filename != '':
+            self.load_yaml(filename)
+        self.cb_stations.setCurrentIndex(0)
+
+    def load_yaml(self, file):
+        data = dotmap.DotMap(yaml.safe_load(open(file, 'r')))
+        self.set_location(data.Latitude, data.Longitude)
+        self.set_time(datetime.datetime.strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f"))
+        self.matcher.sensor_data.load(data)
+        self.on_location_time_changed()
 
     def import_file(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Import constants from file", ".", "YAML files (*.yml *.yaml)")
@@ -276,22 +299,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.w_input.setEnabled(True)
         self.w_input.repaint();
-        self.plot_errors()
+        self.on_parameters_changed()
 
-    def plot_observed_stars(self):
+    def plot_sensor_data(self):
+        self.sensorScatter.set_offsets(self.matcher.sensor_data.points)
+        self.sensorCanvas.draw()
+
+    def plot_observed_stars(self, errors):
         z, a = self.matcher.sensor_data.project(self.projection)
         self.skyScatter.set_offsets(np.stack((a, np.degrees(z)), axis=1))
+
+       # c = self.matcher.errors(self.projection)
+        cmap = mpl.cm.get_cmap('cool_r')
+        norm = mpl.colors.Normalize(vmin=0, vmax=0.05)
+        self.skyScatter.set_facecolors(cmap(norm(errors)))
         self.skyCanvas.draw()
 
     def plot_catalogue_stars(self):
         z, a = self.matcher.catalogue.to_altaz(self.location, self.time)
-        a = np.radians(a)
-        offsets = np.stack((a, 90 - z), axis=1)
+        offsets = np.stack((np.radians(a), 90 - z), axis=1)
+        sizes = np.exp(-0.666 * (self.matcher.catalogue.vmag - 5))
+
         self.starsScatter.set_offsets(offsets)
-
-        s = np.exp(-0.666 * (self.matcher.catalogue.vmag - 5))
-        self.starsScatter.set_sizes(s)
-
+        self.starsScatter.set_sizes(sizes)
         self.skyCanvas.draw()
 
     def plot_quiver(self):
@@ -307,21 +337,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.skyCanvas.draw()
 
-    def plot_errors(self):
+    def plot_errors(self, errors):
         alt = np.degrees(self.matcher.sensor_data.project(self.projection)[0, :])
-        err = np.degrees(self.matcher.errors(self.projection))
-        self.errorScatter.set_offsets(np.stack((alt, err), axis=1))
+        self.errorScatter.set_offsets(np.stack((alt, np.degrees(errors)), axis=1))
         self.errorAxis.set_ylim([0, 0.2])
         self.errorCanvas.draw()
 
-    def compute_error(self):
-        mean_error = self.matcher.mean_error(self.projection)
-        self.lb_avg_error.setText(f'Mean error: {np.degrees(mean_error):.6f}°')
-        max_error = self.matcher.max_error(self.projection)
-        self.lb_max_error.setText(f'Max error: {np.degrees(max_error):.6f}°')
+        avg_error = self.matcher.avg_error(errors)
+        max_error = self.matcher.max_error(errors)
+        self.lb_avg_error.setText(f'{np.degrees(avg_error):.6f}°')
+        self.lb_max_error.setText(f'{np.degrees(max_error):.6f}°')
 
     def pair(self):
-        self.matcher.pair(self.projection)
+        self.fitter = Fitter(self.matcher.pair(self.projection))
+
         self.plot_catalogue_stars()
         self.plot_errors()
         self.plot_quiver()

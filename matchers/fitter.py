@@ -1,6 +1,19 @@
 import numpy as np
-import scipy as sp
 
+from .base import Comparator
+
+#class Fitter():
+#    def __init__(self):
+#        pass
+#
+#    def __call__(self, xy: Tuple[np.ndarray, np.ndarray], za: Tuple[np.ndarray, np.ndarray], cls: Type[Projection], *, params: Optional[dict]=None) -> Projection:
+#        """
+#            xy      a 2-tuple of x and y coordinates on the sensor
+#            za      a 2-tuple of z and a coordinates in the sky catalogue
+#            cls     a subclass of Projection that is used to transform xy onto za
+#            Returns an instance of cls with parameters set to values that result in minimal deviation
+#        """
+#        return cls(params)
 
 class Fitter():
     def __init__(self, sensor, catalogue):
@@ -15,7 +28,3 @@ class Fitter():
     def func(self, x, *args):
         projection = BorovickaProjection(*x)
         return self.calculate_error(BorovickaProjection, *args)
-
-    def minimize(self, location, time, x0=(0, 0, 0, 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0)):
-        result = sp.optimize.minimize(self.func, x0, args=(location, time), method='Nelder-Mead')
-        return result
