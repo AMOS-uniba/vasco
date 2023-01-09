@@ -104,16 +104,19 @@
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
                <property name="decimals">
-                <number>6</number>
+                <number>3</number>
                </property>
                <property name="minimum">
-                <double>-1.000000000000000</double>
+                <double>0.000000000000000</double>
                </property>
                <property name="maximum">
-                <double>1.000000000000000</double>
+                <double>1600.000000000000000</double>
                </property>
                <property name="singleStep">
-                <double>0.010000000000000</double>
+                <double>1.000000000000000</double>
+               </property>
+               <property name="value">
+                <double>800.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -137,16 +140,19 @@
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
                <property name="decimals">
-                <number>6</number>
+                <number>3</number>
                </property>
                <property name="minimum">
-                <double>-1.000000000000000</double>
+                <double>0.000000000000000</double>
                </property>
                <property name="maximum">
-                <double>1.000000000000000</double>
+                <double>1200.000000000000000</double>
                </property>
                <property name="singleStep">
-                <double>0.010000000000000</double>
+                <double>1.000000000000000</double>
+               </property>
+               <property name="value">
+                <double>600.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -281,16 +287,16 @@
                 <number>6</number>
                </property>
                <property name="minimum">
-                <double>0.100000000000000</double>
+                <double>0.000000000000000</double>
                </property>
                <property name="maximum">
-                <double>5.000000000000000</double>
+                <double>10.000000000000000</double>
                </property>
                <property name="singleStep">
-                <double>0.010000000000000</double>
+                <double>0.000100000000000</double>
                </property>
                <property name="value">
-                <double>1.570000000000000</double>
+                <double>0.002000000000000</double>
                </property>
               </widget>
              </item>
@@ -561,7 +567,7 @@
              <double>1.000000000000000</double>
             </property>
             <property name="value">
-             <double>-22.953410000000002</double>
+             <double>48.372000000000000</double>
             </property>
            </widget>
           </item>
@@ -593,7 +599,7 @@
              <double>1.000000000000000</double>
             </property>
             <property name="value">
-             <double>-68.179339999999996</double>
+             <double>17.327000000000002</double>
             </property>
            </widget>
           </item>
@@ -648,63 +654,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="gb_identify">
-         <property name="title">
-          <string>Identify stars</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_6">
-          <item row="3" column="0" colspan="2">
-           <widget class="QPushButton" name="pb_pair">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Create pairing</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QSpinBox" name="sb_maxiter">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="suffix">
-             <string> iterations</string>
-            </property>
-            <property name="minimum">
-             <number>10</number>
-            </property>
-            <property name="maximum">
-             <number>200</number>
-            </property>
-            <property name="singleStep">
-             <number>10</number>
-            </property>
-            <property name="value">
-             <number>100</number>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QPushButton" name="pb_optimize">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Optimize</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -726,7 +675,7 @@
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab_sensor">
        <attribute name="title">
@@ -740,7 +689,7 @@
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QWidget" name="widget" native="true">
+         <widget class="QWidget" name="w_skyplot" native="true">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -748,6 +697,19 @@
            </sizepolicy>
           </property>
           <layout class="QGridLayout" name="gridLayout_7">
+           <item row="3" column="0" colspan="2">
+            <spacer name="verticalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
            <item row="0" column="0">
             <widget class="QLabel" name="lx_avg_error">
              <property name="sizePolicy">
@@ -791,6 +753,63 @@
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
+            </widget>
+           </item>
+           <item row="2" column="0" colspan="2">
+            <widget class="QGroupBox" name="gb_identify">
+             <property name="title">
+              <string>Identify stars</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_6">
+              <item row="2" column="1">
+               <widget class="QSpinBox" name="sb_maxiter">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="suffix">
+                 <string> iterations</string>
+                </property>
+                <property name="minimum">
+                 <number>10</number>
+                </property>
+                <property name="maximum">
+                 <number>200</number>
+                </property>
+                <property name="singleStep">
+                 <number>10</number>
+                </property>
+                <property name="value">
+                 <number>100</number>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QPushButton" name="pb_optimize">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Optimize</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0" colspan="2">
+               <widget class="QPushButton" name="pb_pair">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Create pairing</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </widget>
            </item>
            <item row="1" column="0">
@@ -838,8 +857,210 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="0" colspan="2">
-            <spacer name="verticalSpacer_2">
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_errors">
+       <attribute name="title">
+        <string>&amp;Errors</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QWidget" name="widget" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <item>
+            <widget class="QGroupBox" name="gb_cull">
+             <property name="title">
+              <string>Cull</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_8">
+              <item row="4" column="0">
+               <widget class="QLabel" name="lx_error_limit">
+                <property name="text">
+                 <string>Error limit</string>
+                </property>
+               </widget>
+              </item>
+              <item row="7" column="0" colspan="2">
+               <widget class="QPushButton" name="pb_cull_unidentified">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Cull unidentified objects</string>
+                </property>
+               </widget>
+              </item>
+              <item row="9" column="0" colspan="2">
+               <widget class="QPushButton" name="pb_cull_distant">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Cull distant stars</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QLabel" name="lb_outside_limit">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>100</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>14</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>0</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="lx_total_stars">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Total stars</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1">
+               <widget class="QDoubleSpinBox" name="dsb_error_limit">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="suffix">
+                 <string>°</string>
+                </property>
+                <property name="decimals">
+                 <number>3</number>
+                </property>
+                <property name="maximum">
+                 <double>1.000000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>0.010000000000000</double>
+                </property>
+                <property name="value">
+                 <double>0.500000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="lx_outside_limit">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Outside limit</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QLabel" name="lb_total_stars">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>100</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>14</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>0</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="8" column="0">
+               <widget class="QLabel" name="lx_distance_limit">
+                <property name="text">
+                 <string>Distance limit</string>
+                </property>
+               </widget>
+              </item>
+              <item row="8" column="1">
+               <widget class="QDoubleSpinBox" name="dsb_distance_limit">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="suffix">
+                 <string>°</string>
+                </property>
+                <property name="decimals">
+                 <number>3</number>
+                </property>
+                <property name="maximum">
+                 <double>1.000000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>0.010000000000000</double>
+                </property>
+                <property name="value">
+                 <double>0.500000000000000</double>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_3">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
              </property>
@@ -860,12 +1081,6 @@
        <attribute name="title">
         <string>&amp;Field</string>
        </attribute>
-      </widget>
-      <widget class="QWidget" name="tab_errors">
-       <attribute name="title">
-        <string>&amp;Errors</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_3"/>
       </widget>
      </widget>
     </item>
