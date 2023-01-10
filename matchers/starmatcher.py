@@ -39,11 +39,14 @@ class StarMatcher(Comparator):
             self.update_sky()
 
     def update_sky(self):
-        self.sky = self.catalogue.to_altaz(self.location, self.time)
-        print(f"Updating sky: {self.sky.shape} valid")
+        self.sky = self.catalogue.to_altaz(self.location, self.time, masked=True)
+        print(f"Updating sky: {self.sky.shape} valid stars")
 
     def avg_error(self, errors) -> float:
-        return np.sqrt(np.sum(np.square(errors)) / self.sensor_data.count)
+        if errors.size == 0:
+            return np.nan
+        else:
+            return np.sqrt(np.sum(np.square(errors)) / self.sensor_data.count)
 
     def max_error(self, errors) -> float:
         if errors.size == 0:
@@ -51,8 +54,14 @@ class StarMatcher(Comparator):
         else:
             return np.max(errors)
 
-    def errors(self, projection, *, for_stars=False) -> np.ndarray:
-        return self.find_nearest_value(self.sensor_data.project(projection), self.sky, for_stars=for_stars)
+    def errors_dots(self, projection, masked) -> np.ndarray:
+        return self.find_nearest_value(self.sensor_data.project(projection, masked=masked), self.sky, axis=0)
+
+    def errors_stars(self, projection, masked) -> np.ndarray:
+        return self.find_nearest_value(self.sensor_data.project(projection, masked=masked), self.catalogue.to_altaz(self.location, self.time, masked=masked), axis=1)
+
+    def vector_errors(self, projection, *, for_stars=False) -> np.ndarray:
+        pass
 
     def compute_distances(self, observed, catalogue):
         """
@@ -71,18 +80,31 @@ class StarMatcher(Comparator):
         observed[0, :, :] = np.pi / 2 - observed[0, :, :]   # Convert observed altitude to zenith distance
         return spherical_distance(observed, catalogue)
 
-    def find_nearest_value(self, observed, catalogue, *, for_stars=False):
-        dist = self.compute_distances(observed, catalogue)
-        return np.min(dist, axis=1 if for_stars else 0)
+    def compute_vector_errors(self, observed, catalogue):
+        observed = np.expand_dims(observed, 1)
+        catalogue = np.expand_dims(catalogue, 2)
+        catalogue = np.radians(catalogue)
+        observed[0, :, :] = np.pi / 2 - observed[0, :, :]   # Convert observed altitude to zenith distance
 
-    def find_nearest_index(self, observed, catalogue):
+    def find_nearest_value(self, observed, catalogue, *, axis):
+        """
+        Find nearest dot to star or vice versa
+
+        axis: int
+            0 for nearest star to every dot
+            1 for nearest dot to every star
+        """
         dist = self.compute_distances(observed, catalogue)
-        return np.argmin(dist, axis=0)
+        return np.min(dist, axis=axis)
+
+    def find_nearest_index(self, observed, catalogue, *, axis):
+        dist = self.compute_distances(observed, catalogue)
+        return np.argmin(dist, axis=axis)
 
     def pair(self, projection):
-        nearest = self.find_nearest_index(self.sensor_data.project(projection), self.sky)
-        return np.take(self.sensor_data, nearest)
+        nearest = self.find_nearest_index(self.sensor_data.project(projection, False), self.sky, axis=1)
+        return np.take(self.sensor_data.points, nearest, axis=0)
 
     def func(self, x):
-        return self.avg_error(self.errors(self.projection_cls(*x)))
+        return self.avg_error(self.errors_dots(self.projection_cls(*x), True))
 

@@ -20,7 +20,7 @@ from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
-from matchers import StarMatcher
+from matchers import StarMatcher, Fitter
 from projections import Projection, EquidistantProjection, BorovickaProjection
 
 from main_ui import Ui_MainWindow
@@ -189,7 +189,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def onParametersChanged(self):
         self.updateProjection()
 
-        errors = self.matcher.errors(self.projection)
+        errors = self.matcher.errors_dots(self.projection, True)
         self.plotObservedStars(errors)
         self.plotErrors(errors)
 
@@ -197,12 +197,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.updateMatcher()
         self.plotCatalogueStars()
 
-        errors = self.matcher.errors(self.projection)
+        errors = self.matcher.errors_dots(self.projection, True)
         self.plotCatalogueStars()
         self.plotErrors(errors)
 
     def onErrorLimitChanged(self):
-        errors = self.matcher.errors(self.projection)
+        errors = self.matcher.errors_dots(self.projection, True)
         self.plotErrors(errors)
 
     def exportFile(self):
@@ -316,16 +316,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.onParametersChanged()
 
     def cullSensor(self):
-        errors = self.matcher.errors(self.projection)
+        errors = self.matcher.errors_dots(self.projection, False)
         self.matcher.sensor_data.use = (errors < np.radians(self.dsb_error_limit.value()))
         self.matcher.update_sky()
-        print(f"Culling the observed stars to {self.dsb_error_limit.value()}°: {self.matcher.sky.shape} stars are valid")
+        print(f"Culled the observed stars to {self.dsb_error_limit.value()}°: {self.matcher.sky.shape} stars are valid")
         self.onParametersChanged()
 
     def cullCatalogue(self):
-        errors = self.matcher.errors(self.projection, for_stars=True)
+        errors = self.matcher.errors_stars(self.projection, False)
         self.matcher.catalogue.stars.use = (errors < np.radians(self.dsb_distance_limit.value()))
-        print(f"Culling the catalogue to {self.dsb_distance_limit.value()}°: {self.matcher.catalogue.valid_stars.shape} stars used")
+        print(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: {self.matcher.catalogue.valid_stars.shape} stars used")
         self.matcher.update_sky()
         self.plotCatalogueStars()
         self.onParametersChanged()
@@ -339,20 +339,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sensorCanvas.draw()
 
     def plotObservedStars(self, errors):
-        print(f"Plotting projected stars for {self.projection}")
-        z, a = self.matcher.sensor_data.project(self.projection)
+        #print(f"Plotting projected stars for {self.projection}")
+        z, a = self.matcher.sensor_data.project(self.projection, True)
         self.skyScatter.set_offsets(np.stack((a, np.degrees(z)), axis=1))
 
-       # c = self.matcher.errors(self.projection)
         cmap = mpl.cm.get_cmap('autumn_r')
         norm = mpl.colors.Normalize(vmin=0, vmax=np.radians(1))
         self.skyScatter.set_facecolors(cmap(norm(errors)))
-        self.skyScatter.set_sizes(0.05 * self.matcher.sensor_data.m)
+        self.skyScatter.set_sizes(10 + 0.05 * self.matcher.sensor_data.m)
         self.skyCanvas.draw()
 
     def plotCatalogueStars(self):
         print(f"Plotting catalogue stars for {self.location} at {self.time}")
-        z, a = self.matcher.catalogue.to_altaz(self.location, self.time)
+        z, a = self.matcher.catalogue.to_altaz(self.location, self.time, True)
         offsets = np.stack((np.radians(a), 90 - z), axis=1)
         sizes = 0.2 * np.exp(-0.666 * (self.matcher.catalogue.vmag - 5))
 
@@ -374,7 +373,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.skyCanvas.draw()
 
     def plotErrors(self, errors):
-        pos = self.matcher.sensor_data.project(self.projection)
+        pos = self.matcher.sensor_data.project(self.projection, True)
         alt = np.degrees(pos[0, :])
         az = np.degrees(pos[1, :])
 
@@ -390,15 +389,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.errorAxis.set_ylim([0, np.degrees(max_error) * 1.05])
             self.errorScatter.set_offsets(np.stack((alt, np.degrees(errors)), axis=1))
 
-            cmap = mpl.cm.get_cmap('hsv')
-            norm = mpl.colors.Normalize(vmin=0, vmax=360)
-            self.errorScatter.set_facecolors(cmap(norm(az)))
+            cmap = mpl.cm.get_cmap('autumn_r')
+            norm = mpl.colors.Normalize(vmin=0, vmax=np.radians(0.5))
+            self.errorScatter.set_facecolors(cmap(norm(errors)))
             self.errorScatter.set_sizes(0.05 * self.matcher.sensor_data.m)
         self.errorCanvas.draw()
 
     def pair(self):
         print(f"Trying to pair stars")
-        self.fitter = Fitter(self.matcher.pair(self.projection))
+        self.fitter = Fitter(self.matcher.pair(self.projection), self.matcher.catalogue.valid_stars)
 
         self.plotCatalogueStars()
         self.plotErrors()

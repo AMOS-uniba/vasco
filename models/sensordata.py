@@ -49,6 +49,9 @@ class SensorData():
     def yv(self):
         return self.points[self.use][:, 1]
 
-    def project(self, projection):
-        return np.stack(projection(self.xv, self.yv), axis=0)
+    def project(self, projection, masked):
+        if masked:
+            return np.stack(projection(self.xv, self.yv), axis=0)
+        else:
+            return np.stack(projection(self.x, self.y), axis=0)
 

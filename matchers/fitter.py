@@ -15,7 +15,7 @@ from .base import Comparator
 #        """
 #        return cls(params)
 
-class Fitter():
+class Fitter(Comparator):
     def __init__(self, sensor, catalogue):
         self.xy = sensor
         self.za = catalogue

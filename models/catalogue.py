@@ -28,9 +28,10 @@ class Catalogue():
     def valid_stars(self):
         return self.stars[self.stars['use']]
 
-    def to_altaz(self, location, time):
+    def to_altaz(self, location, time, masked):
         altaz = AltAz(location=location, obstime=time, pressure=0, obswl=500 * u.nm)
-        stars = self.skycoord[self.stars['use']].transform_to(altaz)
+        source = self.skycoord[self.stars['use']] if masked else self.skycoord
+        stars = source.transform_to(altaz)
         return np.stack((stars.alt.degree, stars.az.degree))
 
     @property

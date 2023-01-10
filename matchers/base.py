@@ -28,8 +28,3 @@ class Comparator(metaclass=ABCMeta):
             options=dict(maxiter=maxiter, disp=True),
         )
         return result
-
-    @abstractmethod
-    def find_nearest_value(self, observed, catalogue):
-        pass
-
