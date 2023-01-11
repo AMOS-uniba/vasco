@@ -18,33 +18,46 @@ class Catalogue():
         self.name = filename
         self.stars = pd.read_csv(filename, sep='\t', header=1)
         self.skycoord = SkyCoord(self.stars.ra * u.deg, self.stars.dec * u.deg)
-        self.stars['use'] = True
+        self.reset_mask()
 
-    def filter(self, vmag):
+    def filter_by_vmag(self, vmag):
         self.stars[self.stars.vmag <= vmag]['use'] = False
         return self
 
-    @property
-    def valid_stars(self):
-        return self.stars[self.stars['use']]
-
-    def to_altaz(self, location, time, masked):
-        altaz = AltAz(location=location, obstime=time, pressure=0, obswl=500 * u.nm)
-        source = self.skycoord[self.stars['use']] if masked else self.skycoord
-        stars = source.transform_to(altaz)
-        return np.stack((stars.alt.degree, stars.az.degree))
-
-    @property
-    def vmag(self):
-        return self.stars.vmag
+    def reset_mask(self):
+        self.stars['use'] = True
+        print(f"Catalogue mask reset: {self.count_valid} / {self.count} stars used")
 
     @property
     def count(self):
         return len(self.stars)
 
     @property
+    def count_valid(self):
+        return np.count_nonzero(self.stars.use)
+
+    @property
+    def vmag(self):
+        return self.stars.vmag
+
+    @property
     def valid(self):
         return self.stars[self.stars['use']]
+
+    def to_altaz(self, location, time, masked):
+        altaz = AltAz(location=location, obstime=time, pressure=0, obswl=500 * u.nm)
+        source = self.skycoord[self.stars['use']] if masked else self.skycoord
+        return source.transform_to(altaz)
+
+    def to_altaz_deg(self, location, time, masked):
+        stars = self.to_altaz(location, time, masked)
+        return np.stack((stars.alt.degree, stars.az.degree), axis=1)
+
+    def to_altaz_chart(self, location, time, masked):
+        """ Same but returns azimuth in radians (t axis) and altitude in degrees (r axis) for chart display """
+        stars = self.to_altaz(location, time, masked)
+        return np.stack((stars.az.radian, 90 - stars.alt.degree), axis=1)
+
 
     def __str__(self):
         return f'<Catalogue "{self.name}" with {self.count} stars>'

@@ -69,7 +69,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.loadYAML('data/20220531_055655.yaml')
         self.matcher.load_catalogue('catalogue/HYG30.tsv')
         self.importConstants('out.yaml')
-        self.matcher.catalogue.filter(7)
+        self.matcher.catalogue.filter_by_vmag(6)
 
         self.onParametersChanged()
         self.plotSensorData()
@@ -128,6 +128,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.errorAxis.set_xlim([0, 90])
         self.errorAxis.set_ylim([0, None])
+        self.errorAxis.set_xlabel('zenith distance')
+        self.errorAxis.xaxis.set_major_formatter(lambda x, pos: f'{x:.0f}°')
+        self.errorAxis.set_ylabel('error')
+        self.errorAxis.yaxis.set_major_formatter(lambda x, pos: f'{x:.2f}°')
+        self.errorAxis.grid(color='white', alpha=0.2)
 
     def connectSignalSlots(self):
         self.ac_load.triggered.connect(self.loadYAMLFile)
@@ -157,6 +162,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.pb_cull_unidentified.clicked.connect(self.cullSensor)
         self.pb_cull_distant.clicked.connect(self.cullCatalogue)
+        self.pb_reset.clicked.connect(self.resetValid)
         self.dsb_error_limit.valueChanged.connect(self.onErrorLimitChanged)
 
     def onTimeChanged(self):
@@ -203,6 +209,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def onErrorLimitChanged(self):
         errors = self.matcher.errors_dots(self.projection, True)
+        self.plotObservedStars(errors)
         self.plotErrors(errors)
 
     def exportFile(self):
@@ -319,16 +326,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         errors = self.matcher.errors_dots(self.projection, False)
         self.matcher.sensor_data.use = (errors < np.radians(self.dsb_error_limit.value()))
         self.matcher.update_sky()
-        print(f"Culled the observed stars to {self.dsb_error_limit.value()}°: {self.matcher.sky.shape} stars are valid")
+        print(f"Culled the dots to {self.dsb_error_limit.value()}°: {self.matcher.sensor_data.count_valid} are valid")
         self.onParametersChanged()
 
     def cullCatalogue(self):
         errors = self.matcher.errors_stars(self.projection, False)
         self.matcher.catalogue.stars.use = (errors < np.radians(self.dsb_distance_limit.value()))
-        print(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: {self.matcher.catalogue.valid_stars.shape} stars used")
+        print(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: {self.matcher.catalogue.count_valid} stars used")
         self.matcher.update_sky()
         self.plotCatalogueStars()
         self.onParametersChanged()
+
+    def resetValid(self):
+        self.matcher.sensor_data.reset_mask()
+        self.matcher.catalogue.reset_mask()
+        self.showCounts()
+
+        self.plotCatalogueStars()
+        self.onParametersChanged()
+
+    def showCounts(self):
+        self.lb_catalogue_all.setText(f'{self.matcher.catalogue.count}')
+        self.lb_catalogue_near.setText(f'{self.matcher.catalogue.count_valid}')
+        self.lb_objects_all.setText(f'{self.matcher.sensor_data.count}')
+        self.lb_objects_near.setText(f'{self.matcher.sensor_data.count_valid}')
 
     def plotSensorData(self):
         print("Plotting sensor data")
@@ -340,19 +361,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def plotObservedStars(self, errors):
         #print(f"Plotting projected stars for {self.projection}")
-        z, a = self.matcher.sensor_data.project(self.projection, True)
+        z, a = self.matcher.sensor_data.project(self.projection, True).T
         self.skyScatter.set_offsets(np.stack((a, np.degrees(z)), axis=1))
 
         cmap = mpl.cm.get_cmap('autumn_r')
-        norm = mpl.colors.Normalize(vmin=0, vmax=np.radians(1))
+        norm = mpl.colors.Normalize(vmin=0, vmax=np.radians(self.dsb_error_limit.value()))
         self.skyScatter.set_facecolors(cmap(norm(errors)))
         self.skyScatter.set_sizes(10 + 0.05 * self.matcher.sensor_data.m)
         self.skyCanvas.draw()
 
     def plotCatalogueStars(self):
-        print(f"Plotting catalogue stars for {self.location} at {self.time}")
-        z, a = self.matcher.catalogue.to_altaz(self.location, self.time, True)
-        offsets = np.stack((np.radians(a), 90 - z), axis=1)
+        loc = self.location.to_geodetic()
+        print(f"Plotting catalogue stars for {loc.lat:.6f}, {loc.lon:.6f} at {self.time}")
+        offsets = self.matcher.catalogue.to_altaz_chart(self.location, self.time, True)
         sizes = 0.2 * np.exp(-0.666 * (self.matcher.catalogue.vmag - 5))
 
         self.starsScatter.set_offsets(offsets)
@@ -374,8 +395,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def plotErrors(self, errors):
         pos = self.matcher.sensor_data.project(self.projection, True)
-        alt = np.degrees(pos[0, :])
-        az = np.degrees(pos[1, :])
+        alt = np.degrees(pos[:, 0])
+        az = np.degrees(pos[:, 1])
 
         avg_error = self.matcher.avg_error(errors)
         max_error = self.matcher.max_error(errors)
@@ -390,17 +411,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.errorScatter.set_offsets(np.stack((alt, np.degrees(errors)), axis=1))
 
             cmap = mpl.cm.get_cmap('autumn_r')
-            norm = mpl.colors.Normalize(vmin=0, vmax=np.radians(0.5))
+            norm = mpl.colors.Normalize(vmin=0, vmax=np.radians(self.dsb_error_limit.value()))
             self.errorScatter.set_facecolors(cmap(norm(errors)))
             self.errorScatter.set_sizes(0.05 * self.matcher.sensor_data.m)
         self.errorCanvas.draw()
 
+        self.showCounts()
+
     def pair(self):
-        print(f"Trying to pair stars")
-        self.fitter = Fitter(self.matcher.pair(self.projection), self.matcher.catalogue.valid_stars)
+        dots, stars = self.matcher.pair(self.projection)
+        self.fitter = Fitter(dots, stars)
 
         self.plotCatalogueStars()
-        self.plotErrors()
+
+        errors = self.matcher.errors_dots(self.projection, True)
+        self.plotErrors(errors)
         self.plotQuiver()
 
 

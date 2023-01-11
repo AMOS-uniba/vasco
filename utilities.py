@@ -27,7 +27,7 @@ def spherical(x: AltAz, y: AltAz) -> u.Quantity:
 def spherical_distance(x, y):
     return 2 * np.sin(
         np.sqrt(
-            np.sin(0.5 * (y[0, :, :] - x[0, :, :]))**2 +
-            np.cos(x[0, :, :]) * np.cos(y[0, :, :]) * np.sin(0.5 * (y[1, :, :] - x[1, :, :]))**2.0
+            np.sin(0.5 * (y[:, :, 0] - x[:, :, 0]))**2 +
+            np.cos(x[:, :, 0]) * np.cos(y[:, :, 0]) * np.sin(0.5 * (y[:, :, 1] - x[:, :, 1]))**2.0
         )
     )

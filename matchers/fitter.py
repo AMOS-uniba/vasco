@@ -19,6 +19,7 @@ class Fitter(Comparator):
     def __init__(self, sensor, catalogue):
         self.xy = sensor
         self.za = catalogue
+        print(f"Fitter created with {sensor} dots and {catalogue} stars")
 
     def compute_distances(self, stars, catalogue):
         catalogue = np.radians(catalogue)

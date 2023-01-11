@@ -15,15 +15,25 @@ class SensorData():
         self.rect = dotmap.DotMap(left=-1, right=1, bottom=-1, top=1)
         self.points = np.empty(shape=(0, 2))
         self.intensities = np.empty(shape=(0,))
-        self.count = 0
 
     def load(self, data):
         w, h = tuple(map(int, data.Resolution.split('x')))
         self.rect = dotmap.DotMap(dict(left=0, top=0, right=w, bottom=h))
         self.points = np.asarray([[star.x, star.y] for star in data.Refstars])
         self.intensities = np.asarray([star.intensity for star in data.Refstars])
+        self.reset_mask()
+
+    def reset_mask(self):
         self.use = np.ones_like(self.points[:, 0], dtype=bool)
-        self.count = len(self.points)
+        print(f"Sensor data mask reset: {self.count_valid} / {self.count} stars used")
+
+    @property
+    def count(self):
+        return self.points.shape[0]
+
+    @property
+    def count_valid(self):
+        return np.count_nonzero(self.use)
 
     @property
     def x(self):
@@ -51,7 +61,7 @@ class SensorData():
 
     def project(self, projection, masked):
         if masked:
-            return np.stack(projection(self.xv, self.yv), axis=0)
+            return np.stack(projection(self.xv, self.yv), axis=1)
         else:
-            return np.stack(projection(self.x, self.y), axis=0)
+            return np.stack(projection(self.x, self.y), axis=1)
 
