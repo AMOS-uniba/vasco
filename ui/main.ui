@@ -674,11 +674,14 @@
     </item>
     <item>
      <widget class="QTabWidget" name="tw_charts">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="tabPosition">
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tab_sensor">
        <attribute name="title">
@@ -696,11 +699,20 @@
        <attribute name="title">
         <string>&amp;Errors</string>
        </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_4"/>
+      </widget>
+      <widget class="QWidget" name="tab_paired">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <attribute name="title">
+        <string>&amp;Paired global</string>
+       </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_3"/>
       </widget>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="tab_paired_errors">
        <attribute name="title">
-        <string>&amp;Field</string>
+        <string>Paired errors</string>
        </attribute>
       </widget>
      </widget>
@@ -1190,7 +1202,7 @@
              <number>10</number>
             </property>
             <property name="value">
-             <number>100</number>
+             <number>250</number>
             </property>
            </widget>
           </item>

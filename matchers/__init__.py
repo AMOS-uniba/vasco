@@ -1,2 +1,2 @@
-from .starmatcher import StarMatcher
-from .fitter import Fitter
+from .matchmaker import Matchmaker
+from .counselor import Counselor

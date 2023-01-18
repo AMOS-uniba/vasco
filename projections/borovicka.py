@@ -43,6 +43,7 @@ class BorovickaProjection(Projection):
         return z, a
 
     def invert(self, z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        raise NotImplementedError("Inversion is not yet supported")
         a -= self.E
 
     def __str__(self):

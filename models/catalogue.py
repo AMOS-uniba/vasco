@@ -6,19 +6,24 @@ from astropy.coordinates import EarthLocation, SkyCoord, AltAz
 
 
 class Catalogue():
-    def __init__(self, filename=None):
-        self.stars = None
+    def __init__(self, stars=None):
+        self.stars = pd.DataFrame()
         self.skycoords = None
         self.name = None
 
-        if filename is not None:
-            self.load(filename)
+        if stars is not None:
+            self.stars = stars
+            self.update_coord()
+        self.reset_mask()
 
     def load(self, filename):
         self.name = filename
         self.stars = pd.read_csv(filename, sep='\t', header=1)
-        self.skycoord = SkyCoord(self.stars.ra * u.deg, self.stars.dec * u.deg)
+        self.update_coord()
         self.reset_mask()
+
+    def update_coord(self):
+        self.skycoord = SkyCoord(self.stars.ra * u.deg, self.stars.dec * u.deg)
 
     def filter_by_vmag(self, vmag):
         self.stars[self.stars.vmag <= vmag]['use'] = False
@@ -37,15 +42,19 @@ class Catalogue():
         return np.count_nonzero(self.stars.use)
 
     @property
+    def mask(self):
+        return self.stars['use']
+
+    @property
     def vmag(self):
         return self.stars.vmag
 
     @property
     def valid(self):
-        return self.stars[self.stars['use']]
+        return self.stars[self.mask]
 
     def to_altaz(self, location, time, masked):
-        altaz = AltAz(location=location, obstime=time, pressure=0, obswl=500 * u.nm)
+        altaz = AltAz(location=location, obstime=time, pressure=0, obswl=550 * u.nm)
         source = self.skycoord[self.stars['use']] if masked else self.skycoord
         return source.transform_to(altaz)
 
@@ -58,6 +67,5 @@ class Catalogue():
         stars = self.to_altaz(location, time, masked)
         return np.stack((stars.az.radian, 90 - stars.alt.degree), axis=1)
 
-
     def __str__(self):
-        return f'<Catalogue "{self.name}" with {self.count} stars>'
+        return f'<Catalogue "{self.name}" with {self.count_valid} of {self.count} stars>'
