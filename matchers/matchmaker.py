@@ -43,6 +43,12 @@ class Matchmaker(Matcher):
     def count(self):
         return self.sensor_data.count
 
+    def cull_catalogue(self, mask):
+        self.catalogue.set_mask(mask)
+
+    def cull_sensor_data(self, mask):
+        self.sensor_data.set_mask(mask)
+
     def errors(self, projection, masked) -> np.ndarray:
         return self.find_nearest_value(
             self.sensor_data.project(projection, masked=masked),
@@ -53,7 +59,7 @@ class Matchmaker(Matcher):
     def errors_inverse(self, projection, masked) -> np.ndarray:
         return self.find_nearest_value(
             self.sensor_data.project(projection, masked=masked),
-            self.catalogue.to_altaz_deg(self.location, self.time, masked=False),
+            self.sky,
             axis=0
         )
 
@@ -118,4 +124,4 @@ class Matchmaker(Matcher):
         return Counselor(self.location, self.time, self.projection_cls, catalogue, sensor_data)
 
     def func(self, x):
-        return self.avg_error(self.errors_dots(self.projection_cls(*x), True))
+        return self.avg_error(self.errors(self.projection_cls(*x), True))

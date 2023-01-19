@@ -39,9 +39,18 @@ class SensorData():
         self._count = self.positions.shape[0]
         self.reset_mask()
 
+    def set_mask(self, mask):
+        self.use = mask
+
     def reset_mask(self):
         self.use = np.ones_like(self.x, dtype=bool)
         print(f"Sensor data mask reset: {self.count_valid} / {self.count} stars used")
+
+    def cull(self):
+        self.positions = self.positions[self.use]
+        self.intensities = self.intensities[self.use]
+        self._count = 0
+        self.reset_mask()
 
     @property
     def count(self):

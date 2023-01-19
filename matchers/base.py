@@ -16,6 +16,18 @@ class Matcher(metaclass=ABCMeta):
     def count(self):
         pass
 
+    @abstractmethod
+    def cull_catalogue(self, mask):
+        pass
+
+    @abstractmethod
+    def cull_sensor_data(self, mask):
+        pass
+
+    def unmask(self):
+        self.catalogue.unmask()
+        self.sensor_data.unmask()
+
     def update(self, location, time):
         self.location = location
         self.time = time
@@ -28,7 +40,7 @@ class Matcher(metaclass=ABCMeta):
         if errors.size == 0:
             return np.nan
         else:
-            return np.sqrt(np.sum(np.square(errors)) / self.count)
+            return np.sqrt(np.sum(np.square(errors)) / errors.size)
 
     def max_error(self, errors) -> float:
         if errors.size == 0:

@@ -344,22 +344,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def cullSensor(self):
         errors = self.matcher.errors(self.projection, False)
-        self.matcher.sensor_data.use = (errors < np.radians(self.dsb_error_limit.value()))
+        self.matcher.cull_sensor_data(errors < np.radians(self.dsb_error_limit.value()))
         self.matcher.update_sky()
         print(f"Culled the dots to {self.dsb_error_limit.value()}°: {self.matcher.sensor_data.count_valid} are valid")
         self.onParametersChanged()
 
     def cullCatalogue(self):
         errors = self.matcher.errors_inverse(self.projection, False)
-        self.matcher.catalogue.stars.use = (errors < np.radians(self.dsb_distance_limit.value()))
+        self.matcher.cull_catalogue(errors < np.radians(self.dsb_distance_limit.value()))
         print(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: {self.matcher.catalogue.count_valid} stars used")
         self.matcher.update_sky()
         self.plotCatalogueStars()
         self.onParametersChanged()
 
     def resetValid(self):
-        self.matcher.sensor_data.reset_mask()
-        self.matcher.catalogue.reset_mask()
+        self.matcher.unmask()
         self.showCounts()
 
         self.plotCatalogueStars()

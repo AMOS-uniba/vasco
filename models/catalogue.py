@@ -29,9 +29,16 @@ class Catalogue():
         self.stars[self.stars.vmag <= vmag]['use'] = False
         return self
 
+    def set_mask(self, condition):
+        self.stars[condition]['use'] = False
+
     def reset_mask(self):
         self.stars['use'] = True
         print(f"Catalogue mask reset: {self.count_valid} / {self.count} stars used")
+
+    def cull(self):
+        """ Retain only currently unmasked data """
+        self.stars = self.stars[self.stars.use]
 
     @property
     def count(self):
