@@ -180,8 +180,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pb_export.clicked.connect(self.exportFile)
         self.pb_import.clicked.connect(self.importFile)
 
-        self.pb_cull_unidentified.clicked.connect(self.cullSensor)
-        self.pb_cull_distant.clicked.connect(self.cullCatalogue)
+        self.pb_mask_unidentified.clicked.connect(self.maskSensor)
+        self.pb_mask_distant.clicked.connect(self.maskCatalogue)
         self.pb_reset.clicked.connect(self.resetValid)
         self.dsb_error_limit.valueChanged.connect(self.onErrorLimitChanged)
 
@@ -342,23 +342,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.w_input.repaint()
         self.onParametersChanged()
 
-    def cullSensor(self):
+    def maskSensor(self):
         errors = self.matcher.errors(self.projection, False)
-        self.matcher.cull_sensor_data(errors < np.radians(self.dsb_error_limit.value()))
-        self.matcher.update_sky()
+        self.matcher.mask_sensor_data(errors > np.radians(self.dsb_error_limit.value()))
         print(f"Culled the dots to {self.dsb_error_limit.value()}°: {self.matcher.sensor_data.count_valid} are valid")
         self.onParametersChanged()
 
-    def cullCatalogue(self):
+    def maskCatalogue(self):
         errors = self.matcher.errors_inverse(self.projection, False)
-        self.matcher.cull_catalogue(errors < np.radians(self.dsb_distance_limit.value()))
+        self.matcher.mask_catalogue(errors > np.radians(self.dsb_distance_limit.value()))
         print(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: {self.matcher.catalogue.count_valid} stars used")
-        self.matcher.update_sky()
         self.plotCatalogueStars()
         self.onParametersChanged()
 
     def resetValid(self):
-        self.matcher.unmask()
+        self.matcher.reset_mask()
         self.showCounts()
 
         self.plotCatalogueStars()

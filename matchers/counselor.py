@@ -26,7 +26,7 @@ class Counselor(Matcher):
         self.catalogue = catalogue
         self.sensor_data = sensor_data
 
-        print(f"Counselor created with {self.catalogue.count} pairs")
+        print(f"Counselor created with {self.catalogue.count} pairs:")
         print(self.catalogue)
         print(self.sensor_data)
 
@@ -79,6 +79,7 @@ class Counselor(Matcher):
     def pair(self, projection):
         self.catalogue.cull()
         self.sensor_data.cull()
+        return self
 
     def save(self, filename):
         self.df.to_csv(sep='\t', float_format='.6f', index=False, header=['x', 'y', 'dec', 'ra'])

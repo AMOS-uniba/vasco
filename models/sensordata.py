@@ -40,7 +40,7 @@ class SensorData():
         self.reset_mask()
 
     def set_mask(self, mask):
-        self.use = mask
+        self.use = ~mask
 
     def reset_mask(self):
         self.use = np.ones_like(self.x, dtype=bool)
@@ -49,7 +49,7 @@ class SensorData():
     def cull(self):
         self.positions = self.positions[self.use]
         self.intensities = self.intensities[self.use]
-        self._count = 0
+        self._count = self.positions.shape[0]
         self.reset_mask()
 
     @property
@@ -79,6 +79,10 @@ class SensorData():
     @property
     def valid(self):
         return self.positions[self.use]
+
+    @property
+    def valid_intensities(self):
+        return self.intensities[self.use]
 
     @property
     def xv(self):

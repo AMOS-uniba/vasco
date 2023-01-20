@@ -22,44 +22,40 @@ class Matchmaker(Matcher):
 
     def __init__(self, location, time, projection_cls=BorovickaProjection):
         self.catalogue = None
-        self.sky = None
         super().__init__(location, time, projection_cls)
         self.sensor_data = SensorData()
 
     def load_catalogue(self, filename: str):
         self.catalogue = Catalogue()
         self.catalogue.load(filename)
-        self.update_sky()
 
     def load_sensor(self, filename: str):
         self.sensor_data = SensorData(filename)
 
     def update(self, location, time):
         super().update(location, time)
-        if self.catalogue is not None:
-            self.update_sky()
 
     @property
     def count(self):
         return self.sensor_data.count
 
-    def cull_catalogue(self, mask):
+    def mask_catalogue(self, mask):
         self.catalogue.set_mask(mask)
 
-    def cull_sensor_data(self, mask):
+    def mask_sensor_data(self, mask):
         self.sensor_data.set_mask(mask)
 
     def errors(self, projection, masked) -> np.ndarray:
         return self.find_nearest_value(
             self.sensor_data.project(projection, masked=masked),
-            self.sky,
+            self.catalogue.to_altaz_deg(self.location, self.time, masked=masked),
             axis=1
         )
 
     def errors_inverse(self, projection, masked) -> np.ndarray:
         return self.find_nearest_value(
             self.sensor_data.project(projection, masked=masked),
-            self.sky,
+            self.catalogue.to_altaz_deg(self.location, self.time, masked=masked),
             axis=0
         )
 
@@ -115,11 +111,15 @@ class Matchmaker(Matcher):
 
     def pair(self, projection):
         # Find which star is the nearest for every dot
-        nearest = self.find_nearest_index(self.sensor_data.project(projection, True), self.sky, axis=1)
+        nearest = self.find_nearest_index(
+            self.sensor_data.project(projection, True),
+            self.catalogue.to_altaz_deg(self.location, self.time, masked=True),
+            axis=1,
+        )
         # Filter the catalogue by that index
         cat = self.catalogue.valid.iloc[nearest]
 
-        sensor_data = SensorData(self.sensor_data.valid, self.sensor_data.intensities)
+        sensor_data = SensorData(self.sensor_data.valid, self.sensor_data.valid_intensities)
         catalogue = Catalogue(cat[['dec', 'ra', 'vmag']])
         return Counselor(self.location, self.time, self.projection_cls, catalogue, sensor_data)
 

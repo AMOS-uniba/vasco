@@ -30,15 +30,20 @@ class Catalogue():
         return self
 
     def set_mask(self, condition):
-        self.stars[condition]['use'] = False
+        self.stars.loc[condition, 'use'] = False
 
     def reset_mask(self):
-        self.stars['use'] = True
+        if 'use' in self.stars.columns:
+            self.stars.loc[:]['use'] = True
+        else:
+            self.stars['use'] = True
         print(f"Catalogue mask reset: {self.count_valid} / {self.count} stars used")
 
     def cull(self):
         """ Retain only currently unmasked data """
+        print("Culling the catalogue")
         self.stars = self.stars[self.stars.use]
+        self.update_coord()
 
     @property
     def count(self):
@@ -62,7 +67,7 @@ class Catalogue():
 
     def to_altaz(self, location, time, masked):
         altaz = AltAz(location=location, obstime=time, pressure=0, obswl=550 * u.nm)
-        source = self.skycoord[self.stars['use']] if masked else self.skycoord
+        source = self.skycoord[self.mask] if masked else self.skycoord
         return source.transform_to(altaz)
 
     def to_altaz_deg(self, location, time, masked):

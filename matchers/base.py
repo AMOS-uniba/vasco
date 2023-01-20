@@ -17,24 +17,20 @@ class Matcher(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def cull_catalogue(self, mask):
+    def mask_catalogue(self, mask):
         pass
 
     @abstractmethod
-    def cull_sensor_data(self, mask):
+    def mask_sensor_data(self, mask):
         pass
 
-    def unmask(self):
-        self.catalogue.unmask()
-        self.sensor_data.unmask()
+    def reset_mask(self):
+        self.catalogue.reset_mask()
+        self.sensor_data.reset_mask()
 
     def update(self, location, time):
         self.location = location
         self.time = time
-
-    def update_sky(self):
-        self.sky = self.catalogue.to_altaz_deg(self.location, self.time, masked=True)
-        print(f"Updating sky: {self.sky.shape[0]} / {self.catalogue.count} valid stars")
 
     def avg_error(self, errors) -> float:
         if errors.size == 0:
