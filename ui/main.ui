@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1099</width>
-    <height>964</height>
+    <width>1088</width>
+    <height>787</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -681,7 +681,7 @@
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tab_sensor">
        <attribute name="title">
@@ -706,14 +706,39 @@
         <bool>false</bool>
        </property>
        <attribute name="title">
-        <string>&amp;Paired global</string>
+        <string>&amp;Vector errors</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_3"/>
-      </widget>
-      <widget class="QWidget" name="tab_paired_errors">
-       <attribute name="title">
-        <string>Paired errors</string>
-       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QStackedWidget" name="stackedWidget">
+          <property name="currentIndex">
+           <number>1</number>
+          </property>
+          <widget class="QWidget" name="tab_disabled">
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <item>
+             <widget class="QLabel" name="label">
+              <property name="font">
+               <font>
+                <pointsize>24</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Only available in paired mode</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_vectors">
+           <layout class="QHBoxLayout" name="horizontalLayout_6"/>
+          </widget>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
@@ -1230,7 +1255,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>241</width>
-           <height>356</height>
+           <height>179</height>
           </size>
          </property>
         </spacer>
@@ -1245,7 +1270,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1099</width>
+     <width>1088</width>
      <height>19</height>
     </rect>
    </property>

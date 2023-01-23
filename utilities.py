@@ -7,6 +7,9 @@ import astropy.units as u
 from typing import Tuple
 
 
+HalfPi = np.pi / 2
+
+
 def polar_to_cart(z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     return z * np.sin(a), -z * np.cos(a)
 
@@ -52,3 +55,18 @@ def spherical_difference(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     dz = y[..., 0] - x[..., 0]
     da = y[..., 1] - x[..., 1]
     return dz, dz * np.cos(x[..., 0])
+
+
+def altaz_to_disk(altaz: AltAz) -> np.ndarray:
+    return np.stack(
+        (
+            np.cos(altaz.az.radian) * (HalfPi - altaz.alt.radian) / HalfPi,
+            np.sin(altaz.az.radian) * (HalfPi - altaz.alt.radian) / HalfPi,
+        ), axis=1,
+    )
+
+def disk_to_altaz(xy: np.ndarray) -> AltAz:
+    return AltAz(
+        np.sqrt(xy[:, 0]**2 + xy[:, 1]**2) / HalfPi,
+        np.arctan2(xy[:, 1], xy[:, 0]),
+    )

@@ -2,6 +2,19 @@ import numpy as np
 from typing import Tuple
 
 
+class ScalingShifter():
+    """ Shifts and scales the sensor without rotation """
+    def __init__(self, *, x0: float=0, y0: float=0, scale: float=0):
+        self.x0 = x0
+        self.y0 = y0
+        self.scale = scale
+
+    def __call__(self, x: np.ndarray, y: np.ndarray):
+        xs = (x - self.x0) * self.scale
+        ys = (y - self.y0) * self.scale
+        return xs, ys
+
+
 class OpticalAxisShifter():
     """ Shifts and derotates the optical axis of the sensor """
     def __init__(self, *, x0: float=0, y0: float=0, a0: float=0, E: float=0):

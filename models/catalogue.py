@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 import pandas as pd
 
@@ -12,7 +13,7 @@ class Catalogue():
         self.name = None
 
         if stars is not None:
-            self.stars = stars
+            self.stars = copy.deepcopy(stars)
             self.update_coord()
         self.reset_mask()
 
@@ -65,18 +66,24 @@ class Catalogue():
     def valid(self):
         return self.stars[self.mask]
 
-    def to_altaz(self, location, time, masked):
+    def altaz(self, location, time, masked):
         altaz = AltAz(location=location, obstime=time, pressure=0, obswl=550 * u.nm)
         source = self.skycoord[self.mask] if masked else self.skycoord
         return source.transform_to(altaz)
 
+    def to_altaz(self, location, time, masked):
+        """ Returns a packed (N, 2) np.ndarray with altitude and azimuth in radians """
+        stars = self.altaz(location, time, masked)
+        return np.stack((stars.alt.radian, stars.az.radian), axis=1)
+
     def to_altaz_deg(self, location, time, masked):
-        stars = self.to_altaz(location, time, masked)
+        """ Same but returns azimuth and altitude in degrees """
+        stars = self.altaz(location, time, masked)
         return np.stack((stars.alt.degree, stars.az.degree), axis=1)
 
     def to_altaz_chart(self, location, time, masked):
-        """ Same but returns azimuth in radians (t axis) and altitude in degrees (r axis) for chart display """
-        stars = self.to_altaz(location, time, masked)
+        """ Same but returns azimuth in radians (t axis) and co-altitude in degrees (r axis) for chart display """
+        stars = self.altaz(location, time, masked)
         return np.stack((stars.az.radian, 90 - stars.alt.degree), axis=1)
 
     def __str__(self):

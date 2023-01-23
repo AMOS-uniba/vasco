@@ -27,6 +27,7 @@ from projections import Projection, EquidistantProjection, BorovickaProjection
 from main_ui import Ui_MainWindow
 
 from amos import AMOS, Station
+from utilities import altaz_to_disk
 
 mpl.use('Qt5Agg')
 
@@ -51,22 +52,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.populateStations()
 
+        plt.style.use('dark_background')
         self.setupSensorPlot()
         self.setupSkyPlot()
         self.setupErrorAltPlot()
         self.setupErrorAzPlot()
+        self.setupVectorPlot()
 
-        self.sensorScatter = self.sensorAxis.scatter([0], [0], s=[50], c='white', marker='o')
-        self.skyScatter = self.skyAxis.scatter([0], [0], s=[50], c='red', marker='x')
-        self.starsScatter = self.skyAxis.scatter([0], [0], s=[1], marker='o', c='white')
-        self.errorAltScatter = self.errorAltAxis.scatter([0], [0], s=[1], marker='x', c='cyan')
-        self.errorAzScatter = self.errorAzAxis.scatter([0], [0], s=[1], marker='x', c='cyan')
-#        self.skyQuiver = self.skyAxis.quiver([0], [0], [0], [0])
-
-        self.tab_sensor.layout().addWidget(self.sensorCanvas)
-        self.tab_sky.layout().addWidget(self.skyCanvas)
-        self.tab_errors.layout().addWidget(self.errorAltCanvas)
-        self.tab_errors.layout().addWidget(self.errorAzCanvas)
 
         self.updateProjection()
 
@@ -99,7 +91,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.onLocationTimeChanged()
 
     def setupSensorPlot(self):
-        plt.style.use('dark_background')
         self.sensorFigure = Figure(figsize=(6, 6))
         self.sensorCanvas = FigureCanvasQTAgg(self.sensorFigure)
         self.sensorAxis = self.sensorFigure.add_subplot()
@@ -109,6 +100,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sensorAxis.set_ylim([-1, 1])
         self.sensorAxis.grid(color='white', alpha=0.3)
         self.sensorAxis.set_aspect('equal')
+
+        self.sensorScatter = self.sensorAxis.scatter([0], [0], s=[50], c='white', marker='o')
+        self.tab_sensor.layout().addWidget(self.sensorCanvas)
 
     def setupSkyPlot(self):
         self.skyFigure = Figure(figsize=(6, 6))
@@ -123,6 +117,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.skyAxis.yaxis.set_major_formatter('{x}°')
         self.skyAxis.grid(color='white', alpha=0.3)
         self.skyAxis.set_theta_offset(3 * np.pi / 2)
+
+        self.skyScatter = self.skyAxis.scatter([0], [0], s=[50], c='red', marker='x')
+        self.starsScatter = self.skyAxis.scatter([0], [0], s=[1], marker='o', c='white')
+        self.tab_sky.layout().addWidget(self.skyCanvas)
 
     def setupErrorAltPlot(self):
         self.errorAltFigure = Figure(figsize=(8, 6))
@@ -139,6 +137,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.errorAltAxis.yaxis.set_major_formatter(lambda x, pos: f'{x:.2f}°')
         self.errorAltAxis.grid(color='white', alpha=0.2)
 
+        self.errorAltScatter = self.errorAltAxis.scatter([0], [0], s=[1], marker='x', c='cyan')
+        self.tab_errors.layout().addWidget(self.errorAltCanvas)
+
     def setupErrorAzPlot(self):
         self.errorAzFigure = Figure(figsize=(8, 6))
         self.errorAzCanvas = FigureCanvasQTAgg(self.errorAzFigure)
@@ -153,6 +154,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.errorAzAxis.set_ylabel('error')
         self.errorAzAxis.yaxis.set_major_formatter(lambda x, pos: f'{x:.2f}°')
         self.errorAzAxis.grid(color='white', alpha=0.2)
+
+        self.errorAzScatter = self.errorAzAxis.scatter([0], [0], s=[1], marker='x', c='cyan')
+        self.tab_errors.layout().addWidget(self.errorAzCanvas)
+
+    def setupVectorPlot(self):
+        self.vectorFigure = Figure(figsize=(8, 6))
+        self.vectorCanvas = FigureCanvasQTAgg(self.vectorFigure)
+        self.vectorAxis = self.vectorFigure.add_subplot()
+        self.vectorFigure.tight_layout()
+
+        self.vectorAxis.set_xlim([-1, 1])
+        self.vectorAxis.set_ylim([-1, 1])
+        self.vectorAxis.set_xlabel('x')
+        self.vectorAxis.set_ylabel('y')
+        self.vectorAxis.set_aspect('equal')
+        self.vectorAxis.grid(color='white', alpha=0.2)
+
+        self.vectorScatterObs = self.vectorAxis.scatter([0], [0], s=[1], marker='x', c='red')
+        self.vectorScatterCat = self.vectorAxis.scatter([0], [0], s=[1], marker='x', c='white')
+        self.vectorQuiver = None
+        self.tab_vectors.layout().addWidget(self.vectorCanvas)
 
     def connectSignalSlots(self):
         self.ac_load.triggered.connect(self.loadYAMLFile)
@@ -218,13 +240,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         errors = self.matcher.errors(self.projection, True)
         self.plotObservedStars(errors)
         self.plotErrors(errors)
+        self.plotVectorErrors()
 
     def onLocationTimeChanged(self):
         self.updateMatcher()
         self.plotCatalogueStars()
 
         errors = self.matcher.errors(self.projection, True)
-        self.plotCatalogueStars()
+        self.plotObservedStars(errors)
         self.plotErrors(errors)
 
     def onErrorLimitChanged(self):
@@ -370,8 +393,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def plotSensorData(self, sd):
         print("Plotting sensor data")
-        self.sensorAxis.set_xlim([sd.rect.left, sd.rect.right])
-        self.sensorAxis.set_ylim([sd.rect.top, sd.rect.bottom])
+        self.sensorAxis.set_xlim([sd.rect.xmin, sd.rect.xmax])
+        self.sensorAxis.set_ylim([sd.rect.ymax, sd.rect.ymin])
         self.sensorScatter.set_offsets(sd.positions)
         self.sensorScatter.set_sizes(np.sqrt(sd.intensities))
         self.sensorCanvas.draw()
@@ -388,8 +411,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.skyCanvas.draw()
 
     def plotCatalogueStars(self):
-        loc = self.location.to_geodetic()
-        print(f"Plotting catalogue stars for {loc.lat:.6f}, {loc.lon:.6f} at {self.time}")
+        #loc = self.location.to_geodetic()
+        #print(f"Plotting catalogue stars for {loc.lat:.6f}, {loc.lon:.6f} at {self.time}")
 
         offsets = self.matcher.catalogue.to_altaz_chart(self.location, self.time, True)
         sizes = 0.2 * np.exp(-0.666 * (self.matcher.catalogue.vmag - 5))
@@ -398,18 +421,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.starsScatter.set_sizes(sizes)
         self.skyCanvas.draw()
 
-    def plotQuiver(self):
-        return
-        z, a = self.matcher.sensor_data.project(self.projection)
-        offsets = np.stack((a, np.degrees(z)), axis=1)
-        self.skyQuiver.set_offsets(offsets)
+    def plotVectorErrors(self):
+        if not isinstance(self.matcher, Counselor):
+            return
 
-        zz, aa = self.matcher.catalogue_altaz
-        aa = np.radians(aa)
-        offsets = np.stack((aa, 90 - zz), axis=1)
-        self.skyQuiver.set_UVC(zz - z, aa - a)
+        print(f"Plotting vector errors")
+        cat = altaz_to_disk(self.matcher.catalogue.altaz(self.location, self.time, True))
+        z, a = self.matcher.sensor_data.project(self.projection, True).T
+        x = z * np.cos(a) / np.pi * 2
+        y = z * np.sin(a) / np.pi * 2
+        obs = np.stack((x, y), axis=1)
 
-        self.skyCanvas.draw()
+        self.vectorScatterCat.set_offsets(cat)
+        self.vectorScatterCat.set_sizes(np.ones_like(cat[:, 0]))
+        self.vectorScatterObs.set_offsets(obs)
+        self.vectorScatterObs.set_sizes(np.ones_like(obs[:, 0]))
+
+        if self.vectorQuiver is not None:
+            self.vectorQuiver.remove()
+
+        self.vectorQuiver = self.vectorAxis.quiver(
+            cat[:, 0], cat[:, 1],
+            obs[:, 0] - cat[:, 0], obs[:, 1] - cat[:, 1],
+            (obs[:, 0] - cat[:, 0])**2 + (obs[:, 1] - cat[:, 1])**2,
+            cmap='autumn_r',
+            scale=0.05,
+        )
+        self.vectorCanvas.draw()
 
     def plotErrors(self, errors):
         pos = self.matcher.sensor_data.project(self.projection, True)
@@ -448,7 +486,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.plotCatalogueStars()
         errors = self.matcher.errors(self.projection, True)
         self.plotErrors(errors)
-        self.plotQuiver()
+        self.plotVectorErrors()
 
 
 

@@ -119,7 +119,7 @@ class Matchmaker(Matcher):
         # Filter the catalogue by that index
         cat = self.catalogue.valid.iloc[nearest]
 
-        sensor_data = SensorData(self.sensor_data.valid, self.sensor_data.valid_intensities)
+        sensor_data = self.sensor_data.culled_copy()
         catalogue = Catalogue(cat[['dec', 'ra', 'vmag']])
         return Counselor(self.location, self.time, self.projection_cls, catalogue, sensor_data)
 
