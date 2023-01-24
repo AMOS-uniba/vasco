@@ -60,8 +60,8 @@ def spherical_difference(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 def altaz_to_disk(altaz: AltAz) -> np.ndarray:
     return np.stack(
         (
-            np.cos(altaz.az.radian) * (HalfPi - altaz.alt.radian) / HalfPi,
             np.sin(altaz.az.radian) * (HalfPi - altaz.alt.radian) / HalfPi,
+            -np.cos(altaz.az.radian) * (HalfPi - altaz.alt.radian) / HalfPi,
         ), axis=1,
     )
 

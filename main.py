@@ -23,11 +23,11 @@ from matplotlib.ticker import MultipleLocator
 
 from matchers import Matchmaker, Counselor
 from projections import Projection, EquidistantProjection, BorovickaProjection
+from plots import SensorPlot, SkyPlot, ErrorPlot, VectorErrorPlot
 
 from main_ui import Ui_MainWindow
 
 from amos import AMOS, Station
-from utilities import altaz_to_disk
 
 mpl.use('Qt5Agg')
 
@@ -53,23 +53,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.populateStations()
 
         plt.style.use('dark_background')
-        self.setupSensorPlot()
-        self.setupSkyPlot()
-        self.setupErrorAltPlot()
-        self.setupErrorAzPlot()
-        self.setupVectorPlot()
-
+        self.sensorPlot = SensorPlot(self.tab_sensor)
+        self.skyPlot = SkyPlot(self.tab_sky)
+        self.errorPlot = ErrorPlot(self.tab_errors)
+        self.vectorErrorPlot = VectorErrorPlot(self.tab_vectors)
 
         self.updateProjection()
 
         self.loadYAML('data/20220531_055655.yaml')
         self.matcher.load_catalogue('catalogue/HYG30.tsv')
-        self.importConstants('out.yaml')
-        self.matcher.catalogue.filter_by_vmag(6)
+        self.importConstants('out2.yaml')
 
         self.onParametersChanged()
-        self.plotSensorData(self.matcher.sensor_data)
-        self.plotCatalogueStars()
 
         self.connectSignalSlots()
 
@@ -89,92 +84,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.updateMatcher()
         self.onLocationTimeChanged()
-
-    def setupSensorPlot(self):
-        self.sensorFigure = Figure(figsize=(6, 6))
-        self.sensorCanvas = FigureCanvasQTAgg(self.sensorFigure)
-        self.sensorAxis = self.sensorFigure.add_subplot()
-        self.sensorFigure.tight_layout()
-
-        self.sensorAxis.set_xlim([-1, 1])
-        self.sensorAxis.set_ylim([-1, 1])
-        self.sensorAxis.grid(color='white', alpha=0.3)
-        self.sensorAxis.set_aspect('equal')
-
-        self.sensorScatter = self.sensorAxis.scatter([0], [0], s=[50], c='white', marker='o')
-        self.tab_sensor.layout().addWidget(self.sensorCanvas)
-
-    def setupSkyPlot(self):
-        self.skyFigure = Figure(figsize=(6, 6))
-        self.skyCanvas = FigureCanvasQTAgg(self.skyFigure)
-        self.skyAxis = self.skyFigure.add_subplot(projection='polar')
-        self.skyFigure.tight_layout()
-
-        self.skyAxis.set_xlim([0, 2 * np.pi])
-        self.skyAxis.set_ylim([0, 90])
-        self.skyAxis.set_rlabel_position(0)
-        self.skyAxis.set_rticks([15, 30, 45, 60, 75])
-        self.skyAxis.yaxis.set_major_formatter('{x}°')
-        self.skyAxis.grid(color='white', alpha=0.3)
-        self.skyAxis.set_theta_offset(3 * np.pi / 2)
-
-        self.skyScatter = self.skyAxis.scatter([0], [0], s=[50], c='red', marker='x')
-        self.starsScatter = self.skyAxis.scatter([0], [0], s=[1], marker='o', c='white')
-        self.tab_sky.layout().addWidget(self.skyCanvas)
-
-    def setupErrorAltPlot(self):
-        self.errorAltFigure = Figure(figsize=(8, 6))
-        self.errorAltCanvas = FigureCanvasQTAgg(self.errorAltFigure)
-        self.errorAltAxis = self.errorAltFigure.add_subplot()
-        self.errorAltFigure.tight_layout()
-
-        self.errorAltAxis.set_xlim([0, 90])
-        self.errorAltAxis.set_ylim([0, None])
-        self.errorAltAxis.set_xlabel('zenith distance')
-        self.errorAltAxis.xaxis.set_major_locator(MultipleLocator(10))
-        self.errorAltAxis.xaxis.set_major_formatter(lambda x, pos: f'{x:.0f}°')
-        self.errorAltAxis.set_ylabel('error')
-        self.errorAltAxis.yaxis.set_major_formatter(lambda x, pos: f'{x:.2f}°')
-        self.errorAltAxis.grid(color='white', alpha=0.2)
-
-        self.errorAltScatter = self.errorAltAxis.scatter([0], [0], s=[1], marker='x', c='cyan')
-        self.tab_errors.layout().addWidget(self.errorAltCanvas)
-
-    def setupErrorAzPlot(self):
-        self.errorAzFigure = Figure(figsize=(8, 6))
-        self.errorAzCanvas = FigureCanvasQTAgg(self.errorAzFigure)
-        self.errorAzAxis = self.errorAzFigure.add_subplot()
-        self.errorAzFigure.tight_layout()
-
-        self.errorAzAxis.set_xlim([0, 360])
-        self.errorAzAxis.set_ylim([0, None])
-        self.errorAzAxis.set_xlabel('azimuth')
-        self.errorAzAxis.xaxis.set_major_locator(MultipleLocator(45))
-        self.errorAzAxis.xaxis.set_major_formatter(lambda x, pos: f'{x:.0f}°')
-        self.errorAzAxis.set_ylabel('error')
-        self.errorAzAxis.yaxis.set_major_formatter(lambda x, pos: f'{x:.2f}°')
-        self.errorAzAxis.grid(color='white', alpha=0.2)
-
-        self.errorAzScatter = self.errorAzAxis.scatter([0], [0], s=[1], marker='x', c='cyan')
-        self.tab_errors.layout().addWidget(self.errorAzCanvas)
-
-    def setupVectorPlot(self):
-        self.vectorFigure = Figure(figsize=(8, 6))
-        self.vectorCanvas = FigureCanvasQTAgg(self.vectorFigure)
-        self.vectorAxis = self.vectorFigure.add_subplot()
-        self.vectorFigure.tight_layout()
-
-        self.vectorAxis.set_xlim([-1, 1])
-        self.vectorAxis.set_ylim([-1, 1])
-        self.vectorAxis.set_xlabel('x')
-        self.vectorAxis.set_ylabel('y')
-        self.vectorAxis.set_aspect('equal')
-        self.vectorAxis.grid(color='white', alpha=0.2)
-
-        self.vectorScatterObs = self.vectorAxis.scatter([0], [0], s=[1], marker='x', c='red')
-        self.vectorScatterCat = self.vectorAxis.scatter([0], [0], s=[1], marker='x', c='white')
-        self.vectorQuiver = None
-        self.tab_vectors.layout().addWidget(self.vectorCanvas)
 
     def connectSignalSlots(self):
         self.ac_load.triggered.connect(self.loadYAMLFile)
@@ -207,6 +116,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pb_reset.clicked.connect(self.resetValid)
         self.dsb_error_limit.valueChanged.connect(self.onErrorLimitChanged)
 
+        self.tw_charts.currentChanged.connect(self.updatePlots)
+
     def onTimeChanged(self):
         self.updateTime()
         self.onLocationTimeChanged()
@@ -235,25 +146,48 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.projection = BorovickaProjection(*self.get_constants_tuple())
 
     def onParametersChanged(self):
-        self.updateProjection()
+        self.skyPlot.dots_valid = False
+        self.errorPlot.valid = False
+        self.vectorErrorPlot.valid = False
 
-        errors = self.matcher.errors(self.projection, True)
-        self.plotObservedStars(errors)
-        self.plotErrors(errors)
-        self.plotVectorErrors()
+        self.updateProjection()
+        self.computeErrors()
+        self.updatePlots()
 
     def onLocationTimeChanged(self):
         self.updateMatcher()
-        self.plotCatalogueStars()
-
-        errors = self.matcher.errors(self.projection, True)
-        self.plotObservedStars(errors)
-        self.plotErrors(errors)
+        self.skyPlot.stars_valid = False
+        self.errorPlot.valid = False
+        self.vectorErrorPlot.valid = False
+        self.computeErrors()
+        self.updatePlots()
 
     def onErrorLimitChanged(self):
-        errors = self.matcher.errors(self.projection, True)
-        self.plotObservedStars(errors)
-        self.plotErrors(errors)
+        self.skyPlot.dots_valid = False
+        self.errorPlot.valid = False
+        self.vectorErrorPlot.valid = False
+        self.updatePlots()
+
+    def updatePlots(self):
+        self.showErrors()
+        index = self.tw_charts.currentIndex()
+        if index == 0:
+            if not self.sensorPlot.valid:
+                self.plotSensorData()
+        elif index == 1:
+            if not self.skyPlot.dots_valid:
+                self.plotObservedStars()
+            if not self.skyPlot.stars_valid:
+                self.plotCatalogueStars()
+        elif index == 2:
+            if not self.errorPlot.valid:
+                self.plotErrors()
+        elif index == 3:
+            if not self.vectorErrorPlot.valid:
+                self.plotVectorErrors()
+
+    def computeErrors(self):
+        self.errors = self.matcher.errors(self.projection, True)
 
     def exportFile(self):
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export constants to file", ".", "YAML files (*.yaml)")
@@ -289,7 +223,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.cb_stations.setCurrentIndex(0)
         self.onLocationTimeChanged()
-        self.plotSensorData(self.sensor_data)
+        self.sensorPlot.update(data)
 
     def loadYAML(self, file):
         data = dotmap.DotMap(yaml.safe_load(open(file, 'r')))
@@ -375,14 +309,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         errors = self.matcher.errors_inverse(self.projection, False)
         self.matcher.mask_catalogue(errors > np.radians(self.dsb_distance_limit.value()))
         print(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: {self.matcher.catalogue.count_valid} stars used")
-        self.plotCatalogueStars()
         self.onParametersChanged()
 
     def resetValid(self):
         self.matcher.reset_mask()
         self.showCounts()
 
-        self.plotCatalogueStars()
         self.onParametersChanged()
 
     def showCounts(self):
@@ -391,103 +323,60 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lb_objects_all.setText(f'{self.matcher.sensor_data.count}')
         self.lb_objects_near.setText(f'{self.matcher.sensor_data.count_valid}')
 
-    def plotSensorData(self, sd):
-        print("Plotting sensor data")
-        self.sensorAxis.set_xlim([sd.rect.xmin, sd.rect.xmax])
-        self.sensorAxis.set_ylim([sd.rect.ymax, sd.rect.ymin])
-        self.sensorScatter.set_offsets(sd.positions)
-        self.sensorScatter.set_sizes(np.sqrt(sd.intensities))
-        self.sensorCanvas.draw()
+    def showErrors(self):
+        avg_error = self.matcher.avg_error(self.errors)
+        max_error = self.matcher.max_error(self.errors)
+        self.lb_avg_error.setText(f'{np.degrees(avg_error):.6f}°')
+        self.lb_max_error.setText(f'{np.degrees(max_error):.6f}°')
+        self.lb_total_stars.setText(f'{self.matcher.catalogue.count}')
+        outside_limit = self.errors[self.errors > np.radians(self.dsb_error_limit.value())].size
+        self.lb_outside_limit.setText(f'{outside_limit}')
 
-    def plotObservedStars(self, errors):
+    def plotSensorData(self):
+        self.sensorPlot.update(self.matcher.sensor_data)
+
+    def plotObservedStars(self):
+        self.skyPlot.update_dots(
+            self.matcher.sensor_data.project(self.projection, True),
+            self.matcher.sensor_data.m,
+            self.errors,
+            limit=np.radians(self.dsb_error_limit.value())
+        )
         #print(f"Plotting projected stars for {self.projection}")
-        z, a = self.matcher.sensor_data.project(self.projection, True).T
-        self.skyScatter.set_offsets(np.stack((a, np.degrees(z)), axis=1))
-
-        cmap = mpl.cm.get_cmap('autumn_r')
-        norm = mpl.colors.Normalize(vmin=0, vmax=np.radians(self.dsb_error_limit.value()))
-        self.skyScatter.set_facecolors(cmap(norm(errors)))
-        self.skyScatter.set_sizes(10 + 0.05 * self.matcher.sensor_data.m)
-        self.skyCanvas.draw()
 
     def plotCatalogueStars(self):
         #loc = self.location.to_geodetic()
         #print(f"Plotting catalogue stars for {loc.lat:.6f}, {loc.lon:.6f} at {self.time}")
+        self.skyPlot.update_stars(
+            self.matcher.catalogue.to_altaz_chart(self.location, self.time, True),
+            self.matcher.catalogue.vmag
+        )
 
-        offsets = self.matcher.catalogue.to_altaz_chart(self.location, self.time, True)
-        sizes = 0.2 * np.exp(-0.666 * (self.matcher.catalogue.vmag - 5))
-
-        self.starsScatter.set_offsets(offsets)
-        self.starsScatter.set_sizes(sizes)
-        self.skyCanvas.draw()
+    def plotErrors(self):
+        positions = self.matcher.sensor_data.project(self.projection, True)
+        self.errorPlot.update(positions, self.matcher.sensor_data.m, self.errors, limit=np.radians(self.dsb_error_limit.value()))
 
     def plotVectorErrors(self):
-        if not isinstance(self.matcher, Counselor):
-            return
-
-        print(f"Plotting vector errors")
-        cat = altaz_to_disk(self.matcher.catalogue.altaz(self.location, self.time, True))
-        z, a = self.matcher.sensor_data.project(self.projection, True).T
-        x = z * np.cos(a) / np.pi * 2
-        y = z * np.sin(a) / np.pi * 2
-        obs = np.stack((x, y), axis=1)
-
-        self.vectorScatterCat.set_offsets(cat)
-        self.vectorScatterCat.set_sizes(np.ones_like(cat[:, 0]))
-        self.vectorScatterObs.set_offsets(obs)
-        self.vectorScatterObs.set_sizes(np.ones_like(obs[:, 0]))
-
-        if self.vectorQuiver is not None:
-            self.vectorQuiver.remove()
-
-        self.vectorQuiver = self.vectorAxis.quiver(
-            cat[:, 0], cat[:, 1],
-            obs[:, 0] - cat[:, 0], obs[:, 1] - cat[:, 1],
-            (obs[:, 0] - cat[:, 0])**2 + (obs[:, 1] - cat[:, 1])**2,
-            cmap='autumn_r',
-            scale=0.05,
-        )
-        self.vectorCanvas.draw()
-
-    def plotErrors(self, errors):
-        pos = self.matcher.sensor_data.project(self.projection, True)
-        alt = np.degrees(pos[:, 0])
-        az = np.degrees(pos[:, 1])
-
-        avg_error = self.matcher.avg_error(errors)
-        max_error = self.matcher.max_error(errors)
-        self.lb_avg_error.setText(f'{np.degrees(avg_error):.6f}°')
-        self.lb_max_error.setText(f'{np.degrees(max_error):.6f}°')
-        self.lb_total_stars.setText(f'{alt.size}')
-        outside_limit = errors[errors > np.radians(self.dsb_error_limit.value())].size
-        self.lb_outside_limit.setText(f'{outside_limit}')
-
-        if max_error is not np.nan:
-            self.errorAltAxis.set_ylim([0, np.degrees(max_error) * 1.05])
-            self.errorAzAxis.set_ylim([0, np.degrees(max_error) * 1.05])
-            self.errorAltScatter.set_offsets(np.stack((alt, np.degrees(errors)), axis=1))
-            self.errorAzScatter.set_offsets(np.stack((az, np.degrees(errors)), axis=1))
-
-            cmap = mpl.cm.get_cmap('autumn_r')
-            norm = mpl.colors.Normalize(vmin=0, vmax=np.radians(self.dsb_error_limit.value()))
-            self.errorAltScatter.set_facecolors(cmap(norm(errors)))
-            self.errorAltScatter.set_sizes(0.05 * self.matcher.sensor_data.m)
-            self.errorAzScatter.set_facecolors(cmap(norm(errors)))
-            self.errorAzScatter.set_sizes(0.05 * self.matcher.sensor_data.m)
-
-        self.errorAltCanvas.draw()
-        self.errorAzCanvas.draw()
-
-        self.showCounts()
+        # Do nothing if working in unpaired mode
+        if isinstance(self.matcher, Counselor):
+            self.tabs.setCurrentIndex(1)
+            self.vectorErrorPlot.update(
+                self.matcher.catalogue.altaz(self.location, self.time, True),
+                self.matcher.sensor_data.project(self.projection, True),
+                limit=np.radians(self.dsb_error_limit.value()),
+                scale=self.dsb_arrow_scale.value(),
+            )
+        else:
+            self.tabs.setCurrentIndex(0)
 
     def pair(self):
         self.matcher = self.matcher.pair(self.projection)
 
-        self.plotCatalogueStars()
-        errors = self.matcher.errors(self.projection, True)
-        self.plotErrors(errors)
-        self.plotVectorErrors()
-
+        self.skyPlot.dots_valid = False
+        self.skyPlot.stars_valid = False
+        self.errorPlot.valid = False
+        self.vectorErrorPlot.valid = False
+        self.updatePlots()
 
 
 app = QApplication(sys.argv)

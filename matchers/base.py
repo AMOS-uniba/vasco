@@ -32,13 +32,15 @@ class Matcher(metaclass=ABCMeta):
         self.location = location
         self.time = time
 
-    def avg_error(self, errors) -> float:
+    @staticmethod
+    def avg_error(errors) -> float:
         if errors.size == 0:
             return np.nan
         else:
             return np.sqrt(np.sum(np.square(errors)) / errors.size)
 
-    def max_error(self, errors) -> float:
+    @staticmethod
+    def max_error(errors) -> float:
         if errors.size == 0:
             return np.nan
         else:

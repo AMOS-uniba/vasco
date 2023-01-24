@@ -56,7 +56,7 @@ class Catalogue():
 
     @property
     def mask(self):
-        return self.stars['use']
+        return self.stars.use
 
     @property
     def vmag(self):
