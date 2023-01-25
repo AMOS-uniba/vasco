@@ -5,7 +5,9 @@ from models.catalogue import Catalogue
 
 @pytest.fixture
 def hyg30():
-    return Catalogue('catalogue/HYG30.tsv')
+    cat = Catalogue()
+    cat.load('catalogue/HYG30.tsv')
+    return cat
 
 
 @pytest.fixture
@@ -15,7 +17,7 @@ def sd():
 
 class TestCatalogue():
     def test_dimensions(self, hyg30):
-        assert hyg30.skycoords.shape == (5068,)
+        assert hyg30.skycoord.size == 5068
 
 
 class TestSensorData():

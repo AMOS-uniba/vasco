@@ -64,17 +64,14 @@ class Counselor(Matcher):
         observed[..., 0] = np.pi / 2 - observed[..., 0]   # Convert observed altitude to zenith distance
         return spherical_difference(observed, catalogue)
 
-    def errors(self, projection, masked=False):
+    def errors(self, projection, masked):
         return self.compute_distances(
             self.sensor_data.project(projection, masked=masked),
             self.catalogue.to_altaz_deg(self.location, self.time, masked=masked),
         )
 
-    def errors_inverse(self, projection, masked=False):
+    def errors_inverse(self, projection, masked):
         return self.errors(projection, masked)
-
-    def func(self, x):
-        return self.avg_error(self.errors(self.projection_cls(*x)))
 
     def pair(self, projection):
         self.catalogue.cull()

@@ -122,6 +122,3 @@ class Matchmaker(Matcher):
         sensor_data = self.sensor_data.culled_copy()
         catalogue = Catalogue(cat[['dec', 'ra', 'vmag']])
         return Counselor(self.location, self.time, self.projection_cls, catalogue, sensor_data)
-
-    def func(self, x):
-        return self.avg_error(self.errors(self.projection_cls(*x), True))

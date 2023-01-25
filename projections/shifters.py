@@ -1,4 +1,5 @@
 import numpy as np
+import scipy as sp
 from typing import Tuple
 
 
@@ -43,12 +44,33 @@ class TiltShifter(OpticalAxisShifter):
         super().__init__(x0=x0, y0=y0, a0=a0, E=E)
         self.A = A                  # tilt stretch, amplitude
         self.F = F                  # tilt stretch, phase
+        self.cos_term = np.cos(self.F - self.a0)
+        self.sin_term = np.sin(self.F - self.a0)
 
     def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         r, b = super().__call__(x, y)
-        r += self.A * (y - self.y0) * np.cos(self.F - self.a0) \
-            - self.A * (x - self.x0) * np.sin(self.F - self.a0)
+        r += self.A * ((y - self.y0) * self.cos_term - (x - self.x0) * self.sin_term)
         return r, b
 
+    def jacobian(self, vec, r, b) -> Tuple[np.ndarray, np.ndarray]:
+        xs = vec[0] - self.x0
+        ys = vec[1] - self.y0
+        r2 = np.square(xs) + np.square(ys)
+        drdx = xs / np.sqrt(r2) - self.A * self.sin_term
+        drdy = ys / np.sqrt(r2) + self.A * self.cos_term
+        dbdx = -ys / r2
+        dbdy = xs / r2
+        return [[drdx, drdy], [dbdx, dbdy]]
+
+    def func(self, vec, r, b):
+        q = self.__call__(vec[0], vec[1])
+        return q[0] - r, q[1] - b
+
     def invert(self, r: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        raise NotImplementedError("Not implemented yet")
+        return sp.optimize.root(
+            self.func,
+            super().invert(r, b),
+            args=(r, b),
+            jac=self.jacobian,
+            tol=1e-9,
+        ).x

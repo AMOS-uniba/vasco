@@ -19,7 +19,7 @@ def boro_identity():
 
 @pytest.fixture
 def boro_rotated():
-    return BorovickaProjection(0, 0, np.radians(7), 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0)
+    return BorovickaProjection(0, 0, np.radians(1.2), 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0)
 
 
 class TestBorovickaProjection():
@@ -38,5 +38,5 @@ class TestBorovickaProjection():
     def test_identity_somewhere(self, boro_identity):
         assert boro_identity(0.5, -0.5) == pytest.approx((np.sqrt(2) * np.pi / 4, np.pi * 1.75), rel=1e-14)
 
-#    def test_identity_invert(self, boro_identity):
-#        assert boro_identity.invert(*boro_identity(0.27, -0.34)) == pytest.approx((0.27, -0.34), rel=1e-14)
+    def dont_test_identity_invert(self, boro_identity):
+        assert boro_identity.invert(*boro_identity(0.27, -0.34)) == pytest.approx((0.27, -0.34), rel=1e-14)

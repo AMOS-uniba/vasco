@@ -12,7 +12,7 @@ from typing import Tuple, Type, Optional
 from astropy import units as u
 from astropy.coordinates import EarthLocation
 
-from PyQt6 import QtWidgets
+from PyQt6 import QtCore, QtWidgets
 from PyQt6.QtWidgets import QApplication, QMainWindow
 
 import matplotlib as mpl
@@ -115,6 +115,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pb_mask_distant.clicked.connect(self.maskCatalogue)
         self.pb_reset.clicked.connect(self.resetValid)
         self.dsb_error_limit.valueChanged.connect(self.onErrorLimitChanged)
+        self.dsb_arrow_scale.valueChanged.connect(self.onArrowScaleChanged)
 
         self.tw_charts.currentChanged.connect(self.updatePlots)
 
@@ -147,6 +148,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def onParametersChanged(self):
         self.skyPlot.dots_valid = False
+        self.skyPlot.meteors_valid = False
         self.errorPlot.valid = False
         self.vectorErrorPlot.valid = False
 
@@ -164,7 +166,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def onErrorLimitChanged(self):
         self.skyPlot.dots_valid = False
+        self.skyPlot.meteors_valid = False
         self.errorPlot.valid = False
+        self.vectorErrorPlot.valid = False
+        self.updatePlots()
+
+    def onArrowScaleChanged(self):
         self.vectorErrorPlot.valid = False
         self.updatePlots()
 
@@ -224,6 +231,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.cb_stations.setCurrentIndex(0)
         self.onLocationTimeChanged()
         self.sensorPlot.update(data)
+        self.updatePlots()
 
     def loadYAML(self, file):
         data = dotmap.DotMap(yaml.safe_load(open(file, 'r')))
@@ -304,20 +312,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.matcher.mask_sensor_data(errors > np.radians(self.dsb_error_limit.value()))
         print(f"Culled the dots to {self.dsb_error_limit.value()}°: {self.matcher.sensor_data.count_valid} are valid")
         self.onParametersChanged()
+        self.showCounts()
 
     def maskCatalogue(self):
         errors = self.matcher.errors_inverse(self.projection, False)
         self.matcher.mask_catalogue(errors > np.radians(self.dsb_distance_limit.value()))
         print(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: {self.matcher.catalogue.count_valid} stars used")
         self.onParametersChanged()
+        self.showCounts()
 
     def resetValid(self):
         self.matcher.reset_mask()
+        self.onParametersChanged()
         self.showCounts()
 
-        self.onParametersChanged()
-
+    @QtCore.pyqtSlot()
     def showCounts(self):
+        if isinstance(self.matcher, Counselor):
+            self.lb_mode.setText("Paired mode")
+            self.tab_paired.setEnabled(True)
+        else:
+            self.lb_mode.setText("Unpaired mode")
+            self.tab_paired.setEnabled(False)
+
         self.lb_catalogue_all.setText(f'{self.matcher.catalogue.count}')
         self.lb_catalogue_near.setText(f'{self.matcher.catalogue.count_valid}')
         self.lb_objects_all.setText(f'{self.matcher.sensor_data.count}')
@@ -376,6 +393,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.skyPlot.stars_valid = False
         self.errorPlot.valid = False
         self.vectorErrorPlot.valid = False
+        self.showCounts()
         self.updatePlots()
 
 

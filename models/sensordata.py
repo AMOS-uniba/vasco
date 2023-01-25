@@ -52,9 +52,11 @@ class SensorData():
 
         self.positions = np.asarray([[star.x, star.y] for star in data.Refstars])
         self.unitdisk = self.rect.to_unit(self.positions)
-
         self.intensities = np.asarray([star.intensity for star in data.Refstars])
         self._count = self.positions.shape[0]
+
+        self.meteor = np.asarray([[snapshot.xc, snapshot.yc] for snapshot in data.Trail])
+
         self.reset_mask()
 
     def set_mask(self, mask):

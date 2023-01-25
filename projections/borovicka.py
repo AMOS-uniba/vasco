@@ -34,9 +34,9 @@ class BorovickaProjection(Projection):
             a = self.E + b
         else:
             cosz = np.cos(u) * np.cos(self.epsilon) - np.sin(u) * np.sin(self.epsilon) * np.cos(b)
-            z = np.arccos(cosz)
             sna = np.sin(b) * np.sin(u)
             cna = (np.cos(u) - np.cos(self.epsilon) * cosz) / np.sin(self.epsilon)
+            z = np.arccos(cosz)
             a = self.E + np.arctan2(sna, cna)
 
         a = np.fmod(a + 2 * np.pi, 2 * np.pi)                           # wrap around to [0, 2pi)

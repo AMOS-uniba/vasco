@@ -46,6 +46,9 @@ class Matcher(metaclass=ABCMeta):
         else:
             return np.max(errors)
 
+    def func(self, x):
+        return self.avg_error(self.errors(self.projection_cls(*x), True))
+
     def minimize(self, x0=(0, 0, 0, 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0), maxiter=30):
         result = sp.optimize.minimize(self.func, x0, method='Nelder-Mead',
             bounds=(

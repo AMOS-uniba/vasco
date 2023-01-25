@@ -19,10 +19,12 @@ class SkyPlot(BasePlot):
         self.axis.grid(color='white', alpha=0.3)
         self.axis.set_theta_offset(3 * np.pi / 2)
 
-        self.starScatter = self.axis.scatter([0], [0], s=[50], c='white', marker='o')
-        self.dotScatter = self.axis.scatter([0], [0], s=[50], c='red', marker='x')
+        self.starScatter = self.axis.scatter([], [], s=[], c='white', marker='o')
+        self.dotScatter = self.axis.scatter([], [], s=[], c='red', marker='x')
+        self.meteorScatter = self.axis.scatter([], [], s=[], c='cyan', marker='*')
         self.stars_valid = False
         self.dots_valid = False
+        self.meteor_valid = False
 
     def update_dots(self, positions, magnitudes, errors, *, limit=1):
         z, a = positions.T
@@ -43,6 +45,14 @@ class SkyPlot(BasePlot):
         self.starScatter.set_sizes(sizes)
 
         self.stars_valid = True
+        self.draw()
+
+    def update_meteor(self, positions, magnitude):
+        sizes = 0.5 * np.exp(-0.666 * (magnitudes - 5))
+        self.meteorScatter.set_offsets(positions)
+        self.meteorScatter.set_sizes(sizes)
+
+        self.meteor_valid = True
         self.draw()
 
     def draw(self):
