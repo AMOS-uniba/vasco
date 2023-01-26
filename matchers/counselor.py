@@ -3,32 +3,24 @@ import pandas as pd
 
 from .base import Matcher
 
-from utilities import spherical_distance
+from correctors import KernelSmoother
+from correctors import kernels
+from utilities import spherical_distance, altaz_to_disk, proj_to_disk
 
-#class Fitter():
-#    def __init__(self):
-#        pass
-#
-#    def __call__(self, xy: Tuple[np.ndarray, np.ndarray], za: Tuple[np.ndarray, np.ndarray], cls: Type[Projection], *, params: Optional[dict]=None) -> Projection:
-#        """
-#            xy      a 2-tuple of x and y coordinates on the sensor
-#            za      a 2-tuple of z and a coordinates in the sky catalogue
-#            cls     a subclass of Projection that is used to transform xy onto za
-#            Returns an instance of cls with parameters set to values that result in minimal deviation
-#        """
-#        return cls(params)
 
 class Counselor(Matcher):
+    """ The Counselor is a Matcher that attempts to reconcile the sensor with the catalogue *after* the stars were paired to dots. """
+
     def __init__(self, location, time, projection_cls, catalogue, sensor_data):
         super().__init__(location, time, projection_cls)
         # a Counselor has fixed pairs: they have to be set on creation
-        assert sensor_data.count == catalogue.count
+        assert sensor_data.stars.count == catalogue.count
         self.catalogue = catalogue
         self.sensor_data = sensor_data
 
         print(f"Counselor created with {self.catalogue.count} pairs:")
-        print(self.catalogue)
-        print(self.sensor_data)
+        print(" - " + self.catalogue.__str__())
+        print(" - " + self.sensor_data.__str__())
 
     @property
     def count(self):
@@ -36,7 +28,7 @@ class Counselor(Matcher):
 
     def mask_catalogue(self, mask):
         self.catalogue.set_mask(mask)
-        self.sensor_data.set_mask(mask)
+        self.sensor_data.stars.mask = mask
 
     def mask_sensor_data(self, mask):
         self.mask_catalogue(mask)
@@ -49,24 +41,25 @@ class Counselor(Matcher):
 
         Returns
         -------
-        np.ndarray(N)
+        np.ndarray(N): spherical distance between the dot and the associated star
         """
         catalogue = np.radians(catalogue)
-        observed[..., 0] = np.pi / 2 - observed[..., 0]   # Convert observed altitude to zenith distance
+        observed[..., 0] = np.pi / 2 - observed[..., 0]   # Convert observed altitude to co-altitude
         return spherical_distance(observed, catalogue)
 
     def compute_vector_errors(self, observed, catalogue):
         """
         Returns
-        np.ndarray(N, 2)
+        np.ndarray(N, 2): vector errors
         """
         catalogue = np.radians(catalogue)
-        observed[..., 0] = np.pi / 2 - observed[..., 0]   # Convert observed altitude to zenith distance
+        observed[..., 0] = np.pi / 2 - observed[..., 0]   # Convert observed altitude to co-altitude
         return spherical_difference(observed, catalogue)
+        # BROKEN
 
     def errors(self, projection, masked):
         return self.compute_distances(
-            self.sensor_data.project(projection, masked=masked),
+            self.sensor_data.project_stars(projection, masked=masked),
             self.catalogue.to_altaz_deg(self.location, self.time, masked=masked),
         )
 
@@ -75,8 +68,20 @@ class Counselor(Matcher):
 
     def pair(self, projection):
         self.catalogue.cull()
-        self.sensor_data.cull()
+        self.sensor_data.stars.cull()
         return self
+
+    def smoothen(self, location, time, projection):
+        cat = altaz_to_disk(self.catalogue.altaz(location, time, masked=True))
+        obs = proj_to_disk(self.sensor_data.project_stars(projection, masked=True))
+
+        smoother = KernelSmoother(cat, obs - cat, kernel=kernels.nexp, bandwidth=0.05)
+        res = 31
+        x = np.linspace(-1, 1, res)
+        xx, yy = np.meshgrid(x, x)
+        nodes = np.ma.stack((xx.ravel(), yy.ravel()), axis=1)
+
+        return smoother(nodes).reshape(res, res, -1)
 
     def save(self, filename):
         self.df.to_csv(sep='\t', float_format='.6f', index=False, header=['x', 'y', 'dec', 'ra'])

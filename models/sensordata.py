@@ -29,109 +29,107 @@ class Rect():
         return out
 
 
+class DotCollection():
+    def __init__(self, xy=None, m=None, mask=None):
+        self._xy = np.empty(shape=(0, 2)) if xy is None else xy
+        self._m = np.empty(shape=(0,)) if m is None else m
+        self.mask = mask
+        assert self._xy.shape[0] == self._m.shape[0], "xy must be of shape (N, 2) and m of shape (N,)"
+        assert self._xy.shape[0] == self._mask.shape[0], "xy must be of shape (N, 2) and mask of shape (N,)"
+
+    @property
+    def xy(self):
+        return self._xy
+
+    @property
+    def x(self):
+        return self._xy[:, 0]
+
+    @property
+    def y(self):
+        return self._xy[:, 1]
+
+    @property
+    def m(self):
+        return self._m
+
+    @property
+    def mask(self):
+        return self._mask
+
+    @property
+    def count(self):
+        return self._xy.shape[0]
+
+    @property
+    def count_valid(self):
+        return np.count_nonzero(self.mask)
+
+    def xs(self, masked):
+        return self.x[self.mask] if masked else self.x
+
+    def ys(self, masked):
+        return self.y[self.mask] if masked else self.y
+
+    def ms(self, masked):
+        return self.m[self.mask] if masked else self.m
+
+    @mask.setter
+    def mask(self, m=None):
+        self._mask = np.ones_like(self.m, dtype=bool) if m is None else ~m
+        assert self.mask.shape == self.x.shape
+
+    def culled_copy(self):
+        out = copy.deepcopy(self)
+        return out.cull()
+
+    def cull(self):
+        self._xy = self._xy[self.mask]
+        self._m = self.m[self.mask]
+        self._count = self._xy.shape[0]
+        self.mask = None
+        return self
+
+
 class SensorData():
     """ A set of stars in xy format """
 
-    def __init__(self, positions=None, intensities=None):
+    def __init__(self, star_positions=None, star_intensities=None, meteor_positions=None, meteor_intensities=None):
         self.rect = Rect(-1, 1, -1, 1)
-        self.positions = np.empty(shape=(0, 2))
-        self.intensities = np.empty(shape=(0,))
-        self._count = 0
-
-        if positions is not None:
-            self.positions = positions
-            self._count = self.positions.shape[0]
-            if intensities is not None:
-                self.intensities = intensities
-
-        self.reset_mask()
+        self.stars = DotCollection(star_positions, star_intensities, None)
+        self.meteor = DotCollection(meteor_positions, meteor_intensities, None)
 
     def load(self, data):
         w, h = tuple(map(int, data.Resolution.split('x')))
         self.rect = Rect(0, w, 0, h)
+        self.stars = DotCollection(
+            np.asarray([[star.x, star.y] for star in data.Refstars]),
+            np.asarray([star.intensity for star in data.Refstars]),
+        )
+        self.meteor = DotCollection(
+            np.asarray([[snapshot.xc, snapshot.yc] for snapshot in data.Trail]),
+            np.asarray([snapshot.intensity for snapshot in data.Trail]),
+        )
 
-        self.positions = np.asarray([[star.x, star.y] for star in data.Refstars])
-        self.unitdisk = self.rect.to_unit(self.positions)
-        self.intensities = np.asarray([star.intensity for star in data.Refstars])
-        self._count = self.positions.shape[0]
+    def project_stars(self, projection, *, masked):
+        return np.stack(projection(self.stars.xs(masked), self.stars.ys(masked)), axis=1)
 
-        self.meteor = np.asarray([[snapshot.xc, snapshot.yc] for snapshot in data.Trail])
+    def project_meteor(self, projection):
+        return np.stack(projection(self.meteor.x, self.meteor.y), axis=1)
 
-        self.reset_mask()
+    def stars_to_disk(self, masked):
+        return np.stack(self.rect.shifter(self.stars.xs(masked), self.stars.ys.masked), axis=1)
 
-    def set_mask(self, mask):
-        self.use = ~mask
+    def meteor_to_disk(self, masked):
+        return np.stack(self.rect.shifter(self.meteor.xs(masked), self.meteor.ys.masked), axis=1)
 
     def reset_mask(self):
-        self.use = np.ones_like(self.x, dtype=bool)
-        print(f"Sensor data mask reset: {self.count_valid} / {self.count} stars used")
+        self.stars.mask = None
 
     def culled_copy(self):
         out = copy.deepcopy(self)
-        out.cull()
+        out.stars.cull()
         return out
 
-    def cull(self):
-        self.positions = self.positions[self.use]
-        self.intensities = self.intensities[self.use]
-        self._count = self.positions.shape[0]
-        self.reset_mask()
-
-    @property
-    def count(self):
-        return self._count
-
-    @property
-    def count_valid(self):
-        return np.count_nonzero(self.use)
-
-    @property
-    def xy(self):
-        return self.positions
-
-    @property
-    def x(self):
-        return self.positions[:, 0]
-
-    @property
-    def y(self):
-        return self.positions[:, 1]
-
-    @property
-    def m(self):
-        return self.intensities
-
-    @property
-    def valid(self):
-        return self.positions[self.use]
-
-    @property
-    def valid_intensities(self):
-        return self.intensities[self.use]
-
-    @property
-    def xv(self):
-        return self.positions[self.use][:, 0]
-
-    @property
-    def yv(self):
-        return self.positions[self.use][:, 1]
-
-    @property
-    def xyv(self):
-        return self.points[self.use]
-
-    def project(self, projection, masked=False):
-        if masked:
-            return np.stack(projection(self.xv, self.yv), axis=1)
-        else:
-            return np.stack(projection(self.x, self.y), axis=1)
-
-    def to_disk(self, masked=False):
-        if masked:
-            return np.stack(self.rect.shifter(self.xv, self.yv), axis=1)
-        else:
-            return np.stack(self.rect.shifter(self.x, self.y), axis=1)
-
     def __str__(self):
-        return f"<Sensor data of {self.count_valid} / {self.count} objects>"
+        return f"<Sensor data with {self.stars.count_valid} / {self.stars.count} reference stars and {self.meteor.count} meteor snapshots>"

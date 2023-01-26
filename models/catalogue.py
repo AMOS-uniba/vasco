@@ -76,12 +76,12 @@ class Catalogue():
         stars = self.altaz(location, time, masked)
         return np.stack((stars.alt.radian, stars.az.radian), axis=1)
 
-    def to_altaz_deg(self, location, time, masked):
+    def to_altaz_deg(self, location, time, *, masked):
         """ Same but returns azimuth and altitude in degrees """
         stars = self.altaz(location, time, masked)
         return np.stack((stars.alt.degree, stars.az.degree), axis=1)
 
-    def to_altaz_chart(self, location, time, masked):
+    def to_altaz_chart(self, location, time, *, masked):
         """ Same but returns azimuth in radians (t axis) and co-altitude in degrees (r axis) for chart display """
         stars = self.altaz(location, time, masked)
         return np.stack((stars.az.radian, 90 - stars.alt.degree), axis=1)

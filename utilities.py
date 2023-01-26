@@ -16,10 +16,10 @@ def polar_to_cart(z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]
 
 def by_azimuth(uv):
     uv = np.nan_to_num(uv, 0)
-    r = np.sqrt(np.sum(np.square(uv), axis=2))
+    r = np.sqrt(np.sum(np.square(uv), axis=-1))
     f = (np.arctan2(uv[..., 1], uv[..., 0]) + 2 * np.pi) % (2 * np.pi)
     r = r / np.max(r)
-    hsv = np.dstack((f / (2 * np.pi), r, np.ones_like(r)))
+    hsv = np.stack((f / (2 * np.pi), r, np.ones_like(r)), axis=1)
     return mpl.colors.hsv_to_rgb(hsv)
 
 
@@ -70,3 +70,9 @@ def disk_to_altaz(xy: np.ndarray) -> AltAz:
         np.sqrt(xy[:, 0]**2 + xy[:, 1]**2) / HalfPi,
         np.arctan2(xy[:, 1], xy[:, 0]),
     )
+
+def proj_to_disk(obs: np.ndarray) -> np.ndarray:
+    z, a = obs.T
+    x = z * np.sin(a) / np.pi * 2
+    y = -z * np.cos(a) / np.pi * 2
+    return np.stack((x, y), axis=1)

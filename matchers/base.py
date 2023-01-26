@@ -14,15 +14,19 @@ class Matcher(metaclass=ABCMeta):
     @property
     @abstractmethod
     def count(self):
-        pass
+        """ Count the dots """
 
     @abstractmethod
     def mask_catalogue(self, mask):
-        pass
+        """ Apply a mask to the catalogue data """
 
     @abstractmethod
     def mask_sensor_data(self, mask):
-        pass
+        """ Apply a mask to the sensor data """
+
+    @abstractmethod
+    def pair(self, projection):
+        """ Assign the nearest catalogue star to every dot """
 
     def reset_mask(self):
         self.catalogue.reset_mask()

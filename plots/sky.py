@@ -5,8 +5,16 @@ from .base import BasePlot
 
 
 class SkyPlot(BasePlot):
+    @staticmethod
+    def to_chart(positions):
+        return np.stack(
+            (positions[:, 1], np.degrees(positions[:, 0])),
+            axis=1,
+        )
+
     def __init__(self, widget, **kwargs):
-        self.cmap = mpl.cm.get_cmap('autumn_r')
+        self.cmap_stars = mpl.cm.get_cmap('autumn_r')
+        self.cmap_meteors = mpl.cm.get_cmap('Blues_r')
         super().__init__(widget, **kwargs)
 
     def add_axes(self):
@@ -19,38 +27,37 @@ class SkyPlot(BasePlot):
         self.axis.grid(color='white', alpha=0.3)
         self.axis.set_theta_offset(3 * np.pi / 2)
 
-        self.starScatter = self.axis.scatter([], [], s=[], c='white', marker='o')
-        self.dotScatter = self.axis.scatter([], [], s=[], c='red', marker='x')
-        self.meteorScatter = self.axis.scatter([], [], s=[], c='cyan', marker='*')
+        self.scatterStars = self.axis.scatter([], [], s=[], c='white', marker='o')
+        self.scatterDots = self.axis.scatter([], [], s=[], c='red', marker='x')
+        self.scatterMeteor = self.axis.scatter([], [], s=[], c='cyan', marker='o')
         self.stars_valid = False
         self.dots_valid = False
         self.meteor_valid = False
 
-    def update_dots(self, positions, magnitudes, errors, *, limit=1):
-        z, a = positions.T
-        self.dotScatter.set_offsets(np.stack((a, np.degrees(z)), axis=1))
-
-        norm = mpl.colors.Normalize(vmin=0, vmax=limit)
-        self.dotScatter.set_facecolors(self.cmap(norm(errors)))
-        self.dotScatter.set_sizes(10 + 0.05 * magnitudes)
-
-        self.dots_valid = True
-        self.draw()
-
     def update_stars(self, positions, magnitudes):
-        #loc = self.location.to_geodetic()
-        #print(f"Plotting catalogue stars for {loc.lat:.6f}, {loc.lon:.6f} at {self.time}")
         sizes = 0.2 * np.exp(-0.666 * (magnitudes - 5))
-        self.starScatter.set_offsets(positions)
-        self.starScatter.set_sizes(sizes)
+        self.scatterStars.set_offsets(positions)
+        self.scatterStars.set_sizes(sizes)
 
         self.stars_valid = True
         self.draw()
 
-    def update_meteor(self, positions, magnitude):
-        sizes = 0.5 * np.exp(-0.666 * (magnitudes - 5))
-        self.meteorScatter.set_offsets(positions)
-        self.meteorScatter.set_sizes(sizes)
+    def update_dots(self, positions, magnitudes, errors, *, limit=1):
+        self.scatterDots.set_offsets(SkyPlot.to_chart(positions))
+
+        norm = mpl.colors.Normalize(vmin=0, vmax=limit)
+        self.scatterDots.set_facecolors(self.cmap_stars(norm(errors)))
+        self.scatterDots.set_sizes(0.03 * magnitudes)
+
+        self.dots_valid = True
+        self.draw()
+
+    def update_meteor(self, positions, magnitudes):
+        self.scatterMeteor.set_offsets(SkyPlot.to_chart(positions))
+
+        norm = mpl.colors.Normalize(vmin=0, vmax=None)
+        self.scatterMeteor.set_facecolors(self.cmap_meteors(norm(magnitudes)))
+        self.scatterMeteor.set_sizes(0.0005 * magnitudes)
 
         self.meteor_valid = True
         self.draw()
