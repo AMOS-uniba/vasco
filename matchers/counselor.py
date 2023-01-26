@@ -71,17 +71,16 @@ class Counselor(Matcher):
         self.sensor_data.stars.cull()
         return self
 
-    def smoothen(self, location, time, projection):
+    def smoothen(self, location, time, projection, *, resolution=21):
         cat = altaz_to_disk(self.catalogue.altaz(location, time, masked=True))
         obs = proj_to_disk(self.sensor_data.project_stars(projection, masked=True))
 
         smoother = KernelSmoother(cat, obs - cat, kernel=kernels.nexp, bandwidth=0.05)
-        res = 31
-        x = np.linspace(-1, 1, res)
+        x = np.linspace(-1, 1, resolution)
         xx, yy = np.meshgrid(x, x)
         nodes = np.ma.stack((xx.ravel(), yy.ravel()), axis=1)
 
-        return smoother(nodes).reshape(res, res, -1)
+        return smoother(nodes).reshape(resolution, resolution, -1)
 
     def save(self, filename):
         self.df.to_csv(sep='\t', float_format='.6f', index=False, header=['x', 'y', 'dec', 'ra'])

@@ -118,6 +118,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pb_reset.clicked.connect(self.resetValid)
         self.dsb_error_limit.valueChanged.connect(self.onErrorLimitChanged)
         self.dsb_arrow_scale.valueChanged.connect(self.onArrowScaleChanged)
+        self.sb_resolution.valueChanged.connect(self.onResolutionChanged)
+
         self.pb_smoothen.clicked.connect(self.plotVectorGrid)
 
         self.tw_charts.currentChanged.connect(self.updatePlots)
@@ -178,6 +180,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def onArrowScaleChanged(self):
         self.vectorErrorPlot.valid_dots = False
+        self.updatePlots()
+
+    def onResolutionChanged(self):
+        self.vectorErrorPlot.valid_grid = False
         self.updatePlots()
 
     def updatePlots(self):
@@ -409,12 +415,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.updatePlots()
 
     def plotVectorGrid(self):
-        field = self.matcher.smoothen(self.location, self.time, self.projection)
-        x = np.linspace(-1, 1, GRID_RESOLUTION)
-        xx, yy = np.meshgrid(x, x)
-        self.vectorErrorPlot.update_grid(
-            xx, yy, field[..., 0].ravel(), field[..., 1].ravel()
-        )
+        if isinstance(self.matcher, Counselor):
+            self.vector_tabs.setCurrentIndex(1)
+            field = self.matcher.smoothen(self.location, self.time, self.projection, resolution=self.sb_resolution.value())
+            x = np.linspace(-1, 1, self.sb_resolution.value())
+            xx, yy = np.meshgrid(x, x)
+            self.vectorErrorPlot.update_grid(
+                xx, yy, field[..., 0].ravel(), field[..., 1].ravel()
+            )
+        else:
+            self.vector_tabs.setCurrentIndex(0)
 
 app = QApplication(sys.argv)
 
