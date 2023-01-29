@@ -35,6 +35,9 @@ class Matchmaker(Matcher):
     def update(self, location, time):
         super().update(location, time)
 
+    def update_smoother(self, projection):
+        ...
+
     @property
     def count(self):
         return self.sensor_data.count
@@ -47,14 +50,14 @@ class Matchmaker(Matcher):
 
     def errors(self, projection, masked) -> np.ndarray:
         return self.find_nearest_value(
-            self.sensor_data.project_stars(projection, masked=masked),
+            self.sensor_data.stars.project(projection, masked=masked),
             self.catalogue.to_altaz_deg(self.location, self.time, masked=masked),
             axis=1
         )
 
     def errors_inverse(self, projection, masked) -> np.ndarray:
         return self.find_nearest_value(
-            self.sensor_data.project_stars(projection, masked=masked),
+            self.sensor_data.stars.project(projection, masked=masked),
             self.catalogue.to_altaz_deg(self.location, self.time, masked=masked),
             axis=0
         )
@@ -112,7 +115,7 @@ class Matchmaker(Matcher):
     def pair(self, projection):
         # Find which star is the nearest for every dot
         nearest = self.find_nearest_index(
-            self.sensor_data.project_stars(projection, masked=True),
+            self.sensor_data.stars.project(projection, masked=True),
             self.catalogue.to_altaz_deg(self.location, self.time, masked=True),
             axis=1,
         )

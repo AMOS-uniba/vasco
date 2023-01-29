@@ -37,6 +37,9 @@ class OpticalAxisShifter():
         y = self.y0 + r * np.sin(xi)
         return x, y
 
+    def __str__(self):
+        return f"<{self.__class__} x0={self.x0} y0={self.y0} a0={self.a0} E={self.E}>"
+
 
 class TiltShifter(OpticalAxisShifter):
     """ Extends OpticalAxisShifter with imaging plane tilt """
@@ -60,10 +63,14 @@ class TiltShifter(OpticalAxisShifter):
         drdy = ys / np.sqrt(r2) + self.A * self.cos_term
         dbdx = -ys / r2
         dbdy = xs / r2
-        return [[drdx, drdy], [dbdx, dbdy]]
+        return [
+            [drdx, drdy],
+            [dbdx, dbdy],
+        ]
 
     def func(self, vec, r, b):
         q = self.__call__(vec[0], vec[1])
+        print(vec, r, b)
         return q[0] - r, q[1] - b
 
     def invert(self, r: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -74,3 +81,7 @@ class TiltShifter(OpticalAxisShifter):
             jac=self.jacobian,
             tol=1e-9,
         ).x
+
+    def __str__(self):
+        return f"<{self.__class__} x0={self.x0} y0={self.y0} a0={self.a0} A={self.A} F={self.F} E={self.E}>"
+

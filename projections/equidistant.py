@@ -17,4 +17,3 @@ class EquidistantProjection(Projection):
 
     def invert(self, z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         return z * np.sin(a), z * np.cos(a)
-

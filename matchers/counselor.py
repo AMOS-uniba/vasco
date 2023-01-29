@@ -17,6 +17,7 @@ class Counselor(Matcher):
         assert sensor_data.stars.count == catalogue.count
         self.catalogue = catalogue
         self.sensor_data = sensor_data
+        self.smoother = None
 
         print(f"Counselor created with {self.catalogue.count} pairs:")
         print(" - " + self.catalogue.__str__())
@@ -59,7 +60,7 @@ class Counselor(Matcher):
 
     def errors(self, projection, masked):
         return self.compute_distances(
-            self.sensor_data.project_stars(projection, masked=masked),
+            self.sensor_data.stars.project(projection, masked=masked),
             self.catalogue.to_altaz_deg(self.location, self.time, masked=masked),
         )
 
@@ -71,16 +72,19 @@ class Counselor(Matcher):
         self.sensor_data.stars.cull()
         return self
 
-    def smoothen(self, location, time, projection, *, resolution=21):
-        cat = altaz_to_disk(self.catalogue.altaz(location, time, masked=True))
-        obs = proj_to_disk(self.sensor_data.project_stars(projection, masked=True))
+    def update_smoother(self, projection, *, bandwidth=0.1):
+        cat = altaz_to_disk(self.catalogue.altaz(self.location, self.time, masked=True))
+        obs = proj_to_disk(self.sensor_data.stars.project(projection))
+        self.smoother = KernelSmoother(cat, obs - cat, kernel=kernels.nexp, bandwidth=bandwidth)
 
-        smoother = KernelSmoother(cat, obs - cat, kernel=kernels.nexp, bandwidth=0.05)
+    def correct_meteor(self, projection):
+        return self.smoother(proj_to_disk(self.sensor_data.meteor.project(projection)))
+
+    def grid(self, resolution=21):
         x = np.linspace(-1, 1, resolution)
         xx, yy = np.meshgrid(x, x)
         nodes = np.ma.stack((xx.ravel(), yy.ravel()), axis=1)
-
-        return smoother(nodes).reshape(resolution, resolution, -1)
+        return self.smoother(nodes).reshape(resolution, resolution, -1)
 
     def save(self, filename):
         self.df.to_csv(sep='\t', float_format='.6f', index=False, header=['x', 'y', 'dec', 'ra'])

@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 
+from base import pytest_generate_tests, TestProjection
 from projections.shifters import OpticalAxisShifter, TiltShifter
 
 
@@ -10,33 +11,43 @@ def oas():
 
 
 @pytest.fixture
-def ts():
-    return TiltShifter(x0=1.2, y0=0.3, a0=-0.05, A=0.1, F=np.radians(135), E=0.01)
+def ts1():
+    return TiltShifter(x0=1.2, y0=0.5, a0=-0.05, A=0.17, F=np.radians(135), E=0.01)
 
 
-class TestOpticalAxisShifter():
-    def test_inverse_1(self, oas):
-        assert oas.invert(*oas(0.775, 1.234)) == pytest.approx((0.775, 1.234), rel=1e-12)
-
-    def test_inverse_2(self, oas):
-        assert oas.invert(*oas(0.168, 2.124)) == pytest.approx((0.168, 2.124), rel=1e-12)
-
-    def test_inverse_3(self, oas):
-        assert oas.invert(*oas(0, 0)) == pytest.approx((0, 0), rel=1e-12)
+@pytest.fixture
+def ts2():
+    return TiltShifter(x0=-0.2, y0=0.345, a0=0.15, A=-0.134, F=np.radians(240), E=0.05)
 
 
-class TestTiltShifter():
-    def test_inverse_1(self, ts):
-        assert ts.invert(*ts(0.775, 1.234)) == pytest.approx((0.775, 1.234), rel=1e-9)
+class TestOpticalAxisShifter(TestProjection):
+    params = dict(
+        test_inverse=[
+            dict(x=x, y=y)
+            for x in np.linspace(-1, 1, 5)
+            for y in np.linspace(-1, 1, 7)
+            if x**2 + y**2 < 1
+        ],
+    )
 
-    def test_inverse_2(self, ts):
-        assert ts.invert(*ts(0.168, 2.124)) == pytest.approx((0.168, 2.124), rel=1e-9)
+    def test_inverse(self, oas, x, y):
+        assert self.compare_inverted(oas, x, y)
 
-    def test_inverse_3(self, ts):
-        assert ts.invert(*ts(0, 0)) == pytest.approx((0, 0), rel=1e-9)
 
-    def test_inverse_4(self, ts):
-        assert ts.invert(*ts(0.3, 0.9)) == pytest.approx((0.3, 0.9), rel=1e-9)
+class TestTiltShifter(TestProjection):
+    grid = [
+        dict(x=x, y=y)
+        for x in np.linspace(-2, 2, 11)
+        for y in np.linspace(-2, 2, 11)
+        if x**2 + y**2 < 1
+    ]
+    params = dict(
+        test_inverse_1=grid,
+        test_inverse_2=grid,
+    )
 
-    def test_inverse_5(self, ts):
-        assert ts.invert(*ts(-0.23, -0.14)) == pytest.approx((-0.23, -0.14), rel=1e-9)
+    def test_inverse_1(self, ts1, x, y):
+        assert self.compare_inverted(ts1, x, y)
+
+    def test_inverse_2(self, ts2, x, y):
+        assert self.compare_inverted(ts2, x, y)

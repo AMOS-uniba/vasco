@@ -67,8 +67,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.connectSignalSlots()
 
-        self.maskSensor() # temporary
-        self.pair() # temporary
+        #self.maskSensor() # temporary
+        #self.pair() # temporary
 
     def populateStations(self):
         for name, station in AMOS.stations.items():
@@ -117,6 +117,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pb_mask_distant.clicked.connect(self.maskCatalogue)
         self.pb_reset.clicked.connect(self.resetValid)
         self.dsb_error_limit.valueChanged.connect(self.onErrorLimitChanged)
+
+        self.dsb_bandwidth.valueChanged.connect(self.onBandwidthChanged)
         self.dsb_arrow_scale.valueChanged.connect(self.onArrowScaleChanged)
         self.sb_resolution.valueChanged.connect(self.onResolutionChanged)
 
@@ -147,6 +149,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def updateMatcher(self):
         self.matcher.update(self.location, self.time)
+        self.matcher.update_smoother(self.projection)
 
     def updateProjection(self):
         self.projection = BorovickaProjection(*self.get_constants_tuple())
@@ -176,6 +179,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.skyPlot.meteors_valid = False
         self.errorPlot.valid = False
         self.vectorErrorPlot.valid_dots = False
+        self.updatePlots()
+
+    def onBandwidthChanged(self):
+        self.matcher.update_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
+        self.vectorErrorPlot.valid_grid = False
         self.updatePlots()
 
     def onArrowScaleChanged(self):
@@ -370,13 +378,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def plotObservedStars(self):
         self.skyPlot.update_dots(
-            self.matcher.sensor_data.project_stars(self.projection, masked=True),
+            self.matcher.sensor_data.stars.project(self.projection, masked=True),
             self.matcher.sensor_data.stars.m,
             self.errors,
             limit=np.radians(self.dsb_error_limit.value())
         )
         self.skyPlot.update_meteor(
-            self.matcher.sensor_data.project_meteor(self.projection),
+            self.matcher.sensor_data.meteor.project(self.projection),
             self.matcher.sensor_data.meteor.m
         )
 
@@ -387,7 +395,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
 
     def plotErrors(self):
-        positions = self.matcher.sensor_data.project_stars(self.projection, masked=True)
+        positions = self.matcher.sensor_data.stars.project(self.projection, masked=True)
         self.errorPlot.update(positions, self.matcher.sensor_data.stars.m, self.errors, limit=np.radians(self.dsb_error_limit.value()))
 
     def plotVectorErrors(self):
@@ -396,15 +404,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.vector_tabs.setCurrentIndex(1)
             self.vectorErrorPlot.update_dots(
                 self.matcher.catalogue.altaz(self.location, self.time, masked=True),
-                self.matcher.sensor_data.project_stars(self.projection, masked=True),
+                self.matcher.sensor_data.stars.project(self.projection, masked=True),
                 limit=np.radians(self.dsb_error_limit.value()),
                 scale=self.dsb_arrow_scale.value(),
+            )
+            self.vectorErrorPlot.update_meteor(
+                self.matcher.sensor_data.meteor.project(self.projection),
+                self.matcher.correct_meteor(self.projection),
+                self.matcher.sensor_data.meteor.ms(True),
+                scale=self.dsb_arrow_scale.value(),
+            )
+        else:
+            self.vector_tabs.setCurrentIndex(0)
+
+    def plotVectorGrid(self):
+        if isinstance(self.matcher, Counselor):
+            self.vector_tabs.setCurrentIndex(1)
+            grid = self.matcher.grid(resolution=self.sb_resolution.value())
+
+            x = np.linspace(-1, 1, self.sb_resolution.value())
+            xx, yy = np.meshgrid(x, x)
+            self.vectorErrorPlot.update_grid(
+                xx, yy, grid[..., 0].ravel(), grid[..., 1].ravel()
             )
         else:
             self.vector_tabs.setCurrentIndex(0)
 
     def pair(self):
         self.matcher = self.matcher.pair(self.projection)
+        self.matcher.update_smoother(self.projection)
 
         self.skyPlot.dots_valid = False
         self.skyPlot.stars_valid = False
@@ -413,18 +441,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vectorErrorPlot.valid_grid = False
         self.showCounts()
         self.updatePlots()
-
-    def plotVectorGrid(self):
-        if isinstance(self.matcher, Counselor):
-            self.vector_tabs.setCurrentIndex(1)
-            field = self.matcher.smoothen(self.location, self.time, self.projection, resolution=self.sb_resolution.value())
-            x = np.linspace(-1, 1, self.sb_resolution.value())
-            xx, yy = np.meshgrid(x, x)
-            self.vectorErrorPlot.update_grid(
-                xx, yy, field[..., 0].ravel(), field[..., 1].ravel()
-            )
-        else:
-            self.vector_tabs.setCurrentIndex(0)
 
 app = QApplication(sys.argv)
 

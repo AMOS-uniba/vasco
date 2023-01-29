@@ -90,6 +90,9 @@ class DotCollection():
         self.mask = None
         return self
 
+    def project(self, projection, *, masked=False):
+        return np.stack(projection(self.xs(masked), self.ys(masked)), axis=1)
+
 
 class SensorData():
     """ A set of stars in xy format """
@@ -110,12 +113,6 @@ class SensorData():
             np.asarray([[snapshot.xc, snapshot.yc] for snapshot in data.Trail]),
             np.asarray([snapshot.intensity for snapshot in data.Trail]),
         )
-
-    def project_stars(self, projection, *, masked):
-        return np.stack(projection(self.stars.xs(masked), self.stars.ys(masked)), axis=1)
-
-    def project_meteor(self, projection):
-        return np.stack(projection(self.meteor.x, self.meteor.y), axis=1)
 
     def stars_to_disk(self, masked):
         return np.stack(self.rect.shifter(self.stars.xs(masked), self.stars.ys.masked), axis=1)

@@ -26,8 +26,10 @@ class BorovickaProjection(Projection):
         self.radial_transform = BiexponentialTransformer(V, S, D, P, Q)
 
     def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        print("x", x, "y", y)
         r, b = self.axis_shifter(x, y)
         u = self.radial_transform(r)
+        print("r", r, "b", b, "u", u)
 
         if abs(self.epsilon) < 1e-14:                       # for tiny epsilon there is no displacement
             z = u                                           # and we are able to calculate the coordinates immediately
@@ -39,12 +41,26 @@ class BorovickaProjection(Projection):
             z = np.arccos(cosz)
             a = self.E + np.arctan2(sna, cna)
 
-        a = np.fmod(a + 2 * np.pi, 2 * np.pi)                           # wrap around to [0, 2pi)
+        a = np.fmod(a + 2 * np.pi, 2 * np.pi)               # wrap around to [0, 2pi)
+        print("z", z, "a", a)
         return z, a
 
     def invert(self, z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        raise NotImplementedError("Inversion is not yet supported")
-        a -= self.E
+        print("z", z, "a", a)
+        if abs(self.epsilon) < 1e-14:
+            u = z
+            b = a - self.E
+        else:
+            cosu = np.cos(z) * np.cos(self.epsilon) - np.sin(z) * np.sin(self.epsilon) * np.cos(a - self.E)
+            u = np.arccos(cosu)
+
+        b = np.fmod(b + 2 * np.pi, 2 * np.pi)
+
+        r = self.radial_transform.invert(u)
+        print("r", r, "b", b)
+        x, y = self.axis_shifter.invert(r, b)
+        print("x", x, "y", y)
+        return x, y
 
     def __str__(self):
         return f"Borovička projection with " \
