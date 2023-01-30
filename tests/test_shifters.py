@@ -31,7 +31,7 @@ class TestOpticalAxisShifter(TestProjection):
     )
 
     def test_inverse(self, oas, x, y):
-        assert self.compare_inverted(oas, x, y)
+        self.compare_inverted(oas, x, y)
 
 
 class TestTiltShifter(TestProjection):
@@ -47,7 +47,7 @@ class TestTiltShifter(TestProjection):
     )
 
     def test_inverse_1(self, ts1, x, y):
-        assert self.compare_inverted(ts1, x, y)
+        self.compare_inverted(ts1, x, y)
 
     def test_inverse_2(self, ts2, x, y):
-        assert self.compare_inverted(ts2, x, y)
+        self.compare_inverted(ts2, x, y)

@@ -36,6 +36,9 @@ class ErrorPlot(BasePlot):
 
         self.scatterAlt = self.axisAlt.scatter([], [], s=[], marker='x', c='cyan')
         self.scatterAz = self.axisAz.scatter([0], [0], s=[1], marker='x', c='cyan')
+        self.invalidate()
+
+    def invalidate(self):
         self.valid = False
 
     def update(self, positions, magnitudes, errors, *, limit=1):

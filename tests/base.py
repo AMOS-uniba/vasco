@@ -15,4 +15,4 @@ def pytest_generate_tests(metafunc):
 class TestProjection():
     @staticmethod
     def compare_inverted(projection, x, y, abs=1e-12):
-        return projection.invert(*projection(x, y)) == pytest.approx((x, y), abs=abs)
+        assert projection.invert(*projection(x, y)) == pytest.approx((x, y), abs=abs)

@@ -30,16 +30,25 @@ class SkyPlot(BasePlot):
         self.scatterStars = self.axis.scatter([], [], s=[], c='white', marker='o')
         self.scatterDots = self.axis.scatter([], [], s=[], c='red', marker='x')
         self.scatterMeteor = self.axis.scatter([], [], s=[], c='cyan', marker='o')
-        self.stars_valid = False
-        self.dots_valid = False
-        self.meteor_valid = False
+        self.invalidate_stars()
+        self.invalidate_dots()
+        self.invalidate_meteor()
+
+    def invalidate_stars(self):
+        self.valid_stars = False
+
+    def invalidate_dots(self):
+        self.valid_dots = False
+
+    def invalidate_meteor(self):
+        self.valid_meteor = False
 
     def update_stars(self, positions, magnitudes):
         sizes = 0.2 * np.exp(-0.666 * (magnitudes - 5))
         self.scatterStars.set_offsets(positions)
         self.scatterStars.set_sizes(sizes)
 
-        self.stars_valid = True
+        self.invalidate_stars()
         self.draw()
 
     def update_dots(self, positions, magnitudes, errors, *, limit=1):
@@ -49,7 +58,7 @@ class SkyPlot(BasePlot):
         self.scatterDots.set_facecolors(self.cmap_stars(norm(errors)))
         self.scatterDots.set_sizes(0.03 * magnitudes)
 
-        self.dots_valid = True
+        self.invalidate_dots()
         self.draw()
 
     def update_meteor(self, positions, magnitudes):
@@ -59,7 +68,7 @@ class SkyPlot(BasePlot):
         self.scatterMeteor.set_facecolors(self.cmap_meteors(norm(magnitudes)))
         self.scatterMeteor.set_sizes(0.0005 * magnitudes)
 
-        self.meteor_valid = True
+        self.invalidate_meteor()
         self.draw()
 
     def draw(self):

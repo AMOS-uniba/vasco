@@ -22,15 +22,33 @@ def boro_identity():
 def boro_rotated():
     return BorovickaProjection(0, 0, np.radians(1.2), 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0)
 
+@pytest.fixture
+def boro_general():
+    return BorovickaProjection(
+        796.164, 605.979, np.radians(256.914847),
+        0.003833, np.radians(187.852341),
+        0.00194479, -5.3e-05, -0.000192, -0.006691, -4.2e-05,
+        0.55556, np.radians(127.910437),
+    )
 
 class TestBorovickaProjection(TestProjection):
+    grid = [
+        dict(x=x, y=y)
+        for x in np.linspace(-1, 1, 12)
+        for y in np.linspace(-1, 1, 12)
+        if x**2 + y**2 <= 1
+    ]
+
+    big_grid = [
+        dict(x=x, y=y)
+        for x in np.linspace(0, 1600, 11)
+        for y in np.linspace(0, 1200, 13)
+    ]
+
     params = dict(
-        test_identity_invert=[
-            dict(x=x, y=y)
-            for x in np.linspace(-1, 1, 11)
-            for y in np.linspace(-1, 1, 11)
-            if x**2 + y**2 <= 1
-        ],
+        test_identity_invert=grid,
+        test_rotated_invert=grid,
+        test_general_invert=big_grid,
     )
 
     def test_identity_zero(self, boro_identity):
@@ -49,4 +67,10 @@ class TestBorovickaProjection(TestProjection):
         assert boro_identity(0.5, -0.5) == pytest.approx((np.sqrt(2) * np.pi / 4, np.pi * 1.75), rel=1e-14)
 
     def test_identity_invert(self, boro_identity, x, y):
-        assert self.compare_inverted(boro_identity, x, y)
+        self.compare_inverted(boro_identity, x, y)
+
+    def test_rotated_invert(self, boro_rotated, x, y):
+        self.compare_inverted(boro_rotated, x, y)
+
+    def test_general_invert(self, boro_general, x, y):
+        self.compare_inverted(boro_general, x, y, abs=1e-9)

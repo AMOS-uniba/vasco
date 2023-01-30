@@ -29,8 +29,14 @@ class VectorErrorPlot(BasePlot):
         self.quiver_dots = None
         self.quiver_grid = None
         self.quiver_meteor = None
+
+    def invalidate_dots(self):
         self.valid_dots = False
+
+    def invalidate_grid(self):
         self.valid_grid = False
+
+    def invalidate_meteor(self):
         self.valid_meteor = False
 
     def update_dots(self, cat, obs, *, limit=1, scale=0.05):
@@ -45,12 +51,14 @@ class VectorErrorPlot(BasePlot):
 
         norm = mpl.colors.Normalize(vmin=0, vmax=limit)
         self.quiver_dots = self.axis.quiver(
-            cat[:, 0], cat[:, 1],
-            obs[:, 0] - cat[:, 0], obs[:, 1] - cat[:, 1],
-            norm(np.sqrt((obs[:, 0] - cat[:, 0])**2 + (obs[:, 1] - cat[:, 1])**2)),
+            obs[:, 0], obs[:, 1],
+            cat[:, 0] - obs[:, 0], cat[:, 1] - obs[:, 1],
+            norm(np.sqrt((cat[:, 0] - obs[:, 0])**2 + (cat[:, 1] - obs[:, 1])**2)),
             cmap=self.cmap_dots,
             scale=scale,
         )
+
+        self.valid_dots = True
         self.draw()
 
     def update_meteor(self, obs, corr, magnitudes, scale=0.05):
@@ -70,6 +78,8 @@ class VectorErrorPlot(BasePlot):
             scale=scale,
             width=0.002,
         )
+
+        self.valid_meteor = True
         self.draw()
 
     def update_grid(self, x, y, u, v, *, limit=1):
@@ -84,5 +94,6 @@ class VectorErrorPlot(BasePlot):
             width=0.002,
         )
 
+        self.valid_grid = True
         self.draw()
 

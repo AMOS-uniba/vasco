@@ -70,8 +70,7 @@ class TiltShifter(OpticalAxisShifter):
 
     def func(self, vec, r, b):
         q = self.__call__(vec[0], vec[1])
-        print(vec, r, b)
-        return q[0] - r, q[1] - b
+        return q[0] - r, np.fmod(q[1] - b + 4 * np.pi, 2 * np.pi)
 
     def invert(self, r: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         return sp.optimize.root(

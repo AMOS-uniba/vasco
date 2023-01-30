@@ -776,10 +776,20 @@
                  <property name="sizeHint" stdset="0">
                   <size>
                    <width>20</width>
-                   <height>514</height>
+                   <height>488</height>
                   </size>
                  </property>
                 </spacer>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="cb_show_grid">
+                 <property name="text">
+                  <string>Show grid</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
                </item>
                <item>
                 <widget class="QLabel" name="lx_bandwidth">
@@ -850,30 +860,21 @@
                 </widget>
                </item>
                <item>
-                <widget class="QDoubleSpinBox" name="dsb_arrow_scale">
+                <widget class="QSpinBox" name="sb_arrow_scale">
                  <property name="alignment">
                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                  </property>
-                 <property name="suffix">
-                  <string/>
-                 </property>
-                 <property name="decimals">
-                  <number>3</number>
-                 </property>
                  <property name="minimum">
-                  <double>0.001000000000000</double>
+                  <number>5</number>
                  </property>
                  <property name="maximum">
-                  <double>0.500000000000000</double>
+                  <number>100</number>
                  </property>
                  <property name="singleStep">
-                  <double>0.050000000000000</double>
-                 </property>
-                 <property name="stepType">
-                  <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
+                  <number>5</number>
                  </property>
                  <property name="value">
-                  <double>0.050000000000000</double>
+                  <number>30</number>
                  </property>
                 </widget>
                </item>

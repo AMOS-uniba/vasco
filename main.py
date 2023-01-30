@@ -24,6 +24,7 @@ from matplotlib.ticker import MultipleLocator
 from matchers import Matchmaker, Counselor
 from projections import Projection, EquidistantProjection, BorovickaProjection
 from plots import SensorPlot, SkyPlot, ErrorPlot, VectorErrorPlot
+from utilities import masked_grid
 
 from main_ui import Ui_MainWindow
 
@@ -67,8 +68,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.connectSignalSlots()
 
-        #self.maskSensor() # temporary
-        #self.pair() # temporary
+        self.maskSensor() # temporary
+        self.pair() # temporary
 
     def populateStations(self):
         for name, station in AMOS.stations.items():
@@ -119,10 +120,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dsb_error_limit.valueChanged.connect(self.onErrorLimitChanged)
 
         self.dsb_bandwidth.valueChanged.connect(self.onBandwidthChanged)
-        self.dsb_arrow_scale.valueChanged.connect(self.onArrowScaleChanged)
+        self.sb_arrow_scale.valueChanged.connect(self.onArrowScaleChanged)
         self.sb_resolution.valueChanged.connect(self.onResolutionChanged)
 
-        self.pb_smoothen.clicked.connect(self.plotVectorGrid)
+        self.cb_show_grid.clicked.connect(self.plotVectorGrid)
 
         self.tw_charts.currentChanged.connect(self.updatePlots)
 
@@ -155,43 +156,50 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.projection = BorovickaProjection(*self.get_constants_tuple())
 
     def onParametersChanged(self):
-        self.skyPlot.dots_valid = False
-        self.skyPlot.meteors_valid = False
-        self.errorPlot.valid = False
-        self.vectorErrorPlot.valid_dots = False
-        self.vectorErrorPlot.valid_grid = False
-
         self.updateProjection()
+
+        self.skyPlot.invalidate_dots()
+        self.skyPlot.invalidate_meteor()
+        self.errorPlot.invalidate()
+        self.vectorErrorPlot.invalidate_dots()
+        self.vectorErrorPlot.invalidate_grid()
+        self.vectorErrorPlot.invalidate_meteor()
+        self.matcher.update_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
+
         self.computeErrors()
         self.updatePlots()
 
     def onLocationTimeChanged(self):
         self.updateMatcher()
-        self.skyPlot.stars_valid = False
-        self.errorPlot.valid = False
-        self.vectorErrorPlot.valid_dots = False
-        self.vectorErrorPlot.valid_grid = False
+        self.skyPlot.invalidate_stars()
+        self.errorPlot.invalidate()
+        self.matcher.update_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
+        self.vectorErrorPlot.invalidate_dots()
+        self.vectorErrorPlot.invalidate_grid()
+        self.vectorErrorPlot.invalidate_meteor()
+
         self.computeErrors()
         self.updatePlots()
 
     def onErrorLimitChanged(self):
-        self.skyPlot.dots_valid = False
-        self.skyPlot.meteors_valid = False
-        self.errorPlot.valid = False
-        self.vectorErrorPlot.valid_dots = False
+        self.skyPlot.invalidate_dots()
+        self.errorPlot.invalidate()
+        self.vectorErrorPlot.invalidate_dots()
         self.updatePlots()
 
     def onBandwidthChanged(self):
         self.matcher.update_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
-        self.vectorErrorPlot.valid_grid = False
+        self.vectorErrorPlot.invalidate_grid()
+        self.vectorErrorPlot.invalidate_meteor()
         self.updatePlots()
 
     def onArrowScaleChanged(self):
-        self.vectorErrorPlot.valid_dots = False
+        self.vectorErrorPlot.invalidate_dots()
+        self.vectorErrorPlot.invalidate_meteor()
         self.updatePlots()
 
     def onResolutionChanged(self):
-        self.vectorErrorPlot.valid_grid = False
+        self.vectorErrorPlot.invalidate_grid()
         self.updatePlots()
 
     def updatePlots(self):
@@ -201,9 +209,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not self.sensorPlot.valid:
                 self.plotSensorData()
         elif index == 1:
-            if not self.skyPlot.dots_valid:
+            if not self.skyPlot.valid_dots:
                 self.plotObservedStars()
-            if not self.skyPlot.stars_valid:
+            if not self.skyPlot.valid_stars:
                 self.plotCatalogueStars()
         elif index == 2:
             if not self.errorPlot.valid:
@@ -211,6 +219,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif index == 3:
             if not self.vectorErrorPlot.valid_dots:
                 self.plotVectorErrors()
+            if not self.vectorErrorPlot.valid_meteor:
+                self.plotVectorMeteor()
             if not self.vectorErrorPlot.valid_grid:
                 self.plotVectorGrid()
 
@@ -339,7 +349,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         errors = self.matcher.errors_inverse(self.projection, False)
         self.matcher.mask_catalogue(errors > np.radians(self.dsb_distance_limit.value()))
         print(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: {self.matcher.catalogue.count_valid} stars used")
-        self.skyPlot.stars_valid = False
+        self.skyPlot.invalidate_stars()
 
         self.computeErrors()
         self.updatePlots()
@@ -401,18 +411,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def plotVectorErrors(self):
         # Do nothing if working in unpaired mode
         if isinstance(self.matcher, Counselor):
+            print("Plotting vector errors")
             self.vector_tabs.setCurrentIndex(1)
             self.vectorErrorPlot.update_dots(
                 self.matcher.catalogue.altaz(self.location, self.time, masked=True),
                 self.matcher.sensor_data.stars.project(self.projection, masked=True),
                 limit=np.radians(self.dsb_error_limit.value()),
-                scale=self.dsb_arrow_scale.value(),
+                scale=1 / self.sb_arrow_scale.value(),
             )
+        else:
+            self.vector_tabs.setCurrentIndex(0)
+
+    def plotVectorMeteor(self):
+        if isinstance(self.matcher, Counselor):
+            print("Plotting vector meteors")
             self.vectorErrorPlot.update_meteor(
                 self.matcher.sensor_data.meteor.project(self.projection),
                 self.matcher.correct_meteor(self.projection),
                 self.matcher.sensor_data.meteor.ms(True),
-                scale=self.dsb_arrow_scale.value(),
+                scale=1 / self.sb_arrow_scale.value(),
             )
         else:
             self.vector_tabs.setCurrentIndex(0)
@@ -420,13 +437,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def plotVectorGrid(self):
         if isinstance(self.matcher, Counselor):
             self.vector_tabs.setCurrentIndex(1)
-            grid = self.matcher.grid(resolution=self.sb_resolution.value())
 
-            x = np.linspace(-1, 1, self.sb_resolution.value())
-            xx, yy = np.meshgrid(x, x)
-            self.vectorErrorPlot.update_grid(
-                xx, yy, grid[..., 0].ravel(), grid[..., 1].ravel()
-            )
+            if self.cb_show_grid.isChecked():
+                print("Plotting vector grid")
+                grid = self.matcher.grid(resolution=self.sb_resolution.value())
+
+                xx, yy = masked_grid(self.sb_resolution.value())
+                self.vectorErrorPlot.update_grid(
+                    xx, yy, grid[..., 0].ravel(), grid[..., 1].ravel()
+                )
+            else:
+                self.vectorErrorPlot.update_grid(
+                    np.empty(shape=(0,)),
+                    np.empty(shape=(0,)),
+                    np.empty(shape=(0,)),
+                    np.empty(shape=(0,)),
+                )
         else:
             self.vector_tabs.setCurrentIndex(0)
 
@@ -434,11 +460,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.matcher = self.matcher.pair(self.projection)
         self.matcher.update_smoother(self.projection)
 
-        self.skyPlot.dots_valid = False
-        self.skyPlot.stars_valid = False
-        self.errorPlot.valid = False
+        self.skyPlot.invalidate_dots()
+        self.skyPlot.invalidate_stars()
+        self.errorPlot.invalidate()
         self.vectorErrorPlot.valid_dots = False
         self.vectorErrorPlot.valid_grid = False
+        self.vectorErrorPlot.valid_meteor = False
         self.showCounts()
         self.updatePlots()
 

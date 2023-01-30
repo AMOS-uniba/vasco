@@ -23,6 +23,14 @@ def by_azimuth(uv):
     return mpl.colors.hsv_to_rgb(hsv)
 
 
+def masked_grid(res):
+    s = np.linspace(-1, 1, res)
+    x, y = np.meshgrid(s, s)
+    xx = np.ma.masked_array(x, x**2 + y**2 > 1)
+    yy = np.ma.masked_array(y, x**2 + y**2 > 1)
+    return xx, yy
+
+
 def spherical(x: AltAz, y: AltAz) -> u.Quantity:
     return 2 * np.sin(np.sqrt(np.sin(0.5 * (y.alt - x.alt))**2 + np.cos(x.alt) * np.cos(y.alt) * np.sin(0.5 * (y.az - x.az))**2) * u.rad)
 

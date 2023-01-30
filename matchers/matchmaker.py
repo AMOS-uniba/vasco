@@ -35,8 +35,8 @@ class Matchmaker(Matcher):
     def update(self, location, time):
         super().update(location, time)
 
-    def update_smoother(self, projection):
-        ...
+    def update_smoother(self, projection, **kwargs):
+        pass
 
     @property
     def count(self):

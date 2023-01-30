@@ -75,14 +75,16 @@ class Counselor(Matcher):
     def update_smoother(self, projection, *, bandwidth=0.1):
         cat = altaz_to_disk(self.catalogue.altaz(self.location, self.time, masked=True))
         obs = proj_to_disk(self.sensor_data.stars.project(projection))
-        self.smoother = KernelSmoother(cat, obs - cat, kernel=kernels.nexp, bandwidth=bandwidth)
+        self.smoother = KernelSmoother(obs, cat - obs, kernel=kernels.nexp, bandwidth=bandwidth)
 
     def correct_meteor(self, projection):
         return self.smoother(proj_to_disk(self.sensor_data.meteor.project(projection)))
 
     def grid(self, resolution=21):
-        x = np.linspace(-1, 1, resolution)
-        xx, yy = np.meshgrid(x, x)
+        s = np.linspace(-1, 1, resolution)
+        x, y = np.meshgrid(s, s)
+        xx = np.ma.masked_array(x, x**2 + y**2 > 1)
+        yy = np.ma.masked_array(y, x**2 + y**2 > 1)
         nodes = np.ma.stack((xx.ravel(), yy.ravel()), axis=1)
         return self.smoother(nodes).reshape(resolution, resolution, -1)
 
