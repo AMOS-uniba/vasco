@@ -66,12 +66,16 @@ def spherical_difference(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 
 
 def altaz_to_disk(altaz: AltAz) -> np.ndarray:
-    return np.stack(
-        (
-            np.sin(altaz.az.radian) * (HalfPi - altaz.alt.radian) / HalfPi,
-            -np.cos(altaz.az.radian) * (HalfPi - altaz.alt.radian) / HalfPi,
-        ), axis=1,
-    )
+    if altaz is None:
+        return np.empty(shape=(0, 2))
+    else:
+        return np.stack(
+            (
+                np.sin(altaz.az.radian) * (HalfPi - altaz.alt.radian) / HalfPi,
+                -np.cos(altaz.az.radian) * (HalfPi - altaz.alt.radian) / HalfPi,
+            ), axis=1,
+        )
+
 
 def disk_to_altaz(xy: np.ndarray) -> AltAz:
     return AltAz(
@@ -79,8 +83,12 @@ def disk_to_altaz(xy: np.ndarray) -> AltAz:
         np.arctan2(xy[:, 1], xy[:, 0]),
     )
 
+
 def proj_to_disk(obs: np.ndarray) -> np.ndarray:
-    z, a = obs.T
-    x = z * np.sin(a) / np.pi * 2
-    y = -z * np.cos(a) / np.pi * 2
-    return np.stack((x, y), axis=1)
+    if obs is None:
+        return np.empty(shape=(0, 2))
+    else:
+        z, a = obs.T
+        x = z * np.sin(a) / np.pi * 2
+        y = -z * np.cos(a) / np.pi * 2
+        return np.stack((x, y), axis=1)

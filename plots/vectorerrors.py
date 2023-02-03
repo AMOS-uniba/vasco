@@ -1,11 +1,10 @@
 import numpy as np
 import matplotlib as mpl
 
-from matplotlib.ticker import MultipleLocator
 
+from astropy.coordinates import AltAz
 from .base import BasePlot
-from matchers import Matcher
-from utilities import altaz_to_disk, proj_to_disk, by_azimuth
+from utilities import altaz_to_disk, proj_to_disk
 
 
 class VectorErrorPlot(BasePlot):
@@ -39,7 +38,7 @@ class VectorErrorPlot(BasePlot):
     def invalidate_meteor(self):
         self.valid_meteor = False
 
-    def update_dots(self, cat, obs, *, limit=1, scale=0.05):
+    def update_errors(self, cat, obs, *, limit=1, scale=0.05):
         cat = altaz_to_disk(cat)
         obs = proj_to_disk(obs)
 
@@ -60,6 +59,9 @@ class VectorErrorPlot(BasePlot):
 
         self.valid_dots = True
         self.draw()
+
+    def clear_errors(self):
+        self.update_errors(None, None)
 
     def update_meteor(self, obs, corr, magnitudes, scale=0.05):
         obs = proj_to_disk(obs)
@@ -91,9 +93,18 @@ class VectorErrorPlot(BasePlot):
             x, y, u, v, np.sqrt(u**2 + v**2),
             cmap=self.cmap_grid,
             #color=by_azimuth(np.stack((u, v), axis=1)),
-            width=0.002,
+            width=0.0014,
         )
 
         self.valid_grid = True
         self.draw()
+
+    def clear_grid(self):
+        self.update_grid(
+            np.empty(shape=(0,)),
+            np.empty(shape=(0,)),
+            np.empty(shape=(0,)),
+            np.empty(shape=(0,)),
+        )
+
 

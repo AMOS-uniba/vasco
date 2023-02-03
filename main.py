@@ -7,8 +7,6 @@ import datetime
 import zoneinfo
 import numpy as np
 
-from typing import Tuple, Type, Optional
-
 from astropy import units as u
 from astropy.coordinates import EarthLocation
 
@@ -17,12 +15,9 @@ from PyQt6.QtWidgets import QApplication, QMainWindow
 
 import matplotlib as mpl
 from matplotlib import pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.figure import Figure
-from matplotlib.ticker import MultipleLocator
 
 from matchers import Matchmaker, Counselor
-from projections import Projection, EquidistantProjection, BorovickaProjection
+from projections import BorovickaProjection
 from plots import SensorPlot, SkyPlot, ErrorPlot, VectorErrorPlot
 from utilities import masked_grid
 
@@ -39,6 +34,12 @@ GRID_RESOLUTION = 31
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.errors = None
+        self.location = None
+        self.time = None
+        self.projection = None
+        self.matcher = None
+
         self.setupUi(self)
         self.param_widgets = [
             (self.dsb_x0, 'x0'), (self.dsb_y0, 'y0'), (self.dsb_a0, 'a0'), (self.dsb_A, 'A'), (self.dsb_F, 'F'),
@@ -82,8 +83,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             station = Station("custom", self.dsb_lat.value(), self.dsb_lon.value(), 0)
         else:
             station = list(AMOS.stations.values())[index - 1]
-            self.dsb_lat.setValue(station.latitude)
-            self.dsb_lon.setValue(station.longitude)
+
+        self.dsb_lat.setValue(station.latitude)
+        self.dsb_lon.setValue(station.longitude)
 
         self.updateMatcher()
         self.onLocationTimeChanged()
@@ -123,6 +125,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sb_arrow_scale.valueChanged.connect(self.onArrowScaleChanged)
         self.sb_resolution.valueChanged.connect(self.onResolutionChanged)
 
+        self.cb_show_errors.clicked.connect(self.plotVectorErrors)
         self.cb_show_grid.clicked.connect(self.plotVectorGrid)
 
         self.tw_charts.currentChanged.connect(self.updatePlots)
@@ -261,7 +264,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.cb_stations.setCurrentIndex(0)
         self.onLocationTimeChanged()
-        self.sensorPlot.update(data)
         self.updatePlots()
 
     def loadYAML(self, file):
@@ -314,8 +316,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.w_input.repaint()
 
         result = self.matcher.minimize(
-        #    location=self.location,
-        #    time=self.time,
+            #    location=self.location,
+            #    time=self.time,
             x0=self.get_constants_tuple(),
             maxiter=self.sb_maxiter.value()
         )
@@ -406,19 +408,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def plotErrors(self):
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=True)
-        self.errorPlot.update(positions, self.matcher.sensor_data.stars.m, self.errors, limit=np.radians(self.dsb_error_limit.value()))
+        self.errorPlot.update(positions, self.matcher.sensor_data.stars.m, self.errors,
+                              limit=np.radians(self.dsb_error_limit.value())
+        )
 
     def plotVectorErrors(self):
         # Do nothing if working in unpaired mode
         if isinstance(self.matcher, Counselor):
-            print("Plotting vector errors")
-            self.vector_tabs.setCurrentIndex(1)
-            self.vectorErrorPlot.update_dots(
-                self.matcher.catalogue.altaz(self.location, self.time, masked=True),
-                self.matcher.sensor_data.stars.project(self.projection, masked=True),
-                limit=np.radians(self.dsb_error_limit.value()),
-                scale=1 / self.sb_arrow_scale.value(),
-            )
+            if self.cb_show_errors.isChecked():
+                print("Plotting vector errors")
+                self.vector_tabs.setCurrentIndex(1)
+                self.vectorErrorPlot.update_errors(
+                    self.matcher.catalogue.altaz(self.location, self.time, masked=True),
+                    self.matcher.sensor_data.stars.project(self.projection, masked=True),
+                    limit=np.radians(self.dsb_error_limit.value()),
+                    scale=1 / self.sb_arrow_scale.value(),
+                )
+            else:
+                self.vectorErrorPlot.clear_errors()
         else:
             self.vector_tabs.setCurrentIndex(0)
 
@@ -447,12 +454,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     xx, yy, grid[..., 0].ravel(), grid[..., 1].ravel()
                 )
             else:
-                self.vectorErrorPlot.update_grid(
-                    np.empty(shape=(0,)),
-                    np.empty(shape=(0,)),
-                    np.empty(shape=(0,)),
-                    np.empty(shape=(0,)),
-                )
+                self.vectorErrorPlot.clear_grid()
         else:
             self.vector_tabs.setCurrentIndex(0)
 
@@ -469,8 +471,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.showCounts()
         self.updatePlots()
 
-app = QApplication(sys.argv)
 
+app = QApplication(sys.argv)
 window = MainWindow()
 window.showMaximized()
 
