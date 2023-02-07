@@ -26,12 +26,24 @@ def boro_rotated():
 
 
 @pytest.fixture
-def boro_general():
+def boro_zenith():
+    """ Borovička projection with everything but zenith offset """
     return BorovickaProjection(
         796.164, 605.979, math.radians(256.914847),
         0.003833, math.radians(187.852341),
         0.00194479, -5.3e-05, -0.000192, -0.006691, -4.2e-05,
-        0.55556, math.radians(127.910437),
+        0, 0,
+    )
+
+
+@pytest.fixture
+def boro_general():
+    """ Fully generalized Borovička projection """
+    return BorovickaProjection(
+        796.164, 605.979, math.radians(256.914847),
+        0.003833, math.radians(187.852341),
+        0.00194479, -5.3e-05, -0.000192, -0.006691, -4.2e-05,
+        math.radians(0.555556), math.radians(127.910437),
     )
 
 
@@ -52,6 +64,7 @@ class TestBorovickaProjection(TestProjection):
     params = dict(
         test_identity_invert=grid,
         test_rotated_invert=grid,
+        test_zenith_invert=big_grid,
         test_general_invert=big_grid,
     )
 
@@ -76,5 +89,9 @@ class TestBorovickaProjection(TestProjection):
     def test_rotated_invert(self, boro_rotated, x, y):
         self.compare_inverted(boro_rotated, x, y)
 
+    def test_zenith_invert(self, boro_zenith, x, y):
+        assert boro_zenith.invert(*boro_zenith(x, y)) == pytest.approx((x, y), abs=1e-9)
+
     def test_general_invert(self, boro_general, x, y):
-        self.compare_inverted(boro_general, x, y, abs=1e-9)
+        assert boro_general.invert(*boro_general(x, y)) == pytest.approx((x, y), abs=1e-9)
+        #self.compare_inverted(boro_general, x, y, abs=1e-9)

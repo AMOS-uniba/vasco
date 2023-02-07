@@ -9,8 +9,8 @@ from utilities import spherical_distance, altaz_to_disk, proj_to_disk, masked_gr
 
 class Counselor(Matcher):
     """
-    The Counselor is a Matcher that attempts to reconcile the sensor with the catalogue *after* the stars were paired to dots.
-    The assignment between
+    The Counselor is a Matcher that attempts to reconcile the sensor
+    with the catalogue *after* the stars were paired to dots.
     """
 
     def __init__(self, location, time, projection_cls, catalogue, sensor_data):
@@ -36,7 +36,8 @@ class Counselor(Matcher):
     def mask_sensor_data(self, mask):
         self.mask_catalogue(mask)
 
-    def compute_distances(self, observed, catalogue):
+    @staticmethod
+    def compute_distances(observed, catalogue):
         """
         Compute distance matrix for observed points projected to the sky and catalogue stars
         observed:   np.ndarray(N, 2)
@@ -50,7 +51,8 @@ class Counselor(Matcher):
         observed[..., 0] = np.pi / 2 - observed[..., 0]   # Convert observed altitude to co-altitude
         return spherical_distance(observed, catalogue)
 
-    def compute_vector_errors(self, observed, catalogue):
+    @staticmethod
+    def compute_vector_errors(observed, catalogue):
         """
         Returns
         np.ndarray(N, 2): vector errors

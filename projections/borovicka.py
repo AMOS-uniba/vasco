@@ -4,11 +4,14 @@ from typing import Tuple
 from .base import Projection
 from .shifters import TiltShifter
 from .transformers import BiexponentialTransformer
+from .zenith import ZenithShifter
 
 
 class BorovickaProjection(Projection):
-    def __init__(self, x0: float = 0, y0: float = 0, a0: float = 0, A: float = 0, F: float = 0, V: float = 1,
-                 S: float = 0, D: float = 0, P: float = 0, Q: float = 0, epsilon: float = 0, E: float = 0):
+    def __init__(self, x0: float = 0, y0: float = 0, a0: float = 0,
+                 A: float = 0, F: float = 0,
+                 V: float = 1, S: float = 0, D: float = 0, P: float = 0, Q: float = 0,
+                 epsilon: float = 0, E: float = 0):
         #        assert(epsilon >= 0 and V >= 0)
         super().__init__()
         self.x0 = x0
@@ -25,37 +28,16 @@ class BorovickaProjection(Projection):
         self.E = E  # azimuth angle of centre of FoV
         self.axis_shifter = TiltShifter(x0=x0, y0=y0, a0=a0, A=A, F=F, E=E)
         self.radial_transform = BiexponentialTransformer(V, S, D, P, Q)
+        self.zenith_shifter = ZenithShifter(epsilon=epsilon, E=E)
 
     def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         r, b = self.axis_shifter(x, y)
         u = self.radial_transform(r)
-
-        if abs(self.epsilon) < 1e-14:  # for tiny epsilon there is no displacement
-            z = u  # and we are able to calculate the coordinates immediately
-            a = self.E + b
-        else:
-            cosz = np.cos(u) * np.cos(self.epsilon) - np.sin(u) * np.sin(self.epsilon) * np.cos(b)
-            sna = np.sin(b) * np.sin(u)
-            cna = (np.cos(u) - np.cos(self.epsilon) * cosz) / np.sin(self.epsilon)
-            z = np.arccos(cosz)
-            a = self.E + np.arctan2(sna, cna)
-
-        a = np.fmod(a + 2 * np.pi, 2 * np.pi)  # wrap around to [0, 2pi)
+        z, a = self.zenith_shifter(u, b)
         return z, a
 
     def invert(self, z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        if abs(self.epsilon) < 1e-14:
-            u = z
-            b = a - self.E
-        else:
-            cosu = np.cos(z) * np.cos(self.epsilon) - np.sin(z) * np.sin(self.epsilon) * np.cos(a - self.E)
-            sna = np.sin(a - self.E) * np.sin(z)
-            cna = (np.cos(z) - np.cos(self.epsilon) * cosu) / np.sin(self.epsilon)
-            u = np.arccos(cosu)
-            b = np.arctan2(sna, cna)
-
-        b = np.fmod(b + 2 * np.pi, 2 * np.pi)
-
+        u, b = self.zenith_shifter.invert(z, a)
         r = self.radial_transform.invert(u)
         x, y = self.axis_shifter.invert(r, b)
         return x, y

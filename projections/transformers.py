@@ -2,8 +2,9 @@ import numpy as np
 import scipy as sp
 
 
-class RadialTransformer():
+class RadialTransformer:
     """ Class for transforming radial distances in all-sky projections """
+
     def __call__(self, r):
         raise NotImplementedError("Radial transformers must implement __call__(r: np.ndarray) -> np.ndarray")
 
@@ -18,8 +19,9 @@ class RadialTransformer():
 
 class LinearTransformer(RadialTransformer):
     """ Linear radial transform, u = Vr """
-    def __init__(self, linear: float=1):
-        self.linear = linear        # radial stretch, linear coefficient
+
+    def __init__(self, linear: float = 1):
+        self.linear = linear  # radial stretch, linear coefficient
 
     def __call__(self, r):
         return self.linear * r
@@ -31,10 +33,11 @@ class LinearTransformer(RadialTransformer):
 
 class ExponentialTransformer(LinearTransformer):
     """ Linear + exponential radial correction, u = Vr + S(e^(Dr) - 1) """
-    def __init__(self, linear: float=1, lin_coef: float=0, lin_exp: float=0):
+
+    def __init__(self, linear: float = 1, lin_coef: float = 0, lin_exp: float = 0):
         super().__init__(linear)
-        self.lin_coef = lin_coef    # radial stretch, exponential term, coefficient
-        self.lin_exp = lin_exp      # radial stretch, exponential term, exponent coefficient
+        self.lin_coef = lin_coef  # radial stretch, exponential term, coefficient
+        self.lin_exp = lin_exp  # radial stretch, exponential term, exponent coefficient
 
     def __call__(self, r):
         return super().__call__(r) + self.lin_coef * (np.exp(self.lin_exp * r) - 1)
@@ -46,7 +49,10 @@ class ExponentialTransformer(LinearTransformer):
 
 class BiexponentialTransformer(ExponentialTransformer):
     """ Bi-exponential radial fitting procedure, u = Vr + S(e^(Dr) - 1) + P(e^(Qr^2) - 1) """
-    def __init__(self, linear: float=0, lin_coef: float=0, lin_exp: float=0, quad_coef: float=0, quad_exp: float=0):
+
+    def __init__(self, linear: float = 0,
+                 lin_coef: float = 0, lin_exp: float = 0,
+                 quad_coef: float = 0, quad_exp: float = 0):
         super().__init__(linear, lin_coef, lin_exp)
         self.quad_coef = quad_coef  # radial stretch, square-exponential term, coefficient
         self.quad_exp = quad_exp    # radial stretch, square-exponential term, exponent coefficient
