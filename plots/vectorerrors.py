@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib as mpl
 
-
-from astropy.coordinates import AltAz
 from .base import BasePlot
 from utilities import altaz_to_disk, proj_to_disk
 
@@ -12,6 +10,15 @@ class VectorErrorPlot(BasePlot):
         self.cmap_dots = mpl.cm.get_cmap('autumn_r')
         self.cmap_grid = mpl.cm.get_cmap('Greens')
         self.cmap_meteor = mpl.cm.get_cmap('Blues')
+        self.axis = None
+        self.scatter_dots = None
+        self.scatter_meteor = None
+        self.quiver_dots = None
+        self.quiver_grid = None
+        self.quiver_meteor = None
+        self.valid_dots = False
+        self.valid_grid = False
+        self.valid_meteor = False
         super().__init__(widget, **kwargs)
 
     def add_axes(self):
@@ -23,11 +30,8 @@ class VectorErrorPlot(BasePlot):
         self.axis.set_aspect('equal')
         self.axis.grid(color='white', alpha=0.2)
 
-        self.scatterDots = self.axis.scatter([], [], s=[], marker='o', c='white')
-        self.scatterMeteor = self.axis.scatter([], [], s=[], marker='o', c='cyan')
-        self.quiver_dots = None
-        self.quiver_grid = None
-        self.quiver_meteor = None
+        self.scatter_dots = self.axis.scatter([], [], s=[], marker='o', c='white')
+        self.scatter_meteor = self.axis.scatter([], [], s=[], marker='o', c='cyan')
 
     def invalidate_dots(self):
         self.valid_dots = False
@@ -42,8 +46,8 @@ class VectorErrorPlot(BasePlot):
         cat = altaz_to_disk(cat)
         obs = proj_to_disk(obs)
 
-        self.scatterDots.set_offsets(cat)
-        self.scatterDots.set_sizes(np.ones_like(cat[:, 0]) * 4)
+        self.scatter_dots.set_offsets(cat)
+        self.scatter_dots.set_sizes(np.ones_like(cat[:, 0]) * 4)
 
         if self.quiver_dots is not None:
             self.quiver_dots.remove()
@@ -66,8 +70,8 @@ class VectorErrorPlot(BasePlot):
     def update_meteor(self, obs, corr, magnitudes, scale=0.05):
         obs = proj_to_disk(obs)
 
-        self.scatterMeteor.set_offsets(obs)
-        self.scatterMeteor.set_sizes(np.ones_like(corr[:, 0]))
+        self.scatter_meteor.set_offsets(obs)
+        self.scatter_meteor.set_sizes(np.ones_like(corr[:, 0]))
 
         if self.quiver_meteor is not None:
             self.quiver_meteor.remove()
@@ -84,7 +88,7 @@ class VectorErrorPlot(BasePlot):
         self.valid_meteor = True
         self.draw()
 
-    def update_grid(self, x, y, u, v, *, limit=1):
+    def update_grid(self, x, y, u, v, *, limit: float=1):
         if self.quiver_grid is not None:
             self.quiver_grid.remove()
 
@@ -106,5 +110,3 @@ class VectorErrorPlot(BasePlot):
             np.empty(shape=(0,)),
             np.empty(shape=(0,)),
         )
-
-

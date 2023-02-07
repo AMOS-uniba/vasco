@@ -15,7 +15,7 @@ def polar_to_cart(z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]
 
 
 def by_azimuth(uv):
-    uv = np.nan_to_num(uv, 0)
+    uv = np.nan_to_num(uv, nan=0)
     r = np.sqrt(np.sum(np.square(uv), axis=-1))
     f = (np.arctan2(uv[..., 1], uv[..., 0]) + 2 * np.pi) % (2 * np.pi)
     r = r / np.max(r)
@@ -32,16 +32,21 @@ def masked_grid(res):
 
 
 def spherical(x: AltAz, y: AltAz) -> u.Quantity:
-    return 2 * np.sin(np.sqrt(np.sin(0.5 * (y.alt - x.alt))**2 + np.cos(x.alt) * np.cos(y.alt) * np.sin(0.5 * (y.az - x.az))**2) * u.rad)
+    return 2 * np.sin(
+        np.sqrt(
+            np.sin(0.5 * (y.alt - x.alt))**2 + np.cos(x.alt) * np.cos(y.alt) * np.sin(0.5 * (y.az - x.az))**2
+        ) * u.rad
+    )
 
 
 def spherical_distance(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     """
-    Compute spherical distance between x and y
-    x: np.ndarray(X, 2)
-    y: np.ndarray(Y, 2)
+    Compute spherical distance between x and y, each are vectors of points in D dimensions
+    x: np.ndarray(X, D)
+    y: np.ndarray(Y, D)
 
     Returns
+    -------
     np.ndarray(X, Y)
     """
     return 2 * np.sin(
@@ -51,18 +56,20 @@ def spherical_distance(x: np.ndarray, y: np.ndarray) -> np.ndarray:
         )
     )
 
+
 def spherical_difference(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     """
     Compute spherical distance between x and y
-    x: np.ndarray(X, 2)
-    y: np.ndarray(Y, 2)
+    x: np.ndarray(X, ..., 2)
+    y: np.ndarray(Y, ..., 2)
 
     Returns
+    -------
     np.ndarray(X, Y), np.ndarray(X, Y)
     """
     dz = y[..., 0] - x[..., 0]
     da = y[..., 1] - x[..., 1]
-    return dz, dz * np.cos(x[..., 0])
+    return np.stack((dz, da * np.cos(x[..., 0])), axis=1)
 
 
 def altaz_to_disk(altaz: AltAz) -> np.ndarray:

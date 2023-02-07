@@ -1,4 +1,5 @@
 import pytest
+import math
 import numpy as np
 
 from base import pytest_generate_tests, TestProjection
@@ -18,18 +19,21 @@ class TestBase():
 def boro_identity():
     return BorovickaProjection(0, 0, 0, 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0)
 
+
 @pytest.fixture
 def boro_rotated():
-    return BorovickaProjection(0, 0, np.radians(1.2), 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0)
+    return BorovickaProjection(0, 0, math.radians(1.2), 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0)
+
 
 @pytest.fixture
 def boro_general():
     return BorovickaProjection(
-        796.164, 605.979, np.radians(256.914847),
-        0.003833, np.radians(187.852341),
+        796.164, 605.979, math.radians(256.914847),
+        0.003833, math.radians(187.852341),
         0.00194479, -5.3e-05, -0.000192, -0.006691, -4.2e-05,
-        0.55556, np.radians(127.910437),
+        0.55556, math.radians(127.910437),
     )
+
 
 class TestBorovickaProjection(TestProjection):
     grid = [

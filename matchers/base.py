@@ -9,6 +9,8 @@ from projections import BorovickaProjection
 class Matcher(metaclass=ABCMeta):
     def __init__(self, location, time, projection_cls=BorovickaProjection):
         self.projection_cls = projection_cls
+        self.location = None
+        self.time = None
         self.update(location, time)
 
     @property
@@ -54,19 +56,21 @@ class Matcher(metaclass=ABCMeta):
         return self.avg_error(self.errors(self.projection_cls(*x), True))
 
     def minimize(self, x0=(0, 0, 0, 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0), maxiter=30):
-        result = sp.optimize.minimize(self.func, x0, method='Nelder-Mead',
+        result = sp.optimize.minimize(
+            self.func, x0,
+            method='Nelder-Mead',
             bounds=(
                 (None, None),
                 (None, None),
                 (None, None),
                 (None, None),
                 (None, None),
-                (0, None), #V
+                (0, None), # V
                 (None, None),
                 (None, None),
                 (None, None),
                 (None, None),
-                (0, None), #epsilon
+                (0, None), # epsilon
                 (None, None),
             ),
             options=dict(maxiter=maxiter, disp=True),

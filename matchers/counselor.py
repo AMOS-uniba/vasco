@@ -1,15 +1,17 @@
 import numpy as np
-import pandas as pd
 
 from .base import Matcher
 
 from correctors import KernelSmoother
 from correctors import kernels
-from utilities import spherical_distance, altaz_to_disk, proj_to_disk
+from utilities import spherical_distance, altaz_to_disk, proj_to_disk, masked_grid
 
 
 class Counselor(Matcher):
-    """ The Counselor is a Matcher that attempts to reconcile the sensor with the catalogue *after* the stars were paired to dots. """
+    """
+    The Counselor is a Matcher that attempts to reconcile the sensor with the catalogue *after* the stars were paired to dots.
+    The assignment between
+    """
 
     def __init__(self, location, time, projection_cls, catalogue, sensor_data):
         super().__init__(location, time, projection_cls)
@@ -81,10 +83,7 @@ class Counselor(Matcher):
         return self.smoother(proj_to_disk(self.sensor_data.meteor.project(projection)))
 
     def grid(self, resolution=21):
-        s = np.linspace(-1, 1, resolution)
-        x, y = np.meshgrid(s, s)
-        xx = np.ma.masked_array(x, x**2 + y**2 > 1)
-        yy = np.ma.masked_array(y, x**2 + y**2 > 1)
+        xx, yy = masked_grid(resolution)
         nodes = np.ma.stack((xx.ravel(), yy.ravel()), axis=1)
         return self.smoother(nodes).reshape(resolution, resolution, -1)
 
