@@ -20,20 +20,21 @@ class ZenithShifter(Projection):
             z = np.arccos(cosz)
             a = self.E + np.arctan2(sna, cna)
 
-        a = np.fmod(a + 2 * np.pi, 2 * np.pi)  # wrap around to [0, 2pi)
-        return z, a
+            print("Forward", u, b, np.cos(u), z, a)
+        return z, np.mod(a, 2 * np.pi)  # wrap around to [0, 2pi)
 
     def invert(self, z, a):
         if abs(self.epsilon) < 1e-14:
             u = z
             b = a - self.E
         else:
-            cosu = np.cos(z) * np.cos(self.epsilon) - np.sin(z) * np.sin(self.epsilon) * np.cos(a - self.E)
+            cosu = np.cos(z) * np.cos(self.epsilon) + np.sin(z) * np.sin(self.epsilon) * np.cos(a - self.E)
             sna = np.sin(a - self.E) * np.sin(z)
-            cna = (np.cos(z) - np.cos(self.epsilon) * cosu) / np.sin(self.epsilon)
+            cna = -(np.cos(z) - np.cos(self.epsilon) * cosu) / np.sin(self.epsilon)
             u = np.arccos(cosu)
             b = np.arctan2(sna, cna)
 
-        b = np.fmod(b + 2 * np.pi, 2 * np.pi)
-        return u, b
+            print("Backward", z, a, cosu, u, b)
+
+        return u, np.mod(b, 2 * np.pi)  # wrap around to [0, 2pi)
 

@@ -18,18 +18,18 @@ def general():
 
 class TestZenithShifter(TestProjection):
     grid = [
-        dict(u=u, b=b)
-        for u in np.linspace(0.01, np.pi / 2, 11)
-        for b in np.linspace(0.1, 2 * np.pi + 0.1, 11, endpoint=False)
+        dict(r=r, t=t)
+        for r in np.linspace(0.01, np.pi / 2, 11)
+        for t in np.linspace(0.1, 2 * np.pi + 0.1, 11, endpoint=False)
     ]
     params = dict(
         test_zenith_aligned=grid,
         test_general=grid,
     )
 
-    def test_zenith_aligned(self, zenith_aligned, u, b):
-        assert zenith_aligned.invert(*zenith_aligned(u, b)) == pytest.approx((u, b), abs=1e-9)
+    def test_zenith_aligned(self, zenith_aligned, r, t):
+        assert zenith_aligned.invert(*zenith_aligned(r, t)) == pytest.approx((r, t), abs=1e-9)
 
-    def test_general(self, general, u, b):
-        assert general.invert(*general(u, b)) == pytest.approx((u, b), abs=1e-9)
+    def test_general(self, general, r, t):
+        assert general.invert(*general(r, t)) == pytest.approx((r, t), abs=1e-9)
 
