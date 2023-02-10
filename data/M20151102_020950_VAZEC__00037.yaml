@@ -1,0 +1,25 @@
+VideoStartTime: "2015-11-02 02:09:50.000"
+EventStartTime: "2015-11-02 02:09:50.067"
+Name: VAZEC
+Latitude: 49.054427
+Longitude: 19.989889
+Altitude: 812
+FieldOfViewCenter: 180 90
+FieldOfView: 180 140
+Resolution: 1280x960
+FPS: 15
+PixelSize: 3.45
+IntegrationTime: 1
+Trail:  
+  - {fno: 019, xc: 213.2324, yc: 398.1757, intensity: 1179.0000, GaussianHeight: 87.5220, GaussianWidth: 1.7475, GaussianBaseline: 26.7030, NumOversaturatedPixels: 0}
+  - {fno: 020, xc: 211.7802, yc: 395.1374, intensity: 2095.0000, GaussianHeight: 123.7382, GaussianWidth: 1.9122, GaussianBaseline: 26.3548, NumOversaturatedPixels: 0}
+  - {fno: 021, xc: 210.5199, yc: 392.3699, intensity: 2046.0000, GaussianHeight: 142.3688, GaussianWidth: 1.8286, GaussianBaseline: 25.1676, NumOversaturatedPixels: 0}
+  - {fno: 022, xc: 209.7180, yc: 389.8086, intensity: 1302.0000, GaussianHeight: 105.7165, GaussianWidth: 1.7381, GaussianBaseline: 25.7454, NumOversaturatedPixels: 0}
+Refstars:  
+  - {x: 752.249131, y: 750.615790, intensity: 673.0000}
+  - {x: 566.146777, y: 738.999152, intensity: 560.0000}
+  - {x: 478.162754, y: 829.700532, intensity: 477.0000}
+  - {x: 993.401723, y: 610.435394, intensity: 297.0000}
+  - {x: 444.600914, y: 649.395967, intensity: 284.0000}
+  - {x: 942.083905, y: 45.160257, intensity: 282.0000}
+  - {x: 695.013064, y: 107.755768, intensity: 17.0000}

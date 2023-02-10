@@ -4,12 +4,28 @@ from .base import Projection
 
 
 class ZenithShifter(Projection):
+    """
+    ZenithShifter is a spherical -> spherical projection that shifts the zenith to a different
+    position at true zenith distance `epsilon` and rotated such that true zenith is at 180°.
+    """
     def __init__(self, epsilon: float = 0, E: float = 0):
         super().__init__()
         self.epsilon = epsilon
         self.E = E
 
     def __call__(self, u, b):
+        """
+        Parameters
+        ----------
+        u : Union[float, np.ndarray]    radial distance from origin in camera coordinates
+        b : Union[float, np.ndarray]    azimuth in camera coordinates
+
+        Returns
+        -------
+        Tuple[Union[float, np.ndarray], Union[float, np.ndarray]]
+        z : Union[float, np.ndarray]    zenith distance in sky coordinates
+        a : Union[float, np.ndarray]    azimuth in sky coordinates
+        """
         if abs(self.epsilon) < 1e-14:  # for tiny epsilon there is no displacement
             z = u  # and we are able to calculate the coordinates immediately
             a = self.E + b
@@ -20,7 +36,6 @@ class ZenithShifter(Projection):
             z = np.arccos(cosz)
             a = self.E + np.arctan2(sna, cna)
 
-            print("Forward", u, b, np.cos(u), z, a)
         return z, np.mod(a, 2 * np.pi)  # wrap around to [0, 2pi)
 
     def invert(self, z, a):
@@ -34,7 +49,4 @@ class ZenithShifter(Projection):
             u = np.arccos(cosu)
             b = np.arctan2(sna, cna)
 
-            print("Backward", z, a, cosu, u, b)
-
         return u, np.mod(b, 2 * np.pi)  # wrap around to [0, 2pi)
-

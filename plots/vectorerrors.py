@@ -10,7 +10,6 @@ class VectorErrorPlot(BasePlot):
         self.cmap_dots = mpl.cm.get_cmap('autumn_r')
         self.cmap_grid = mpl.cm.get_cmap('Greens')
         self.cmap_meteor = mpl.cm.get_cmap('Blues')
-        self.axis = None
         self.scatter_dots = None
         self.scatter_meteor = None
         self.quiver_dots = None
@@ -96,7 +95,6 @@ class VectorErrorPlot(BasePlot):
         self.quiver_grid = self.axis.quiver(
             x, y, u, v, np.sqrt(u**2 + v**2),
             cmap=self.cmap_grid,
-            #color=by_azimuth(np.stack((u, v), axis=1)),
             width=0.0014,
         )
 

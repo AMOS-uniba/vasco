@@ -6,7 +6,7 @@ from base import pytest_generate_tests, TestProjection
 from projections import Projection, BorovickaProjection
 
 
-class TestBase():
+class TestBase:
     def test_is_abstract(self):
         with pytest.raises(TypeError):
             _ = Projection()
@@ -38,12 +38,34 @@ def boro_zenith():
 
 @pytest.fixture
 def boro_general():
-    """ Fully generalized Borovička projection """
+    """ Fully generalized Borovička projection, based on sighting 20220531_055655-DRGR """
     return BorovickaProjection(
         796.164, 605.979, math.radians(256.914847),
         0.003833, math.radians(187.852341),
         0.00194479, -5.3e-05, -0.000192, -0.006691, -4.2e-05,
         math.radians(0.555556), math.radians(127.910437),
+    )
+
+
+@pytest.fixture
+def boro_random():
+    """ Fully generalized Borovička projection, with some made-up but correct values """
+    return BorovickaProjection(
+        775.4, 581.625, math.radians(53.5123),
+        0.00376, math.radians(65.25),
+        0.00185364, 0.0000253, -0.000592, -0.006691, -3.3e-06,
+        math.radians(7.5263), math.radians(203.910437),
+    )
+
+
+@pytest.fixture
+def boro_karel():
+    """ Fully generalized Borovička projection, with some made-up but correct values """
+    return BorovickaProjection(
+        824.4, 617.625, math.radians(357.4523),
+        0.00423, math.radians(23.5),
+        0.00198453, 0.0000753, 0.000572, 0.0005691, 2.3e-06,
+        math.radians(2.5142), math.radians(337.910437),
     )
 
 
@@ -66,6 +88,8 @@ class TestBorovickaProjection(TestProjection):
         test_rotated_invert=grid,
         test_zenith_invert=big_grid,
         test_general_invert=big_grid,
+        test_random_invert=big_grid,
+        test_karel_invert=big_grid,
     )
 
     def test_identity_zero(self, boro_identity):
@@ -94,4 +118,9 @@ class TestBorovickaProjection(TestProjection):
 
     def test_general_invert(self, boro_general, x, y):
         assert boro_general.invert(*boro_general(x, y)) == pytest.approx((x, y), abs=1e-9)
-        #self.compare_inverted(boro_general, x, y, abs=1e-9)
+
+    def test_random_invert(self, boro_random, x, y):
+        assert boro_random.invert(*boro_random(x, y)) == pytest.approx((x, y), abs=1e-9)
+
+    def test_karel_invert(self, boro_karel, x, y):
+        assert boro_karel.invert(*boro_karel(x, y)) == pytest.approx((x, y), abs=1e-9)

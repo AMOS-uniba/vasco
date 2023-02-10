@@ -4,10 +4,11 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
 
-class BasePlot():
+class BasePlot:
     def __init__(self, widget, *, figsize=(8, 6)):
         self.figure = Figure(figsize=figsize)
         self.canvas = FigureCanvasQTAgg(self.figure)
+        self.axis = None
         self.add_axes()
         self.figure.tight_layout()
 
@@ -20,5 +21,4 @@ class BasePlot():
         """ Add axes to this plot """
 
     def draw(self):
-        self.valid = True
         self.canvas.draw()

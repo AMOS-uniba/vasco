@@ -16,6 +16,11 @@ def general():
     return ZenithShifter(math.radians(1.5), math.radians(213.4))
 
 
+@pytest.fixture
+def general_2():
+    return ZenithShifter(math.radians(17.3), math.radians(107.4))
+
+
 class TestZenithShifter(TestProjection):
     grid = [
         dict(r=r, t=t)
@@ -25,6 +30,7 @@ class TestZenithShifter(TestProjection):
     params = dict(
         test_zenith_aligned=grid,
         test_general=grid,
+        test_general_2=grid,
     )
 
     def test_zenith_aligned(self, zenith_aligned, r, t):
@@ -32,4 +38,7 @@ class TestZenithShifter(TestProjection):
 
     def test_general(self, general, r, t):
         assert general.invert(*general(r, t)) == pytest.approx((r, t), abs=1e-9)
+
+    def test_general_2(self, general_2, r, t):
+        assert general_2.invert(*general_2(r, t)) == pytest.approx((r, t), abs=1e-9)
 

@@ -21,6 +21,11 @@ def ts2():
     return TiltShifter(x0=-0.2, y0=0.345, a0=0.15, A=-0.134, F=math.radians(240), E=0.05)
 
 
+@pytest.fixture
+def ts3():
+    return TiltShifter(x0=800, y0=600, a0=math.radians(95), A=0.134, F=math.radians(70), E=math.radians(270))
+
+
 class TestOpticalAxisShifter(TestProjection):
     params = dict(
         test_inverse=[
@@ -45,6 +50,7 @@ class TestTiltShifter(TestProjection):
     params = dict(
         test_inverse_1=grid,
         test_inverse_2=grid,
+        test_inverse_3=grid,
     )
 
     def test_inverse_1(self, ts1, x, y):
@@ -52,3 +58,6 @@ class TestTiltShifter(TestProjection):
 
     def test_inverse_2(self, ts2, x, y):
         self.compare_inverted(ts2, x, y)
+
+    def test_inverse_3(self, ts3, x, y):
+        self.compare_inverted(ts3, x, y)

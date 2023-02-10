@@ -5,13 +5,14 @@ from abc import ABCMeta, abstractmethod
 
 
 class Projection(metaclass=ABCMeta):
+    """"""
     def __init__(self):
         pass
 
     @abstractmethod
     def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        pass
+        """ Apply this projection to an array of points """
 
     @abstractmethod
     def invert(self, z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        pass
+        """ Apply an inverse projection to an array of points """

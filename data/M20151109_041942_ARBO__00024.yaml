@@ -1,0 +1,162 @@
+VideoStartTime: "2015-11-09 04:19:42.000"
+EventStartTime: "2015-11-09 04:19:42.400"
+Name: ARBO
+Latitude: 18.368468
+Longitude: 48.323447
+Altitude: 201
+FieldOfViewCenter: 180 90
+FieldOfView: 180 140
+Resolution: 1280x960
+FPS: 15
+PixelSize: 3.45
+IntegrationTime: 1
+MultipleObjects: False
+ObjectOrientationAlignedWithMovement: True
+StableMovement: True
+Trail:  
+  - {fno: 015, xc: 576.2853, yc: 274.2097, intensity: 1643.0000, GaussianHeight: 74.1662, GaussianWidth: 1.3854, GaussianBaseline: 17.1759, NumOversaturatedPixels: 0}
+  - {fno: 016, xc: 582.1079, yc: 271.4072, intensity: 1710.0000, GaussianHeight: 170.1172, GaussianWidth: 1.6600, GaussianBaseline: 17.8485, NumOversaturatedPixels: 0}
+  - {fno: 017, xc: 586.4347, yc: 269.3674, intensity: 1704.0000, GaussianHeight: 194.8078, GaussianWidth: 1.5329, GaussianBaseline: 16.9237, NumOversaturatedPixels: 0}
+  - {fno: 018, xc: 590.6872, yc: 267.3933, intensity: 2211.5716, GaussianHeight: 204.0103, GaussianWidth: 1.7714, GaussianBaseline: 17.8129, NumOversaturatedPixels: 1}
+  - {fno: 019, xc: 595.6013, yc: 264.9214, intensity: 2417.7597, GaussianHeight: 203.7296, GaussianWidth: 1.6182, GaussianBaseline: 18.1333, NumOversaturatedPixels: 2}
+  - {fno: 020, xc: 600.0517, yc: 262.8411, intensity: 2887.7164, GaussianHeight: 243.2319, GaussianWidth: 1.6667, GaussianBaseline: 18.1263, NumOversaturatedPixels: 2}
+  - {fno: 021, xc: 604.5195, yc: 260.7529, intensity: 3372.9643, GaussianHeight: 286.3337, GaussianWidth: 1.7596, GaussianBaseline: 18.8681, NumOversaturatedPixels: 3}
+  - {fno: 022, xc: 609.2883, yc: 258.5543, intensity: 3724.8931, GaussianHeight: 315.7517, GaussianWidth: 1.7938, GaussianBaseline: 19.9925, NumOversaturatedPixels: 4}
+  - {fno: 023, xc: 614.4278, yc: 256.3568, intensity: 4613.1728, GaussianHeight: 304.2331, GaussianWidth: 1.8045, GaussianBaseline: 19.0646, NumOversaturatedPixels: 5}
+  - {fno: 024, xc: 619.4032, yc: 253.9888, intensity: 4778.1709, GaussianHeight: 318.8975, GaussianWidth: 1.8063, GaussianBaseline: 19.1689, NumOversaturatedPixels: 4}
+  - {fno: 025, xc: 624.4151, yc: 251.7563, intensity: 5171.6999, GaussianHeight: 310.3918, GaussianWidth: 1.8646, GaussianBaseline: 19.8886, NumOversaturatedPixels: 5}
+  - {fno: 026, xc: 629.7633, yc: 249.4512, intensity: 4264.4758, GaussianHeight: 280.0782, GaussianWidth: 1.9621, GaussianBaseline: 19.6719, NumOversaturatedPixels: 7}
+  - {fno: 027, xc: 635.1742, yc: 247.1213, intensity: 4526.3837, GaussianHeight: 331.6442, GaussianWidth: 1.9755, GaussianBaseline: 18.5305, NumOversaturatedPixels: 5}
+  - {fno: 028, xc: 640.3088, yc: 244.9182, intensity: 4868.8666, GaussianHeight: 360.8562, GaussianWidth: 2.0471, GaussianBaseline: 20.1440, NumOversaturatedPixels: 8}
+  - {fno: 029, xc: 645.5980, yc: 242.8200, intensity: 5803.2506, GaussianHeight: 301.9104, GaussianWidth: 2.4313, GaussianBaseline: 20.7457, NumOversaturatedPixels: 8}
+  - {fno: 030, xc: 651.6902, yc: 240.2516, intensity: 6802.2951, GaussianHeight: 298.1617, GaussianWidth: 2.2881, GaussianBaseline: 20.2490, NumOversaturatedPixels: 9}
+  - {fno: 031, xc: 657.2666, yc: 238.1984, intensity: 5776.8671, GaussianHeight: 313.4364, GaussianWidth: 2.3289, GaussianBaseline: 20.2843, NumOversaturatedPixels: 9}
+  - {fno: 032, xc: 663.5635, yc: 235.7446, intensity: 6141.7165, GaussianHeight: 245.0553, GaussianWidth: 2.5028, GaussianBaseline: 20.7655, NumOversaturatedPixels: 10}
+  - {fno: 033, xc: 669.6530, yc: 233.3384, intensity: 6320.2096, GaussianHeight: 299.3991, GaussianWidth: 2.6180, GaussianBaseline: 21.8068, NumOversaturatedPixels: 11}
+  - {fno: 034, xc: 675.9750, yc: 230.9320, intensity: 9727.5020, GaussianHeight: 258.1170, GaussianWidth: 2.8770, GaussianBaseline: 23.3339, NumOversaturatedPixels: 13}
+  - {fno: 035, xc: 682.0632, yc: 228.6931, intensity: 7634.6085, GaussianHeight: 267.2402, GaussianWidth: 2.7592, GaussianBaseline: 22.6171, NumOversaturatedPixels: 13}
+  - {fno: 036, xc: 688.6225, yc: 226.3807, intensity: 9115.1820, GaussianHeight: 338.1793, GaussianWidth: 2.9058, GaussianBaseline: 29.5224, NumOversaturatedPixels: 14}
+  - {fno: 037, xc: 695.0270, yc: 224.0225, intensity: 9998.6154, GaussianHeight: 314.0041, GaussianWidth: 3.1219, GaussianBaseline: 28.1337, NumOversaturatedPixels: 16}
+  - {fno: 038, xc: 701.7765, yc: 221.6995, intensity: 6313.2443, GaussianHeight: 288.2261, GaussianWidth: 2.9329, GaussianBaseline: 29.1467, NumOversaturatedPixels: 15}
+  - {fno: 039, xc: 708.6922, yc: 219.3900, intensity: 8104.8743, GaussianHeight: 358.8697, GaussianWidth: 2.7015, GaussianBaseline: 27.2432, NumOversaturatedPixels: 13}
+  - {fno: 040, xc: 715.7977, yc: 217.1183, intensity: 8005.6562, GaussianHeight: 312.9012, GaussianWidth: 2.8555, GaussianBaseline: 25.0312, NumOversaturatedPixels: 14}
+  - {fno: 041, xc: 722.9850, yc: 214.9242, intensity: 9306.7166, GaussianHeight: 305.8718, GaussianWidth: 3.1390, GaussianBaseline: 26.9555, NumOversaturatedPixels: 18}
+  - {fno: 042, xc: 730.3421, yc: 212.6793, intensity: 11495.1037, GaussianHeight: 337.2544, GaussianWidth: 3.1415, GaussianBaseline: 27.6590, NumOversaturatedPixels: 18}
+  - {fno: 043, xc: 736.4946, yc: 210.4688, intensity: 37952.4366, GaussianHeight: 311.7959, GaussianWidth: 6.2238, GaussianBaseline: 45.6561, NumOversaturatedPixels: 57}
+  - {fno: 044, xc: 744.1359, yc: 208.4401, intensity: 16795.1644, GaussianHeight: 292.0565, GaussianWidth: 4.0203, GaussianBaseline: 29.9428, NumOversaturatedPixels: 24}
+  - {fno: 045, xc: 751.0755, yc: 206.5958, intensity: 13018.1428, GaussianHeight: 280.3667, GaussianWidth: 3.8421, GaussianBaseline: 24.7044, NumOversaturatedPixels: 28}
+  - {fno: 046, xc: 758.7464, yc: 204.6716, intensity: 12606.2532, GaussianHeight: 299.0993, GaussianWidth: 3.6527, GaussianBaseline: 24.8348, NumOversaturatedPixels: 24}
+  - {fno: 047, xc: 765.9476, yc: 202.6713, intensity: 9493.3500, GaussianHeight: 332.9809, GaussianWidth: 3.2047, GaussianBaseline: 23.0995, NumOversaturatedPixels: 20}
+  - {fno: 048, xc: 773.1750, yc: 201.0629, intensity: 9306.3015, GaussianHeight: 286.7204, GaussianWidth: 2.7628, GaussianBaseline: 22.4077, NumOversaturatedPixels: 13}
+  - {fno: 049, xc: 780.2335, yc: 199.3435, intensity: 6931.4412, GaussianHeight: 247.9014, GaussianWidth: 2.3243, GaussianBaseline: 17.1032, NumOversaturatedPixels: 7}
+  - {fno: 050, xc: 785.6017, yc: 198.1599, intensity: 3031.7124, GaussianHeight: 188.3700, GaussianWidth: 1.9610, GaussianBaseline: 17.2533, NumOversaturatedPixels: 0}
+Refstars:  
+  - {x: 503.873360, y: 436.632695, intensity: 2203.8861}
+  - {x: 338.186062, y: 566.806868, intensity: 1084.0000}
+  - {x: 636.285781, y: 621.772532, intensity: 1219.0000}
+  - {x: 430.344680, y: 701.683853, intensity: 1446.0147}
+  - {x: 607.164214, y: 769.860216, intensity: 1824.8892}
+  - {x: 489.487351, y: 898.549020, intensity: 2080.9241}
+  - {x: 917.899218, y: 350.954152, intensity: 477.0000}
+  - {x: 822.915466, y: 382.731683, intensity: 737.0000}
+  - {x: 1183.733246, y: 426.024708, intensity: 672.0000}
+  - {x: 540.317178, y: 470.845271, intensity: 583.0000}
+  - {x: 447.652454, y: 543.453290, intensity: 640.0000}
+  - {x: 625.309924, y: 593.997260, intensity: 815.0000}
+  - {x: 1080.431672, y: 714.321204, intensity: 5373.6215}
+  - {x: 865.741495, y: 716.631126, intensity: 748.0000}
+  - {x: 991.569180, y: 720.241665, intensity: 3692.6974}
+  - {x: 328.759442, y: 774.405402, intensity: 601.0000}
+  - {x: 712.036687, y: 226.029696, intensity: 402.0000}
+  - {x: 830.015490, y: 228.470302, intensity: 420.0000}
+  - {x: 448.618539, y: 319.880385, intensity: 479.0000}
+  - {x: 838.970742, y: 414.649983, intensity: 394.0000}
+  - {x: 430.720254, y: 490.903731, intensity: 447.0000}
+  - {x: 507.189216, y: 622.548066, intensity: 546.0000}
+  - {x: 873.852969, y: 660.351140, intensity: 636.0000}
+  - {x: 517.389519, y: 670.470154, intensity: 586.0000}
+  - {x: 889.293445, y: 402.699548, intensity: 254.0000}
+  - {x: 515.937113, y: 516.681937, intensity: 219.0000}
+  - {x: 838.729446, y: 521.378168, intensity: 342.0000}
+  - {x: 543.230563, y: 617.495327, intensity: 256.0000}
+  - {x: 378.916013, y: 683.387348, intensity: 313.0000}
+  - {x: 168.840423, y: 711.261021, intensity: 534.0000}
+  - {x: 807.483198, y: 866.737029, intensity: 470.0000}
+  - {x: 373.862476, y: 245.264134, intensity: 250.0000}
+  - {x: 984.683140, y: 331.122429, intensity: 297.0000}
+  - {x: 939.348139, y: 331.539093, intensity: 408.0000}
+  - {x: 384.340602, y: 333.569067, intensity: 458.0000}
+  - {x: 481.371181, y: 436.884718, intensity: 207.0000}
+  - {x: 495.424599, y: 617.485150, intensity: 283.0000}
+  - {x: 465.238752, y: 289.083383, intensity: 183.0000}
+  - {x: 409.842259, y: 395.248327, intensity: 196.0000}
+  - {x: 883.044187, y: 480.740321, intensity: 248.0000}
+  - {x: 926.879520, y: 544.115092, intensity: 190.0000}
+  - {x: 771.328635, y: 583.781231, intensity: 390.0000}
+  - {x: 368.891542, y: 337.470189, intensity: 137.0000}
+  - {x: 362.759049, y: 430.096969, intensity: 175.0000}
+  - {x: 315.788860, y: 461.932306, intensity: 256.0000}
+  - {x: 769.215126, y: 470.722154, intensity: 164.0000}
+  - {x: 438.855511, y: 598.672975, intensity: 165.0000}
+  - {x: 954.394417, y: 625.521418, intensity: 239.0000}
+  - {x: 1022.096486, y: 636.454596, intensity: 159.0000}
+  - {x: 816.382130, y: 646.977813, intensity: 226.0000}
+  - {x: 1060.582554, y: 714.371035, intensity: 123.0000}
+  - {x: 380.461358, y: 744.515160, intensity: 216.0000}
+  - {x: 588.379614, y: 745.697259, intensity: 284.0000}
+  - {x: 386.911600, y: 753.643947, intensity: 279.0000}
+  - {x: 743.180409, y: 773.029989, intensity: 197.0000}
+  - {x: 374.994241, y: 734.724648, intensity: 206.0000}
+  - {x: 239.020974, y: 850.179019, intensity: 135.0000}
+  - {x: 518.762595, y: 163.173332, intensity: 178.0000}
+  - {x: 445.005704, y: 346.269703, intensity: 116.0000}
+  - {x: 906.805080, y: 440.043436, intensity: 88.0000}
+  - {x: 474.528195, y: 454.566727, intensity: 168.0000}
+  - {x: 607.661786, y: 617.751075, intensity: 25.0000}
+  - {x: 863.246301, y: 638.700539, intensity: 132.0000}
+  - {x: 592.022388, y: 653.392561, intensity: 176.0000}
+  - {x: 674.844641, y: 750.727154, intensity: 145.0000}
+  - {x: 1010.949618, y: 432.513090, intensity: 109.0000}
+  - {x: 543.767327, y: 465.265408, intensity: 171.0000}
+  - {x: 737.088881, y: 497.995207, intensity: 176.0000}
+  - {x: 326.456955, y: 561.797955, intensity: 166.0000}
+  - {x: 572.887910, y: 565.734782, intensity: 133.0000}
+  - {x: 494.387696, y: 142.558697, intensity: 231.0000}
+  - {x: 846.099008, y: 214.557044, intensity: 211.0000}
+  - {x: 415.460643, y: 370.026980, intensity: 124.0000}
+  - {x: 621.509460, y: 626.759293, intensity: 91.0000}
+  - {x: 631.522148, y: 645.148968, intensity: 129.0000}
+  - {x: 858.195030, y: 685.504372, intensity: 164.0000}
+  - {x: 723.432084, y: 692.921828, intensity: 91.0000}
+  - {x: 523.538404, y: 697.410845, intensity: 173.0000}
+  - {x: 747.858572, y: 354.788802, intensity: 101.0000}
+  - {x: 709.139599, y: 416.679516, intensity: 141.0000}
+  - {x: 742.442166, y: 503.395684, intensity: 34.0000}
+  - {x: 527.688173, y: 120.323136, intensity: 39.0000}
+  - {x: 508.087198, y: 187.672323, intensity: 85.0000}
+  - {x: 240.547267, y: 306.729231, intensity: 135.0000}
+  - {x: 829.978834, y: 514.324499, intensity: 139.0000}
+  - {x: 565.459951, y: 656.321654, intensity: 103.0000}
+  - {x: 821.528439, y: 739.198859, intensity: 84.0000}
+  - {x: 727.767000, y: 770.278989, intensity: 168.0000}
+  - {x: 445.158462, y: 895.430851, intensity: 178.0000}
+  - {x: 409.876734, y: 321.026214, intensity: 57.0000}
+  - {x: 572.526174, y: 417.129252, intensity: 153.0000}
+  - {x: 447.333915, y: 428.233460, intensity: 101.0000}
+  - {x: 339.494505, y: 542.039262, intensity: 95.0000}
+  - {x: 892.755134, y: 552.304742, intensity: 157.0000}
+  - {x: 930.866230, y: 553.905035, intensity: 43.0000}
+  - {x: 824.347663, y: 630.532539, intensity: 81.0000}
+  - {x: 652.829967, y: 170.481761, intensity: 70.0000}
+  - {x: 810.234702, y: 330.705400, intensity: 159.0000}
+  - {x: 696.128739, y: 529.368569, intensity: 75.0000}
+  - {x: 590.609730, y: 596.737688, intensity: 122.0000}
+  - {x: 423.344135, y: 610.202369, intensity: 95.0000}
+  - {x: 386.832486, y: 813.432966, intensity: 65.0000}
+  - {x: 795.639261, y: 655.807236, intensity: 70.0000}
+  - {x: 482.094179, y: 605.422545, intensity: 30.0000}
+  - {x: 590.597136, y: 741.929279, intensity: 165.0000}
+  - {x: 827.153228, y: 813.334071, intensity: 109.0000}
+  - {x: 938.840869, y: 213.991038, intensity: 91.0000}
+  - {x: 511.400346, y: 640.905570, intensity: 89.0000}
+  - {x: 582.159136, y: 688.169364, intensity: 113.0000}

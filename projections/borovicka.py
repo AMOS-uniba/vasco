@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Union
 
 from .base import Projection
 from .shifters import TiltShifter
@@ -14,23 +14,13 @@ class BorovickaProjection(Projection):
                  epsilon: float = 0, E: float = 0):
         #        assert(epsilon >= 0 and V >= 0)
         super().__init__()
-        self.x0 = x0
-        self.y0 = y0
-        self.a0 = a0
-        self.A = A
-        self.F = F
-        self.V = V
-        self.S = S
-        self.D = D
-        self.P = P
-        self.Q = Q
-        self.epsilon = epsilon  # zenith angle of centre of FoV
-        self.E = E  # azimuth angle of centre of FoV
         self.axis_shifter = TiltShifter(x0=x0, y0=y0, a0=a0, A=A, F=F, E=E)
         self.radial_transform = BiexponentialTransformer(V, S, D, P, Q)
         self.zenith_shifter = ZenithShifter(epsilon=epsilon, E=E)
 
-    def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def __call__(self,
+                 x: Union[float, np.ndarray],
+                 y: Union[float, np.ndarray]) -> Tuple[np.ndarray, np.ndarray]:
         r, b = self.axis_shifter(x, y)
         u = self.radial_transform(r)
         z, a = self.zenith_shifter(u, b)

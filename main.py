@@ -62,7 +62,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.updateProjection()
 
         self.loadYAML('data/20220531_055655.yaml')
-        self.matcher.load_catalogue('catalogue/HYG30.tsv')
         self.importConstants('out2.yaml')
 
         self.onParametersChanged()
@@ -259,11 +258,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def loadYAMLFile(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data", "YAML files (*.yml *.yaml)")
-        if filename != '':
+        if filename == '':
+            print("No file provided, loading aborted")
+        else:
             self.loadYAML(filename)
 
         self.cb_stations.setCurrentIndex(0)
         self.onLocationTimeChanged()
+        self.onParametersChanged()
+        self.sensorPlot.invalidate()
         self.updatePlots()
 
     def loadYAML(self, file):
@@ -275,6 +278,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.matcher = Matchmaker(self.location, self.time)
         self.matcher.sensor_data.load(data)
+        self.matcher.load_catalogue('catalogue/HYG30.tsv')
 
     def importFile(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Import constants from file", ".", "YAML files (*.yml *.yaml)")
@@ -389,6 +393,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sensorPlot.update(self.matcher.sensor_data)
 
     def plotObservedStars(self):
+        print("Plotting observed stars")
         self.skyPlot.update_dots(
             self.matcher.sensor_data.stars.project(self.projection, masked=True),
             self.matcher.sensor_data.stars.m,
@@ -401,6 +406,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
 
     def plotCatalogueStars(self):
+        print("Plotting catalogue stars")
         self.skyPlot.update_stars(
             self.matcher.catalogue.to_altaz_chart(self.location, self.time, masked=True),
             self.matcher.catalogue.vmag
