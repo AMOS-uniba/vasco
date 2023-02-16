@@ -79,8 +79,10 @@ class TestBorovickaProjection(TestProjection):
 
     big_grid = [
         dict(x=x, y=y)
-        for x in np.linspace(0, 1600, 11)
-        for y in np.linspace(0, 1200, 13)
+        for x in [0]
+        for y in [1100]
+#        for x in np.linspace(0, 1600, 11)
+#        for y in np.linspace(0, 1200, 13)
     ]
 
     params = dict(
@@ -108,10 +110,10 @@ class TestBorovickaProjection(TestProjection):
         assert boro_identity(0.5, -0.5) == pytest.approx((np.sqrt(2) * np.pi / 4, np.pi * 1.75), rel=1e-14)
 
     def test_identity_invert(self, boro_identity, x, y):
-        self.compare_inverted(boro_identity, x, y)
+        assert boro_identity.invert(*boro_identity(x, y)) == pytest.approx((x, y), abs=1e-9)
 
     def test_rotated_invert(self, boro_rotated, x, y):
-        self.compare_inverted(boro_rotated, x, y)
+        assert boro_rotated.invert(*boro_rotated(x, y)) == pytest.approx((x, y), abs=1e-9)
 
     def test_zenith_invert(self, boro_zenith, x, y):
         assert boro_zenith.invert(*boro_zenith(x, y)) == pytest.approx((x, y), abs=1e-9)

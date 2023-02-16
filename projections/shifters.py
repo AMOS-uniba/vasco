@@ -29,6 +29,7 @@ class OpticalAxisShifter():
         ys = y - self.y0
         r = np.sqrt(np.square(xs) + np.square(ys))
         b = self.a0 - self.E + np.arctan2(ys, xs)
+        b = np.mod(b, 2 * np.pi)
         return r, b
 
     def invert(self, r: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -63,14 +64,14 @@ class TiltShifter(OpticalAxisShifter):
         drdy = ys / np.sqrt(r2) + self.A * self.cos_term
         dbdx = -ys / r2
         dbdy = xs / r2
-        return [
-            [drdx, drdy],
-            [dbdx, dbdy],
-        ]
+        return (
+            np.stack((drdx, drdy)),
+            np.stack((dbdx, dbdy)),
+        )
 
     def func(self, vec, r, b):
         q = self.__call__(vec[0], vec[1])
-        return q[0] - r, np.fmod(q[1] - b + 4 * np.pi, 2 * np.pi)
+        return q[0] - r, np.mod(q[1] - b, 2 * np.pi)
 
     def invert(self, r: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         return sp.optimize.root(

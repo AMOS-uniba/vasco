@@ -21,28 +21,27 @@ class BorovickaProjection(Projection):
     def __call__(self,
                  x: Union[float, np.ndarray],
                  y: Union[float, np.ndarray]) -> Tuple[np.ndarray, np.ndarray]:
+        print(f"x = {x}, y = {y}")
         r, b = self.axis_shifter(x, y)
+        print(f"r = {r}, b = {b}")
         u = self.radial_transform(r)
+        print(f"u = {u}, b = {b}")
         z, a = self.zenith_shifter(u, b)
+        print(f"z = {z}, a = {a}")
         return z, a
 
     def invert(self, z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        print(f"z = {z}, a = {a}")
         u, b = self.zenith_shifter.invert(z, a)
+        print(f"u = {u}, b = {b}")
         r = self.radial_transform.invert(u)
+        print(f"r = {r}, b = {b}")
         x, y = self.axis_shifter.invert(r, b)
+        print(f"x = {x}, y = {y}")
         return x, y
 
     def __str__(self):
-        return f"Borovička projection with " \
-               f"x0 = {self.x0:.6f}, " \
-               f"y0 = {self.y0:.6f}, " \
-               f"a0 = {self.a0:.6f}, " \
-               f"V = {self.V:.6f}, " \
-               f"S = {self.S:.6f}, " \
-               f"D = {self.D:.6f}, " \
-               f"P = {self.P:.6f}, " \
-               f"Q = {self.Q:.6f}, " \
-               f"A = {self.A:.6f}, " \
-               f"F = {self.F:.6f}, " \
-               f"epsilon = {self.epsilon:.6f}, " \
-               f"E = {self.E:.6f}"
+        return f"Borovička projection with \n" \
+               f"   {self.axis_shifter} \n" \
+               f"   {self.radial_transform} \n" \
+               f"   {self.zenith_shifter}"

@@ -1,5 +1,3 @@
-import numpy as np
-
 from .base import BasePlot
 
 
@@ -26,11 +24,9 @@ class SensorPlot(BasePlot):
         self.scatter_stars.set_offsets(data.stars.xy)
         self.scatter_stars.set_sizes(data.stars.m / 100)
         self.scatter_meteor.set_offsets(data.meteor.xy)
-        self.scatter_meteor.set_sizes(data.meteor.m / 10
+        self.scatter_meteor.set_sizes(data.meteor.m / 100)
         self.valid = True
         self.draw()
 
     def invalidate(self):
         self.valid = False
-
-

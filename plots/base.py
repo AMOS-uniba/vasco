@@ -21,4 +21,5 @@ class BasePlot:
         """ Add axes to this plot """
 
     def draw(self):
+        print("Drawing canvas")
         self.canvas.draw()

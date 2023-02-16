@@ -87,7 +87,7 @@ class VectorErrorPlot(BasePlot):
         self.valid_meteor = True
         self.draw()
 
-    def update_grid(self, x, y, u, v, *, limit: float=1):
+    def update_grid(self, x, y, u, v, *, limit: float = 1):
         if self.quiver_grid is not None:
             self.quiver_grid.remove()
 

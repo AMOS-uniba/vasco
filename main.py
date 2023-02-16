@@ -61,15 +61,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.updateProjection()
 
-        self.loadYAML('data/20220531_055655.yaml')
-        self.importConstants('out2.yaml')
+        self.loadYAML('data/M20120922_225744_AGO__00007.yaml')  # temporary
+        self.importConstants('AGO.yaml')  # temporary
 
         self.onParametersChanged()
-
         self.connectSignalSlots()
-
-        self.maskSensor() # temporary
-        self.pair() # temporary
 
     def populateStations(self):
         for name, station in AMOS.stations.items():
@@ -92,21 +88,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def connectSignalSlots(self):
         self.ac_load.triggered.connect(self.loadYAMLFile)
 
-        self.dsb_x0.valueChanged.connect(self.onParametersChanged)
-        self.dsb_y0.valueChanged.connect(self.onParametersChanged)
-        self.dsb_a0.valueChanged.connect(self.onParametersChanged)
-        self.dsb_V.valueChanged.connect(self.onParametersChanged)
-        self.dsb_S.valueChanged.connect(self.onParametersChanged)
-        self.dsb_D.valueChanged.connect(self.onParametersChanged)
-        self.dsb_P.valueChanged.connect(self.onParametersChanged)
-        self.dsb_Q.valueChanged.connect(self.onParametersChanged)
-        self.dsb_A.valueChanged.connect(self.onParametersChanged)
-        self.dsb_F.valueChanged.connect(self.onParametersChanged)
-        self.dsb_eps.valueChanged.connect(self.onParametersChanged)
-        self.dsb_E.valueChanged.connect(self.onParametersChanged)
+        for widget, param in self.param_widgets:
+            widget.valueChanged.connect(self.onParametersChanged)
 
         self.dt_time.dateTimeChanged.connect(self.updateTime)
         self.dt_time.dateTimeChanged.connect(self.onTimeChanged)
+
         self.dsb_lat.valueChanged.connect(self.onLocationChanged)
         self.dsb_lon.valueChanged.connect(self.onLocationChanged)
 
@@ -116,7 +103,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pb_import.clicked.connect(self.importFile)
 
         self.pb_mask_unidentified.clicked.connect(self.maskSensor)
-        self.pb_mask_distant.clicked.connect(self.maskCatalogue)
+        self.pb_mask_distant.clicked.connect(self.maskCatalogueDistant)
+        self.pb_mask_faint.clicked.connect(self.maskCatalogueFaint)
         self.pb_reset.clicked.connect(self.resetValid)
         self.dsb_error_limit.valueChanged.connect(self.onErrorLimitChanged)
 
@@ -158,6 +146,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.projection = BorovickaProjection(*self.get_constants_tuple())
 
     def onParametersChanged(self):
+        print("Parameters changed")
         self.updateProjection()
 
         self.skyPlot.invalidate_dots()
@@ -230,7 +219,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.errors = self.matcher.errors(self.projection, True)
 
     def exportFile(self):
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export constants to file", ".", "YAML files (*.yaml)")
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export constants to file", ".",
+                                                            "YAML files (*.yaml)")
         self.exportConstants(filename)
 
     def exportConstants(self, filename):
@@ -257,7 +247,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             print(f"Could not export constants: {exc}")
 
     def loadYAMLFile(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data", "YAML files (*.yml *.yaml)")
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data",
+                                                            "YAML files (*.yml *.yaml)")
         if filename == '':
             print("No file provided, loading aborted")
         else:
@@ -273,7 +264,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         data = dotmap.DotMap(yaml.safe_load(open(file, 'r')))
         self.setLocation(data.Latitude, data.Longitude)
         self.updateLocation()
-        self.setTime(datetime.datetime.strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=zoneinfo.ZoneInfo('UTC')))
+        self.setTime(datetime.datetime
+                     .strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f")
+                     .replace(tzinfo=zoneinfo.ZoneInfo('UTC')))
         self.updateTime()
 
         self.matcher = Matchmaker(self.location, self.time)
@@ -281,7 +274,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.matcher.load_catalogue('catalogue/HYG30.tsv')
 
     def importFile(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Import constants from file", ".", "YAML files (*.yml *.yaml)")
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Import constants from file", ".",
+                                                            "YAML files (*.yml *.yaml)")
         self.importConstants(filename)
         self.onParametersChanged()
 
@@ -290,18 +284,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             with open(filename, 'r') as file:
                 try:
                     data = dotmap.DotMap(yaml.safe_load(file))
+                    self.blockParameterSignals(True)
                     for widget, param in self.param_widgets:
-                        widget.blockSignals(True)
                         widget.setValue(data.params[param])
-                        widget.blockSignals(False)
+                    self.blockParameterSignals(False)
+
                     self.updateProjection()
                 except yaml.YAMLError as exc:
-                    print(f"Could not open file {filename}")
+                    print(f"Could not open file {filename}: {exc}")
         except FileNotFoundError as exc:
             print(f"Could not import constants: {exc}")
 
+    def blockParameterSignals(self, block):
+        for widget, param in self.param_widgets:
+            widget.blockSignals(block)
+
     def get_constants_tuple(self):
-        return (self.dsb_x0.value(),
+        return (
+            self.dsb_x0.value(),
             self.dsb_y0.value(),
             np.radians(self.dsb_a0.value()),
             self.dsb_A.value(),
@@ -327,6 +327,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
 
         x0, y0, a0, A, F, V, S, D, P, Q, e, E = tuple(result.x)
+        self.blockParameterSignals(True)
         self.dsb_x0.setValue(x0)
         self.dsb_y0.setValue(y0)
         self.dsb_a0.setValue(np.degrees(a0))
@@ -339,6 +340,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dsb_Q.setValue(Q)
         self.dsb_eps.setValue(np.degrees(e))
         self.dsb_E.setValue(np.degrees(E))
+        self.blockParameterSignals(False)
 
         self.w_input.setEnabled(True)
         self.w_input.repaint()
@@ -347,14 +349,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def maskSensor(self):
         errors = self.matcher.errors(self.projection, False)
         self.matcher.mask_sensor_data(errors > np.radians(self.dsb_error_limit.value()))
-        print(f"Culled the dots to {self.dsb_error_limit.value()}°: {self.matcher.sensor_data.stars.count_valid} are valid")
+        print(f"Culled the dots to {self.dsb_error_limit.value()}°: "
+              f"{self.matcher.sensor_data.stars.count_valid} are valid")
         self.onParametersChanged()
         self.showCounts()
 
-    def maskCatalogue(self):
+    def maskCatalogueDistant(self):
         errors = self.matcher.errors_inverse(self.projection, False)
         self.matcher.mask_catalogue(errors > np.radians(self.dsb_distance_limit.value()))
-        print(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: {self.matcher.catalogue.count_valid} stars used")
+        print(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: "
+              f"{self.matcher.catalogue.count_valid} stars used")
+        self.skyPlot.invalidate_stars()
+
+        self.computeErrors()
+        self.updatePlots()
+        self.showCounts()
+
+    def maskCatalogueFaint(self):
+        self.matcher.mask_catalogue(self.matcher.catalogue.vmag > self.dsb_magnitude_limit.value())
+        print(f"Culled the catalogue to {self.dsb_magnitude_limit.value()}m: "
+              f"{self.matcher.catalogue.count_valid} stars used")
         self.skyPlot.invalidate_stars()
 
         self.computeErrors()
@@ -393,7 +407,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sensorPlot.update(self.matcher.sensor_data)
 
     def plotObservedStars(self):
-        print("Plotting observed stars")
         self.skyPlot.update_dots(
             self.matcher.sensor_data.stars.project(self.projection, masked=True),
             self.matcher.sensor_data.stars.m,
@@ -406,7 +419,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
 
     def plotCatalogueStars(self):
-        print("Plotting catalogue stars")
         self.skyPlot.update_stars(
             self.matcher.catalogue.to_altaz_chart(self.location, self.time, masked=True),
             self.matcher.catalogue.vmag
@@ -415,8 +427,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def plotErrors(self):
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=True)
         self.errorPlot.update(positions, self.matcher.sensor_data.stars.m, self.errors,
-                              limit=np.radians(self.dsb_error_limit.value())
-        )
+                              limit=np.radians(self.dsb_error_limit.value()))
 
     def plotVectorErrors(self):
         # Do nothing if working in unpaired mode
