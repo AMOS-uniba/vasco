@@ -12,7 +12,7 @@ def pytest_generate_tests(metafunc):
             )
 
 
-class TestProjection():
+class TestProjection:
     @staticmethod
-    def compare_inverted(projection, x, y, abs=1e-12):
-        assert projection.invert(*projection(x, y)) == pytest.approx((x, y), abs=abs)
+    def compare_inverted(projection, x, y, atol=1e-12):
+        assert projection.invert(*projection(x, y)) == pytest.approx((x, y), abs=atol)

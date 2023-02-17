@@ -63,3 +63,7 @@ class BiexponentialTransformer(ExponentialTransformer):
     def fprime(self, r):
         """ du/dr = V + SDe^(Dr) + 2 PQr e^(Qr^2) """
         return super().fprime(r) + 2 * self.quad_coef * self.quad_exp * r * np.exp(self.quad_exp * r * r)
+
+    def __str__(self):
+        return f"<{self.__class__} V={self.linear} S={self.lin_coef} " \
+               f"D={self.lin_exp} P={self.quad_coef} Q={self.quad_exp}>"

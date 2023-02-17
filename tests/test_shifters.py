@@ -26,6 +26,12 @@ def ts3():
     return TiltShifter(x0=800, y0=600, a0=math.radians(95), A=0.134, F=math.radians(70), E=math.radians(270))
 
 
+@pytest.fixture
+def ts4():
+    return TiltShifter(x0=775.4, y0=581.625, a0=math.radians(53.5123),
+                       A=0.00376, F=math.radians(65.25), E=math.radians(203.910437))
+
+
 class TestOpticalAxisShifter(TestProjection):
     params = dict(
         test_inverse=[
@@ -42,22 +48,16 @@ class TestOpticalAxisShifter(TestProjection):
 
 class TestTiltShifter(TestProjection):
     grid = [
-        dict(x=x, y=y)
-        for x in np.linspace(-1, 1, 11)
-        for y in np.linspace(-1, 1, 11)
+        dict(proj=proj, x=x, y=y)
+        for proj in ['ts1', 'ts2', 'ts3', 'ts4']
+        for x in np.linspace(-1, 1, 15)
+        for y in np.linspace(-1, 1, 15)
         if x**2 + y**2 < 1
     ]
     params = dict(
-        test_inverse_1=grid,
-        test_inverse_2=grid,
-        test_inverse_3=grid,
+        test_inverse=grid,
     )
 
-    def test_inverse_1(self, ts1, x, y):
-        self.compare_inverted(ts1, x, y)
-
-    def test_inverse_2(self, ts2, x, y):
-        self.compare_inverted(ts2, x, y)
-
-    def test_inverse_3(self, ts3, x, y):
-        self.compare_inverted(ts3, x, y)
+    def test_inverse(self, proj, x, y, request):
+        proj = request.getfixturevalue(proj)
+        assert proj.invert(*proj(x, y)) == pytest.approx((x, y), abs=1e-9)
