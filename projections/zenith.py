@@ -52,4 +52,4 @@ class ZenithShifter(Projection):
         return u, np.mod(b, 2 * np.pi)  # wrap around to [0, 2pi)
 
     def __str__(self):
-        return f"<{self.__class__} epsilon={self.epsilon} E={self.E}>"
+        return f"<{self.__class__.__name__} epsilon={self.epsilon} E={self.E}>"

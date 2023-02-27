@@ -18,6 +18,7 @@ vptree = "*"
 pytest = "*"
 pyyaml = "*"
 flake8 = "*"
+lxml = "*"
 
 [dev-packages]
 

@@ -195,6 +195,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def updatePlots(self):
         self.showErrors()
+        self.correctMeteor()
         index = self.tw_charts.currentIndex()
         if index == 0:
             if not self.sensorPlot.valid:
@@ -403,6 +404,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         outside_limit = self.errors[self.errors > np.radians(self.dsb_error_limit.value())].size
         self.lb_outside_limit.setText(f'{outside_limit}')
 
+    def correctMeteor(self):
+        if isinstance(self.matcher, Counselor):
+            self.matcher.print_meteor(self.projection)
+
     def plotSensorData(self):
         self.sensorPlot.update(self.matcher.sensor_data)
 
@@ -451,7 +456,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             print("Plotting vector meteors")
             self.vectorErrorPlot.update_meteor(
                 self.matcher.sensor_data.meteor.project(self.projection),
-                self.matcher.correct_meteor(self.projection),
+                self.matcher.correction_meteor_xy(self.projection),
                 self.matcher.sensor_data.meteor.ms(True),
                 scale=1 / self.sb_arrow_scale.value(),
             )

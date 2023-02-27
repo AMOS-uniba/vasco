@@ -4,7 +4,7 @@ import matplotlib as mpl
 from astropy.coordinates import AltAz
 import astropy.units as u
 
-from typing import Tuple
+from typing import Tuple, Union
 
 
 HalfPi = np.pi / 2
@@ -39,25 +39,25 @@ def spherical(x: AltAz, y: AltAz) -> u.Quantity:
     )
 
 
-def spherical_distance(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+def spherical_distance(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
-    Compute spherical distance between x and y, each are vectors of points in D dimensions
-    x: np.ndarray(X, D)
-    y: np.ndarray(Y, D)
+    Compute spherical distance between a and b, each are vectors of points in D dimensions
+    a: np.ndarray(A, D)
+    b: np.ndarray(B, D)
 
     Returns
     -------
-    np.ndarray(X, Y)
+    np.ndarray(A, B)
     """
     return 2 * np.sin(
         np.sqrt(
-            np.sin(0.5 * (y[..., 0] - x[..., 0]))**2 +
-            np.cos(x[..., 0]) * np.cos(y[..., 0]) * np.sin(0.5 * (y[..., 1] - x[..., 1]))**2
+            np.sin(0.5 * (b[..., 0] - a[..., 0]))**2 +
+            np.cos(a[..., 0]) * np.cos(b[..., 0]) * np.sin(0.5 * (b[..., 1] - a[..., 1]))**2
         )
     )
 
 
-def spherical_difference(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+def spherical_difference(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     Compute spherical distance between x and y
     x: np.ndarray(X, ..., 2)
@@ -67,12 +67,12 @@ def spherical_difference(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     -------
     np.ndarray(X, Y), np.ndarray(X, Y)
     """
-    dz = y[..., 0] - x[..., 0]
-    da = y[..., 1] - x[..., 1]
-    return np.stack((dz, da * np.cos(x[..., 0])), axis=1)
+    dz = b[..., 0] - a[..., 0]
+    da = b[..., 1] - a[..., 1]
+    return np.stack((dz, da * np.cos(a[..., 0])), axis=1)
 
 
-def altaz_to_disk(altaz: AltAz) -> np.ndarray:
+def altaz_to_disk(altaz: Union[None, AltAz]) -> np.ndarray:
     if altaz is None:
         return np.empty(shape=(0, 2))
     else:
@@ -86,16 +86,13 @@ def altaz_to_disk(altaz: AltAz) -> np.ndarray:
 
 def disk_to_altaz(xy: np.ndarray) -> AltAz:
     return AltAz(
-        np.sqrt(xy[:, 0]**2 + xy[:, 1]**2) / HalfPi,
-        np.arctan2(xy[:, 1], xy[:, 0]),
+        (HalfPi + np.arctan2(xy[:, 1], xy[:, 0])) * u.rad,          # Add pi/2 since our 0° is at the bottom
+        np.sqrt(xy[:, 0] ** 2 + xy[:, 1] ** 2) / HalfPi * u.rad,
     )
 
 
 def proj_to_disk(obs: np.ndarray) -> np.ndarray:
-    if obs is None:
-        return np.empty(shape=(0, 2))
-    else:
-        z, a = obs.T
-        x = z * np.sin(a) / np.pi * 2
-        y = -z * np.cos(a) / np.pi * 2
-        return np.stack((x, y), axis=1)
+    z, a = obs.T
+    x = z * np.sin(a) / np.pi * 2
+    y = -z * np.cos(a) / np.pi * 2
+    return np.stack((x, y), axis=1)

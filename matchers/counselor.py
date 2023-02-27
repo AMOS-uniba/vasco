@@ -1,10 +1,11 @@
 import numpy as np
+import pandas as pd
 
 from .base import Matcher
 
 from correctors import KernelSmoother
 from correctors import kernels
-from utilities import spherical_distance, altaz_to_disk, proj_to_disk, masked_grid
+from utilities import spherical_distance, spherical_difference, disk_to_altaz, altaz_to_disk, proj_to_disk, masked_grid
 
 
 class Counselor(Matcher):
@@ -81,8 +82,17 @@ class Counselor(Matcher):
         obs = proj_to_disk(self.sensor_data.stars.project(projection))
         self.smoother = KernelSmoother(obs, cat - obs, kernel=kernels.nexp, bandwidth=bandwidth)
 
-    def correct_meteor(self, projection):
+    def project_meteor(self, projection):
+        xy = proj_to_disk(self.sensor_data.meteor.project(projection))
+        return disk_to_altaz(xy)
+
+    def correction_meteor_xy(self, projection):
         return self.smoother(proj_to_disk(self.sensor_data.meteor.project(projection)))
+
+    def correct_meteor(self, projection):
+        xy = proj_to_disk(self.sensor_data.meteor.project(projection))
+        dxdy = self.smoother(xy)
+        return disk_to_altaz(xy + dxdy)
 
     def grid(self, resolution=21):
         xx, yy = masked_grid(resolution)
@@ -91,3 +101,21 @@ class Counselor(Matcher):
 
     def save(self, filename):
         self.df.to_csv(sep='\t', float_format='.6f', index=False, header=['x', 'y', 'dec', 'ra'])
+
+    def print_meteor(self, projection):
+        raw = self.project_meteor(projection)
+        corr = self.correct_meteor(projection)
+        df = pd.DataFrame()
+        df['ev_r'] = raw.alt.degree
+        df['ev'] = corr.alt.degree
+        df['az_r'] = raw.az.degree
+        df['az'] = corr.az.degree
+        df['fno'] = 0
+        df['b'] = 0
+        df['bm'] = 0
+        df['Lsum'] = 0
+        df['mag'] = self.sensor_data.meteor.m
+        df['ra'] = 0
+        df['dec'] = 0
+        print(df.to_xml(index=False, root_name='ua2_objpath', row_name='ua2_fdata2',
+                        attr_cols=['fno', 'b', 'bm', 'Lsum', 'mag', 'az', 'ev', 'az_r', 'ev_r', 'ra', 'dec']))
