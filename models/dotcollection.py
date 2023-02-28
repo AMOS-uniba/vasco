@@ -4,7 +4,7 @@ import numpy as np
 
 class DotCollection:
     def __init__(self, xy=None, m=None, mask=None):
-        self._xy = np.empty(shape=(0, 2), dtype=float) if xy is None else xy
+        self.xy = xy
         self._m = np.empty(shape=(0,), dtype=float) if m is None else m
         self.mask = mask
         assert (xy is None) == (m is None), "Both or neither of xy and m must be set"
@@ -15,6 +15,10 @@ class DotCollection:
     @property
     def xy(self):
         return self._xy
+
+    @xy.setter
+    def xy(self, pos=None):
+        self._xy = np.empty(shape=(0, 2), dtype=float) if pos is None else pos
 
     @property
     def x(self):

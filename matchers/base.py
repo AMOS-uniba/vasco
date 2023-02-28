@@ -11,12 +11,9 @@ class Matcher(metaclass=ABCMeta):
         self.projection_cls = projection_cls
         self.location = None
         self.time = None
+        self.catalogue = None
+        self.sensor_data = None
         self.update(location, time)
-
-    @property
-    @abstractmethod
-    def count(self):
-        """ Count the dots """
 
     @abstractmethod
     def mask_catalogue(self, mask):

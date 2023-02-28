@@ -3,11 +3,11 @@ import matplotlib as mpl
 
 from matplotlib.ticker import MultipleLocator
 
-from .base import BasePlot
+from plots.base import BasePlot
 from matchers import Matcher
 
 
-class ErrorPlot(BasePlot):
+class BaseErrorPlot(BasePlot):
     def __init__(self, widget, **kwargs):
         self.cmap = mpl.cm.get_cmap('autumn_r')
         self.axis_alt = None

@@ -20,7 +20,8 @@ class Counselor(Matcher):
         assert sensor_data.stars.count == catalogue.count
         self.catalogue = catalogue
         self.sensor_data = sensor_data
-        self.smoother = None
+        self.position_smoother = None
+        self.magnitude_smoother = None
 
         print(f"Counselor created with {self.catalogue.count} pairs:")
         print(" - " + self.catalogue.__str__())
@@ -35,6 +36,7 @@ class Counselor(Matcher):
         self.sensor_data.stars.mask = mask
 
     def mask_sensor_data(self, mask):
+        """ Here both methods are the same so just call the other one. """
         self.mask_catalogue(mask)
 
     @staticmethod
@@ -63,44 +65,50 @@ class Counselor(Matcher):
         return spherical_difference(observed, catalogue)
         # BROKEN
 
-    def errors(self, projection, masked):
+    def position_errors(self, projection, masked):
         return self.compute_distances(
             self.sensor_data.stars.project(projection, masked=masked),
             self.catalogue.to_altaz_deg(self.location, self.time, masked=masked),
         )
 
+    def magnitude_errors(self, projection, masked):
+        return self.sensor_data.stars.m - self.catalogue.vmag
+
     def errors_inverse(self, projection, masked):
-        return self.errors(projection, masked)
+        return self.position_errors(projection, masked)
 
     def pair(self, projection):
         self.catalogue.cull()
         self.sensor_data.stars.cull()
         return self
 
-    def update_smoother(self, projection, *, bandwidth=0.1):
-        cat = altaz_to_disk(self.catalogue.altaz(self.location, self.time, masked=True))
+    def update_position_smoother(self, projection, *, bandwidth=0.1):
         obs = proj_to_disk(self.sensor_data.stars.project(projection))
-        self.smoother = KernelSmoother(obs, cat - obs, kernel=kernels.nexp, bandwidth=bandwidth)
+        cat = altaz_to_disk(self.catalogue.altaz(self.location, self.time, masked=True))
+        print(obs.shape, cat.shape)
+        self.position_smoother = KernelSmoother(obs, cat - obs, kernel=kernels.nexp, bandwidth=bandwidth)
+
+    def update_magnitude_smoother(self, projection, *, bandwidth=0.1):
+        obs = proj_to_disk(self.sensor_data.stars.project(projection))
+        mag = self.catalogue.vmag(masked=True)
+        self.magnitude_smoother = KernelSmoother(obs, mag, kernel=kernels.nexp, bandwidth=bandwidth)
 
     def project_meteor(self, projection):
         xy = proj_to_disk(self.sensor_data.meteor.project(projection))
         return disk_to_altaz(xy)
 
     def correction_meteor_xy(self, projection):
-        return self.smoother(proj_to_disk(self.sensor_data.meteor.project(projection)))
+        return self.position_smoother(proj_to_disk(self.sensor_data.meteor.project(projection)))
 
     def correct_meteor(self, projection):
         xy = proj_to_disk(self.sensor_data.meteor.project(projection))
-        dxdy = self.smoother(xy)
+        dxdy = self.position_smoother(xy)
         return disk_to_altaz(xy + dxdy)
 
     def grid(self, resolution=21):
         xx, yy = masked_grid(resolution)
         nodes = np.ma.stack((xx.ravel(), yy.ravel()), axis=1)
-        return self.smoother(nodes).reshape(resolution, resolution, -1)
-
-    def save(self, filename):
-        self.df.to_csv(sep='\t', float_format='.6f', index=False, header=['x', 'y', 'dec', 'ra'])
+        return self.position_smoother(nodes).reshape(resolution, resolution, -1)
 
     def print_meteor(self, projection):
         raw = self.project_meteor(projection)
@@ -117,5 +125,5 @@ class Counselor(Matcher):
         df['mag'] = self.sensor_data.meteor.m
         df['ra'] = 0
         df['dec'] = 0
-        print(df.to_xml(index=False, root_name='ua2_objpath', row_name='ua2_fdata2',
+        print(df.to_xml(index=False, root_name='ua2_objpath', row_name='ua2_fdata2', xml_declaration=False,
                         attr_cols=['fno', 'b', 'bm', 'Lsum', 'mag', 'az', 'ev', 'az_r', 'ev_r', 'ra', 'dec']))

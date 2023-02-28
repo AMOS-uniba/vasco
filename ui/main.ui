@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1088</width>
-    <height>787</height>
+    <width>1176</width>
+    <height>792</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -681,7 +681,7 @@
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tab_sensor">
        <attribute name="title">
@@ -689,17 +689,29 @@
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_4"/>
       </widget>
-      <widget class="QWidget" name="tab_sky">
+      <widget class="QWidget" name="tab_sky_positions">
        <attribute name="title">
-        <string>&amp;Sky plot</string>
+        <string>&amp;Sky positions</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_2"/>
       </widget>
-      <widget class="QWidget" name="tab_errors">
+      <widget class="QWidget" name="tab_sky_magnitudes">
        <attribute name="title">
-        <string>&amp;Errors</string>
+        <string>Sky magnitudes</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_7"/>
+      </widget>
+      <widget class="QWidget" name="tab_position_errors">
+       <attribute name="title">
+        <string>Position &amp;errors</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_4"/>
+      </widget>
+      <widget class="QWidget" name="tab_magnitude_errors">
+       <attribute name="title">
+        <string>&amp;Magnitude errors</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_8"/>
       </widget>
       <widget class="QWidget" name="tab_paired">
        <property name="enabled">
@@ -1523,7 +1535,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1088</width>
+     <width>1176</width>
      <height>19</height>
     </rect>
    </property>

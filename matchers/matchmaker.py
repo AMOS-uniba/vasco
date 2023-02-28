@@ -1,14 +1,11 @@
 import numpy as np
-import pandas as pd
 
-from astropy import units as u
-from astropy.coordinates import EarthLocation, SkyCoord, AltAz
-from typing import Optional
+from typing import Optional, Callable
 
 from .base import Matcher
 from .counselor import Counselor
 
-from projections import BorovickaProjection
+from projections import Projection, BorovickaProjection
 from models import SensorData, Catalogue
 from utilities import spherical_distance
 
@@ -35,12 +32,8 @@ class Matchmaker(Matcher):
     def update(self, location, time):
         super().update(location, time)
 
-    def update_smoother(self, projection, **kwargs):
-        pass
-
-    @property
-    def count(self):
-        return self.sensor_data.count
+    def update_position_smoother(self, projection, **kwargs):
+        """ There is no position smoother in Matchmaker """
 
     def mask_catalogue(self, mask):
         self.catalogue.set_mask(mask)
@@ -48,21 +41,34 @@ class Matchmaker(Matcher):
     def mask_sensor_data(self, mask):
         self.sensor_data.stars.mask = mask
 
-    def errors(self, projection, masked) -> np.ndarray:
-        return self.find_nearest_value(
+    def _cartesian(self, func: Callable, projection: Projection, masked: bool, axis: int) -> np.ndarray:
+        """
+        Apply a function func over the Cartesian product of projected and catalogue stars
+        and aggregate over the specified axis
+        """
+        return func(
             self.sensor_data.stars.project(projection, masked=masked),
             self.catalogue.to_altaz_deg(self.location, self.time, masked=masked),
-            axis=1
+            axis=axis,
         )
 
-    def errors_inverse(self, projection, masked) -> np.ndarray:
-        return self.find_nearest_value(
-            self.sensor_data.stars.project(projection, masked=masked),
-            self.catalogue.to_altaz_deg(self.location, self.time, masked=masked),
-            axis=0
-        )
+    def position_errors(self, projection: Projection, masked: bool) -> np.ndarray:
+        return self._cartesian(self.find_nearest_value, projection, masked, 1)
 
-    def compute_distances(self, observed, catalogue):
+    def errors_inverse(self, projection: Projection, masked: bool) -> np.ndarray:
+        return self._cartesian(self.find_nearest_value, projection, masked, 0)
+
+    def magnitude_errors(self, projection: Projection, masked: bool) -> np.ndarray:
+        # Find which star is the nearest for every dot
+        nearest = self._cartesian(self.find_nearest_index, projection, masked, 1)
+        # Filter the catalogue by that index
+        cat = self.catalogue.valid.iloc[nearest].vmag.values
+        print(self.sensor_data.stars.m - cat)
+        return self.sensor_data.stars.m - cat
+
+
+    @staticmethod
+    def compute_distances(observed, catalogue):
         """
         Compute distance matrix for observed points projected to the sky and catalogue stars
         observed:   np.ndarray(M, 2)
@@ -92,7 +98,7 @@ class Matchmaker(Matcher):
 
     def find_nearest_value(self, observed, catalogue, *, axis):
         """
-        Find nearest dot to star or vice versa
+        Find the nearest dot to star or vice versa
 
         axis: int
             0 for nearest star to every dot
@@ -103,7 +109,7 @@ class Matchmaker(Matcher):
 
     def find_nearest_index(self, observed, catalogue, *, axis):
         """
-        Find the index of nearest dot to star or vice versa
+        Find the index of the nearest dot to star or vice versa
 
         axis: int
             0 for nearest star to every dot
@@ -114,14 +120,10 @@ class Matchmaker(Matcher):
 
     def pair(self, projection):
         # Find which star is the nearest for every dot
-        nearest = self.find_nearest_index(
-            self.sensor_data.stars.project(projection, masked=True),
-            self.catalogue.to_altaz_deg(self.location, self.time, masked=True),
-            axis=1,
-        )
+        nearest = self._cartesian(self.find_nearest_index, projection, masked=True, axis=1)
         # Filter the catalogue by that index
         cat = self.catalogue.valid.iloc[nearest]
 
-        sensor_data = self.sensor_data.culled_copy()
         catalogue = Catalogue(cat[['dec', 'ra', 'vmag']])
+        sensor_data = self.sensor_data.culled_copy()
         return Counselor(self.location, self.time, self.projection_cls, catalogue, sensor_data)

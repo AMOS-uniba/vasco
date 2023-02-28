@@ -1,3 +1,5 @@
+from matplotlib.ticker import MultipleLocator
+
 from .base import BasePlot
 
 
@@ -12,7 +14,12 @@ class SensorPlot(BasePlot):
         self.axis = self.figure.add_subplot()
         self.axis.set_xlim([-1, 1])
         self.axis.set_ylim([-1, 1])
-        self.axis.grid(color='white', alpha=0.2)
+        self.axis.grid(which='major', color='white', alpha=0.2)
+        self.axis.grid(which='minor', color='white', alpha=0.12)
+        self.axis.xaxis.set_major_locator(MultipleLocator(320))
+        self.axis.xaxis.set_minor_locator(MultipleLocator(80))
+        self.axis.yaxis.set_major_locator(MultipleLocator(240))
+        self.axis.yaxis.set_minor_locator(MultipleLocator(80))
         self.axis.set_aspect('equal')
 
         self.scatter_stars = self.axis.scatter([], [], s=[], c='white', marker='o')

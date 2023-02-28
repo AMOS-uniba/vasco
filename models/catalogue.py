@@ -59,10 +59,6 @@ class Catalogue():
         return self.stars.use
 
     @property
-    def vmag(self):
-        return self.stars.vmag
-
-    @property
     def valid(self):
         return self.stars[self.mask]
 
@@ -85,6 +81,9 @@ class Catalogue():
         """ Same but returns azimuth in radians (t axis) and co-altitude in degrees (r axis) for chart display """
         stars = self.altaz(location, time, masked)
         return np.stack((stars.az.radian, 90 - stars.alt.degree), axis=1)
+
+    def vmag(self, masked):
+        return self.stars[self.mask].vmag if masked else self.stars.vmag
 
     def __str__(self):
         return f'<Catalogue "{self.name}" with {self.count_valid} of {self.count} stars>'

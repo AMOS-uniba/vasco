@@ -5,7 +5,10 @@ from abc import ABCMeta, abstractmethod
 
 
 class Projection(metaclass=ABCMeta):
-    """"""
+    """
+    A base class for all projections. Should implement xy -> za and za -> xy conversions.
+    """
+
     def __init__(self):
         pass
 

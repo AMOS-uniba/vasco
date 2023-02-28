@@ -1,10 +1,10 @@
 import numpy as np
 import matplotlib as mpl
 
-from .base import BasePlot
+from plots.base import BasePlot
 
 
-class SkyPlot(BasePlot):
+class BaseSkyPlot(BasePlot):
     @staticmethod
     def to_chart(positions):
         return np.stack(
@@ -55,7 +55,7 @@ class SkyPlot(BasePlot):
         self.draw()
 
     def update_dots(self, positions, magnitudes, errors, *, limit=1):
-        self.scatter_dots.set_offsets(SkyPlot.to_chart(positions))
+        self.scatter_dots.set_offsets(self.to_chart(positions))
 
         norm = mpl.colors.Normalize(vmin=0, vmax=limit)
         self.scatter_dots.set_facecolors(self.cmap_stars(norm(errors)))
@@ -65,7 +65,7 @@ class SkyPlot(BasePlot):
         self.draw()
 
     def update_meteor(self, positions, magnitudes):
-        self.scatter_meteor.set_offsets(SkyPlot.to_chart(positions))
+        self.scatter_meteor.set_offsets(self.to_chart(positions))
 
         norm = mpl.colors.Normalize(vmin=0, vmax=None)
         self.scatter_meteor.set_facecolors(self.cmap_meteors(norm(magnitudes)))
