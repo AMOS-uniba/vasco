@@ -6,6 +6,7 @@ from .base import Matcher
 from .counselor import Counselor
 
 from projections import Projection, BorovickaProjection
+from photometry import Calibration
 from models import SensorData, Catalogue
 from utilities import spherical_distance
 
@@ -52,20 +53,24 @@ class Matchmaker(Matcher):
             axis=axis,
         )
 
-    def position_errors(self, projection: Projection, masked: bool) -> np.ndarray:
+    def position_errors(self, projection: Projection, *, masked: bool) -> np.ndarray:
         return self._cartesian(self.find_nearest_value, projection, masked, 1)
 
-    def errors_inverse(self, projection: Projection, masked: bool) -> np.ndarray:
+    def errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray:
         return self._cartesian(self.find_nearest_value, projection, masked, 0)
 
-    def magnitude_errors(self, projection: Projection, masked: bool) -> np.ndarray:
+    def magnitude_errors(self,
+                         projection: Projection,
+                         calibration: Calibration,
+                         *, masked: bool) -> np.ndarray:
         # Find which star is the nearest for every dot
         nearest = self._cartesian(self.find_nearest_index, projection, masked, 1)
         # Filter the catalogue by that index
+        obs = calibration(self.sensor_data.stars.ms(masked=masked))
         cat = self.catalogue.valid.iloc[nearest].vmag.values
-        print(self.sensor_data.stars.m - cat)
-        return self.sensor_data.stars.m - cat
-
+        print(cat.shape)
+        print(obs.shape)
+        return obs - cat
 
     @staticmethod
     def compute_distances(observed, catalogue):

@@ -3,13 +3,13 @@ import numpy as np
 import pandas as pd
 
 from astropy import units as u
-from astropy.coordinates import EarthLocation, SkyCoord, AltAz
+from astropy.coordinates import SkyCoord, AltAz
 
 
-class Catalogue():
+class Catalogue:
     def __init__(self, stars=None):
         self.stars = pd.DataFrame()
-        self.skycoords = None
+        self.skycoord = None
         self.name = None
 
         if stars is not None:
@@ -67,23 +67,23 @@ class Catalogue():
         source = self.skycoord[self.mask] if masked else self.skycoord
         return source.transform_to(altaz)
 
-    def to_altaz(self, location, time, masked):
+    def to_altaz(self, location, time, *, masked: bool = True):
         """ Returns a packed (N, 2) np.ndarray with altitude and azimuth in radians """
-        stars = self.altaz(location, time, masked)
+        stars = self.altaz(location, time, masked=masked)
         return np.stack((stars.alt.radian, stars.az.radian), axis=1)
 
-    def to_altaz_deg(self, location, time, *, masked):
+    def to_altaz_deg(self, location, time, *, masked: bool = True):
         """ Same but returns azimuth and altitude in degrees """
-        stars = self.altaz(location, time, masked)
+        stars = self.altaz(location, time, masked=masked)
         return np.stack((stars.alt.degree, stars.az.degree), axis=1)
 
-    def to_altaz_chart(self, location, time, *, masked):
+    def to_altaz_chart(self, location, time, *, masked: bool = True):
         """ Same but returns azimuth in radians (t axis) and co-altitude in degrees (r axis) for chart display """
-        stars = self.altaz(location, time, masked)
+        stars = self.altaz(location, time, masked=masked)
         return np.stack((stars.az.radian, 90 - stars.alt.degree), axis=1)
 
-    def vmag(self, masked):
-        return self.stars[self.mask].vmag if masked else self.stars.vmag
+    def vmag(self, *, masked: bool = True):
+        return self.stars[self.mask].vmag.to_numpy() if masked else self.stars.vmag.to_numpy()
 
     def __str__(self):
         return f'<Catalogue "{self.name}" with {self.count_valid} of {self.count} stars>'

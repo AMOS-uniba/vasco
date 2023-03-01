@@ -8,8 +8,9 @@ from matchers import Matcher
 
 
 class BaseErrorPlot(BasePlot):
+    cmap = mpl.cm.get_cmap('autumn_r')
+
     def __init__(self, widget, **kwargs):
-        self.cmap = mpl.cm.get_cmap('autumn_r')
         self.axis_alt = None
         self.axis_az = None
         self.scatter_alt = None
@@ -22,21 +23,19 @@ class BaseErrorPlot(BasePlot):
         self.axis_az = self.figure.add_subplot(2, 1, 2)
 
         self.axis_alt.set_xlim([0, 90])
-        self.axis_alt.set_ylim([0, None])
         self.axis_alt.set_xlabel('zenith distance')
         self.axis_alt.xaxis.set_major_locator(MultipleLocator(10))
         self.axis_alt.xaxis.set_major_formatter(lambda x, pos: f'{x:.0f}°')
         self.axis_alt.set_ylabel('error')
-        self.axis_alt.yaxis.set_major_formatter(lambda x, pos: f'{x:.2f}°')
+        self.axis_alt.yaxis.set_major_formatter(self.y_formatter)
         self.axis_alt.grid(color='white', alpha=0.2)
 
         self.axis_az.set_xlim([0, 360])
-        self.axis_az.set_ylim([0, None])
         self.axis_az.set_xlabel('azimuth')
         self.axis_az.xaxis.set_major_locator(MultipleLocator(45))
         self.axis_az.xaxis.set_major_formatter(lambda x, pos: f'{x:.0f}°')
         self.axis_az.set_ylabel('error')
-        self.axis_az.yaxis.set_major_formatter(lambda x, pos: f'{x:.2f}°')
+        self.axis_az.yaxis.set_major_formatter(self.y_formatter)
         self.axis_az.grid(color='white', alpha=0.2)
 
         self.scatter_alt = self.axis_alt.scatter([], [], s=[], marker='x', c='cyan')

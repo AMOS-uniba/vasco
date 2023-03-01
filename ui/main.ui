@@ -681,7 +681,7 @@
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="tab_sensor">
        <attribute name="title">
@@ -724,7 +724,7 @@
         <item>
          <widget class="QStackedWidget" name="vector_tabs">
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tab_disabled">
            <layout class="QHBoxLayout" name="horizontalLayout_5">

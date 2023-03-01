@@ -3,7 +3,8 @@ import scipy as sp
 
 from abc import ABCMeta, abstractmethod
 
-from projections import BorovickaProjection
+from projections import Projection, BorovickaProjection
+from photometry import Calibration
 
 
 class Matcher(metaclass=ABCMeta):
@@ -35,6 +36,21 @@ class Matcher(metaclass=ABCMeta):
         self.location = location
         self.time = time
 
+    @abstractmethod
+    def position_errors(self, projection: Projection, *, masked: bool) -> np.ndarray:
+        """ Find position error for each dot """
+
+    @abstractmethod
+    def errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray:
+        """ Find position error for each star """
+
+    @abstractmethod
+    def magnitude_errors(self,
+                         projection: Projection,
+                         calibration: Calibration,
+                         *, masked: bool) -> np.ndarray:
+        """ Find magnitude error for each dot """
+
     @staticmethod
     def avg_error(errors) -> float:
         if errors.size == 0:
@@ -50,7 +66,7 @@ class Matcher(metaclass=ABCMeta):
             return np.max(errors)
 
     def func(self, x):
-        return self.avg_error(self.errors(self.projection_cls(*x), True))
+        return self.avg_error(self.position_errors(self.projection_cls(*x), masked=True))
 
     def minimize(self, x0=(0, 0, 0, 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0), maxiter=30):
         result = sp.optimize.minimize(
@@ -62,12 +78,12 @@ class Matcher(metaclass=ABCMeta):
                 (None, None),
                 (None, None),
                 (None, None),
-                (0, None), # V
+                (0, None),  # V
                 (None, None),
                 (None, None),
                 (None, None),
                 (None, None),
-                (0, None), # epsilon
+                (0, None),  # epsilon
                 (None, None),
             ),
             options=dict(maxiter=maxiter, disp=True),

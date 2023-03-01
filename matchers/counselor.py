@@ -3,6 +3,10 @@ import pandas as pd
 
 from .base import Matcher
 
+from astropy.coordinates import AltAz
+
+from projections import Projection
+from photometry import Calibration, LogCalibration
 from correctors import KernelSmoother
 from correctors import kernels
 from utilities import spherical_distance, spherical_difference, disk_to_altaz, altaz_to_disk, proj_to_disk, masked_grid
@@ -65,42 +69,43 @@ class Counselor(Matcher):
         return spherical_difference(observed, catalogue)
         # BROKEN
 
-    def position_errors(self, projection, masked):
+    def position_errors(self, projection: Projection, *, masked: bool):
         return self.compute_distances(
             self.sensor_data.stars.project(projection, masked=masked),
             self.catalogue.to_altaz_deg(self.location, self.time, masked=masked),
         )
 
-    def magnitude_errors(self, projection, masked):
-        return self.sensor_data.stars.m - self.catalogue.vmag
+    def magnitude_errors(self, projection: Projection, calibration: Calibration, *, masked: bool = False):
+        obs = calibration(self.sensor_data.stars.m)
+        cat = self.catalogue.vmag(masked=False)
+        return obs - cat
 
-    def errors_inverse(self, projection, masked):
-        return self.position_errors(projection, masked)
+    def errors_inverse(self, projection: Projection, *, masked: bool):
+        return self.position_errors(projection, masked=masked)
 
     def pair(self, projection):
         self.catalogue.cull()
         self.sensor_data.stars.cull()
         return self
 
-    def update_position_smoother(self, projection, *, bandwidth=0.1):
+    def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
         obs = proj_to_disk(self.sensor_data.stars.project(projection))
-        cat = altaz_to_disk(self.catalogue.altaz(self.location, self.time, masked=True))
-        print(obs.shape, cat.shape)
+        cat = altaz_to_disk(self.catalogue.altaz(self.location, self.time, masked=False))
         self.position_smoother = KernelSmoother(obs, cat - obs, kernel=kernels.nexp, bandwidth=bandwidth)
 
-    def update_magnitude_smoother(self, projection, *, bandwidth=0.1):
+    def update_magnitude_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
         obs = proj_to_disk(self.sensor_data.stars.project(projection))
-        mag = self.catalogue.vmag(masked=True)
+        mag = self.catalogue.vmag(masked=False)
         self.magnitude_smoother = KernelSmoother(obs, mag, kernel=kernels.nexp, bandwidth=bandwidth)
 
-    def project_meteor(self, projection):
+    def project_meteor(self, projection: Projection):
         xy = proj_to_disk(self.sensor_data.meteor.project(projection))
         return disk_to_altaz(xy)
 
-    def correction_meteor_xy(self, projection):
+    def correction_meteor_xy(self, projection: Projection):
         return self.position_smoother(proj_to_disk(self.sensor_data.meteor.project(projection)))
 
-    def correct_meteor(self, projection):
+    def correct_meteor(self, projection: Projection) -> AltAz:
         xy = proj_to_disk(self.sensor_data.meteor.project(projection))
         dxdy = self.position_smoother(xy)
         return disk_to_altaz(xy + dxdy)
@@ -125,5 +130,5 @@ class Counselor(Matcher):
         df['mag'] = self.sensor_data.meteor.m
         df['ra'] = 0
         df['dec'] = 0
-        print(df.to_xml(index=False, root_name='ua2_objpath', row_name='ua2_fdata2', xml_declaration=False,
-                        attr_cols=['fno', 'b', 'bm', 'Lsum', 'mag', 'az', 'ev', 'az_r', 'ev_r', 'ra', 'dec']))
+        # print(df.to_xml(index=False, root_name='ua2_objpath', row_name='ua2_fdata2', xml_declaration=False,
+        #                 attr_cols=['fno', 'b', 'bm', 'Lsum', 'mag', 'az', 'ev', 'az_r', 'ev_r', 'ra', 'dec']))

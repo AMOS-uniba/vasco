@@ -18,6 +18,7 @@ from matplotlib import pyplot as plt
 
 from matchers import Matchmaker, Counselor
 from projections import BorovickaProjection
+from photometry import Calibration, LogCalibration
 from plots import SensorPlot, VectorErrorPlot
 from plots.sky import PositionSkyPlot, MagnitudeSkyPlot
 from plots.errors import PositionErrorPlot, MagnitudeErrorPlot
@@ -41,6 +42,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.location = None
         self.time = None
         self.projection = None
+        self.calibration = None
         self.matcher = None
 
         self.setupUi(self)
@@ -63,6 +65,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.positionErrorPlot = PositionErrorPlot(self.tab_position_errors)
         self.magnitudeErrorPlot = MagnitudeErrorPlot(self.tab_magnitude_errors)
         self.vectorErrorPlot = VectorErrorPlot(self.tab_vectors)
+
+        self.calibration = LogCalibration(6000)
 
         self.updateProjection()
 
@@ -172,7 +176,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def onLocationTimeChanged(self):
         self.updateMatcher()
         self.positionSkyPlot.invalidate_stars()
+        self.magnitudeSkyPlot.invalidate_stars()
         self.positionErrorPlot.invalidate()
+        self.magnitudeErrorPlot.invalidate()
         self.matcher.update_position_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
         self.vectorErrorPlot.invalidate_dots()
         self.vectorErrorPlot.invalidate_grid()
@@ -223,8 +229,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plotCatalogueStarsMagnitudes()
         elif index == 3:
             if not self.positionErrorPlot.valid:
-                self.plotErrors()
-        elif index == 3:
+                self.plotPositionErrors()
+        elif index == 4:
+            if not self.positionErrorPlot.valid:
+                self.plotMagnitudeErrors()
+        elif index == 5:
             if not self.vectorErrorPlot.valid_dots:
                 self.plotVectorErrors()
             if not self.vectorErrorPlot.valid_meteor:
@@ -233,10 +242,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plotVectorGrid()
 
     def computePositionErrors(self):
-        self.position_errors = self.matcher.position_errors(self.projection, True)
+        self.position_errors = self.matcher.position_errors(self.projection, masked=True)
 
     def computeMagnitudeErrors(self):
-        self.magnitude_errors = self.matcher.magnitude_errors(self.projection, True)
+        self.magnitude_errors = self.matcher.magnitude_errors(self.projection, self.calibration, masked=True)
 
     def exportFile(self):
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export constants to file", ".",
@@ -368,7 +377,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.onParametersChanged()
 
     def maskSensor(self):
-        errors = self.matcher.position_errors(self.projection, False)
+        errors = self.matcher.position_errors(self.projection, masked=False)
         self.matcher.mask_sensor_data(errors > np.radians(self.dsb_error_limit.value()))
         print(f"Culled the dots to {self.dsb_error_limit.value()}°: "
               f"{self.matcher.sensor_data.stars.count_valid} are valid")
@@ -376,7 +385,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.showCounts()
 
     def maskCatalogueDistant(self):
-        errors = self.matcher.errors_inverse(self.projection, False)
+        errors = self.matcher.errors_inverse(self.projection, masked=False)
         self.matcher.mask_catalogue(errors > np.radians(self.dsb_distance_limit.value()))
         print(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: "
               f"{self.matcher.catalogue.count_valid} stars used")
@@ -433,7 +442,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def plotSensorData(self):
         self.sensorPlot.update(self.matcher.sensor_data)
 
-    def plotObservedStars(self, plot, errors, *, limit=None):
+    def _plotObservedStars(self, plot, errors, *, limit=None):
         plot.update_dots(
             self.matcher.sensor_data.stars.project(self.projection, masked=True),
             self.matcher.sensor_data.stars.m,
@@ -446,29 +455,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
 
     def plotObservedStarsPositions(self):
-        self.plotObservedStars(self.positionSkyPlot, self.position_errors,
-                               limit=np.radians(self.dsb_error_limit.value()))
+        self._plotObservedStars(self.positionSkyPlot, self.position_errors,
+                                limit=np.radians(self.dsb_error_limit.value()))
 
     def plotObservedStarsMagnitudes(self):
-        self.plotObservedStars(self.magnitudeSkyPlot, self.magnitude_errors,
-                               limit=np.radians(self.dsb_error_limit.value()))
+        self._plotObservedStars(self.magnitudeSkyPlot, self.magnitude_errors,
+                                limit=np.radians(self.dsb_error_limit.value()))
 
-    def plotCatalogueStars(self, plot):
+    def _plotCatalogueStars(self, plot):
         plot.update_stars(
             self.matcher.catalogue.to_altaz_chart(self.location, self.time, masked=True),
             self.matcher.catalogue.vmag(masked=True)
         )
 
     def plotCatalogueStarsPositions(self):
-        self.plotCatalogueStars(self.positionSkyPlot)
+        self._plotCatalogueStars(self.positionSkyPlot)
 
     def plotCatalogueStarsMagnitudes(self):
-        self.plotCatalogueStars(self.magnitudeSkyPlot)
+        self._plotCatalogueStars(self.magnitudeSkyPlot)
 
-    def plotErrors(self):
+    def plotPositionErrors(self):
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=True)
         self.positionErrorPlot.update(positions, self.matcher.sensor_data.stars.m, self.position_errors,
                                       limit=np.radians(self.dsb_error_limit.value()))
+
+    def plotMagnitudeErrors(self):
+        positions = self.matcher.sensor_data.stars.project(self.projection, masked=True)
+        self.magnitudeErrorPlot.update(positions, self.matcher.sensor_data.stars.m, self.magnitude_errors,
+                                       limit=np.radians(self.dsb_error_limit.value()))
 
     def plotVectorErrors(self):
         # Do nothing if working in unpaired mode
@@ -522,7 +536,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.positionSkyPlot.invalidate_dots()
         self.positionSkyPlot.invalidate_stars()
+        self.magnitudeSkyPlot.invalidate_dots()
+        self.magnitudeSkyPlot.invalidate_stars()
         self.positionErrorPlot.invalidate()
+        self.magnitudeErrorPlot.invalidate()
         self.vectorErrorPlot.valid_dots = False
         self.vectorErrorPlot.valid_grid = False
         self.vectorErrorPlot.valid_meteor = False
