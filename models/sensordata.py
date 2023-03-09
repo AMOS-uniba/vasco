@@ -1,31 +1,12 @@
 import copy
 import numpy as np
 
-from models.dotcollection import DotCollection
-from projections.shifters import ScalingShifter
-
-
-class Rect:
-    def __init__(self, xmin, xmax, ymin, ymax):
-        self.xmin = xmin
-        self.xmax = xmax
-        self.ymin = ymin
-        self.ymax = ymax
-        self.xcen = (xmax + xmin) / 2
-        self.ycen = (ymax + ymin) / 2
-        self.r = np.sqrt((ymax - ymin)**2 + (xmax - xmin)**2) / 2
-        self.shifter = ScalingShifter(x0=self.xcen, y0=self.ycen, scale=1 / self.r)
-
-    def to_unit(self, data):
-        """ data: np.ndarray(N, 2) """
-        out = np.zeros_like(data)
-        out[:, 0] = (data[:, 0] - self.xcen) / self.r
-        out[:, 1] = (data[:, 1] - self.ycen) / self.r
-        return out
+from .dotcollection import DotCollection
+from .rect import Rect
 
 
 class SensorData:
-    """ A set of stars and optionally a meteor in xy format """
+    """ A set of stars and meteor snapshots in xy format """
 
     def __init__(self, star_positions=None, star_intensities=None, meteor_positions=None, meteor_intensities=None):
         self.rect = Rect(-1, 1, -1, 1)

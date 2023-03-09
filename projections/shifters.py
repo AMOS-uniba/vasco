@@ -56,7 +56,8 @@ class TiltShifter(OpticalAxisShifter):
         r += self.A * ((y - self.y0) * self.cos_term - (x - self.x0) * self.sin_term)
         return r, b
 
-    def jacobian(self, vec, r, b) -> np.ndarray:
+    def jacobian(self, vec, r, b) -> np.ndarray[float]:
+        """ Jacoian for the numerical inversion method """
         xs = vec[0] - self.x0
         ys = vec[1] - self.y0
         r2 = np.square(xs) + np.square(ys)
@@ -89,4 +90,3 @@ class TiltShifter(OpticalAxisShifter):
 
     def __str__(self):
         return f"<{self.__class__} x0={self.x0} y0={self.y0} a0={self.a0} A={self.A} F={self.F} E={self.E}>"
-

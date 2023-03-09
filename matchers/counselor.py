@@ -9,7 +9,7 @@ from projections import Projection
 from photometry import Calibration, LogCalibration
 from correctors import KernelSmoother
 from correctors import kernels
-from utilities import spherical_distance, spherical_difference, disk_to_altaz, altaz_to_disk, proj_to_disk, masked_grid
+from utilities import spherical_distance, spherical_difference, disk_to_altaz, altaz_to_disk, proj_to_disk, unit_grid
 
 
 class Counselor(Matcher):
@@ -75,9 +75,9 @@ class Counselor(Matcher):
             self.catalogue.to_altaz_deg(self.location, self.time, masked=masked),
         )
 
-    def magnitude_errors(self, projection: Projection, calibration: Calibration, *, masked: bool = False):
-        obs = calibration(self.sensor_data.stars.m)
-        cat = self.catalogue.vmag(masked=False)
+    def magnitude_errors(self, projection: Projection, calibration: Calibration, *, masked: bool):
+        obs = calibration(self.sensor_data.stars.ms(masked=masked))
+        cat = self.catalogue.vmag(masked=masked)
         return obs - cat
 
     def errors_inverse(self, projection: Projection, *, masked: bool):
@@ -89,31 +89,39 @@ class Counselor(Matcher):
         return self
 
     def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
-        obs = proj_to_disk(self.sensor_data.stars.project(projection))
+        obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=False))
         cat = altaz_to_disk(self.catalogue.altaz(self.location, self.time, masked=False))
         self.position_smoother = KernelSmoother(obs, cat - obs, kernel=kernels.nexp, bandwidth=bandwidth)
 
     def update_magnitude_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
-        obs = proj_to_disk(self.sensor_data.stars.project(projection))
-        mag = self.catalogue.vmag(masked=False)
-        self.magnitude_smoother = KernelSmoother(obs, mag, kernel=kernels.nexp, bandwidth=bandwidth)
+        obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=False))
+        mcat = self.catalogue.vmag(masked=False)
+        mobs = self.sensor_data.stars.ms(masked=False)
+        self.magnitude_smoother = KernelSmoother(obs, np.expand_dims(mcat - mobs, 1), kernel=kernels.nexp, bandwidth=bandwidth)
 
     def project_meteor(self, projection: Projection):
-        xy = proj_to_disk(self.sensor_data.meteor.project(projection))
+        xy = proj_to_disk(self.sensor_data.meteor.project(projection, masked=False))
         return disk_to_altaz(xy)
 
     def correction_meteor_xy(self, projection: Projection):
-        return self.position_smoother(proj_to_disk(self.sensor_data.meteor.project(projection)))
+        return self.position_smoother(proj_to_disk(self.sensor_data.meteor.project(projection, masked=False)))
 
     def correct_meteor(self, projection: Projection) -> AltAz:
-        xy = proj_to_disk(self.sensor_data.meteor.project(projection))
+        xy = proj_to_disk(self.sensor_data.meteor.project(projection, masked=False))
         dxdy = self.position_smoother(xy)
         return disk_to_altaz(xy + dxdy)
 
-    def grid(self, resolution=21):
-        xx, yy = masked_grid(resolution)
+    @staticmethod
+    def _grid(smoother, resolution=21, *, masked: bool):
+        xx, yy = unit_grid(resolution, masked=masked)
         nodes = np.ma.stack((xx.ravel(), yy.ravel()), axis=1)
-        return self.position_smoother(nodes).reshape(resolution, resolution, -1)
+        return smoother(nodes).reshape(resolution, resolution, -1)
+
+    def position_grid(self, resolution=21):
+        return self._grid(self.position_smoother, resolution, masked=True)
+
+    def magnitude_grid(self, resolution=21):
+        return self._grid(self.magnitude_smoother, resolution, masked=False)
 
     def print_meteor(self, projection):
         raw = self.project_meteor(projection)

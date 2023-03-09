@@ -4,6 +4,7 @@ import sys
 import yaml
 import dotmap
 import datetime
+import functools
 import zoneinfo
 import numpy as np
 
@@ -11,7 +12,7 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation
 
 from PyQt6 import QtCore, QtWidgets
-from PyQt6.QtWidgets import QApplication, QMainWindow
+from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget
 
 import matplotlib as mpl
 from matplotlib import pyplot as plt
@@ -19,10 +20,12 @@ from matplotlib import pyplot as plt
 from matchers import Matchmaker, Counselor
 from projections import BorovickaProjection
 from photometry import Calibration, LogCalibration
-from plots import SensorPlot, VectorErrorPlot
+
+from plots import SensorPlot
 from plots.sky import PositionSkyPlot, MagnitudeSkyPlot
 from plots.errors import PositionErrorPlot, MagnitudeErrorPlot
-from utilities import masked_grid
+from plots.correction import BaseCorrectionPlot, PositionCorrectionPlot, MagnitudeCorrectionPlot
+from utilities import unit_grid
 
 from main_ui import Ui_MainWindow
 
@@ -31,7 +34,6 @@ from amos import AMOS, Station
 mpl.use('Qt5Agg')
 
 COUNT = 100
-GRID_RESOLUTION = 31
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -62,11 +64,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sensorPlot = SensorPlot(self.tab_sensor)
         self.positionSkyPlot = PositionSkyPlot(self.tab_sky_positions)
         self.magnitudeSkyPlot = MagnitudeSkyPlot(self.tab_sky_magnitudes)
-        self.positionErrorPlot = PositionErrorPlot(self.tab_position_errors)
-        self.magnitudeErrorPlot = MagnitudeErrorPlot(self.tab_magnitude_errors)
-        self.vectorErrorPlot = VectorErrorPlot(self.tab_vectors)
+        self.positionErrorPlot = PositionErrorPlot(self.tab_errors_positions)
+        self.magnitudeErrorPlot = MagnitudeErrorPlot(self.tab_errors_magnitudes)
+        self.positionCorrectionPlot = PositionCorrectionPlot(self.tab_correction_positions_enabled)
+        self.magnitudeCorrectionPlot = MagnitudeCorrectionPlot(self.tab_correction_magnitudes_enabled)
 
-        self.calibration = LogCalibration(6000)
+        self.calibration = LogCalibration(5000)
 
         self.updateProjection()
 
@@ -121,8 +124,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sb_arrow_scale.valueChanged.connect(self.onArrowScaleChanged)
         self.sb_resolution.valueChanged.connect(self.onResolutionChanged)
 
-        self.cb_show_errors.clicked.connect(self.plotVectorErrors)
-        self.cb_show_grid.clicked.connect(self.plotVectorGrid)
+        self.cb_show_errors.clicked.connect(self.plotPositionCorrectionErrors)
+        self.cb_show_grid.clicked.connect(self.plotPositionCorrectionGrid)
 
         self.tw_charts.currentChanged.connect(self.updatePlots)
 
@@ -152,7 +155,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.matcher.update_position_smoother(self.projection)
 
     def updateProjection(self):
-        self.projection = BorovickaProjection(*self.get_constants_tuple())
+        self.projection = BorovickaProjection(*self.getConstantsTuple())
 
     def onParametersChanged(self):
         print("Parameters changed")
@@ -164,9 +167,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.magnitudeSkyPlot.invalidate_meteor()
         self.positionErrorPlot.invalidate()
         self.magnitudeErrorPlot.invalidate()
-        self.vectorErrorPlot.invalidate_dots()
-        self.vectorErrorPlot.invalidate_grid()
-        self.vectorErrorPlot.invalidate_meteor()
+        self.positionCorrectionPlot.invalidate()
+        self.magnitudeCorrectionPlot.invalidate()
         self.matcher.update_position_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
 
         self.computePositionErrors()
@@ -180,9 +182,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.positionErrorPlot.invalidate()
         self.magnitudeErrorPlot.invalidate()
         self.matcher.update_position_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
-        self.vectorErrorPlot.invalidate_dots()
-        self.vectorErrorPlot.invalidate_grid()
-        self.vectorErrorPlot.invalidate_meteor()
+        self.positionCorrectionPlot.invalidate()
 
         self.computePositionErrors()
         self.computeMagnitudeErrors()
@@ -191,22 +191,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def onErrorLimitChanged(self):
         self.positionSkyPlot.invalidate_dots()
         self.positionErrorPlot.invalidate()
-        self.vectorErrorPlot.invalidate_dots()
+        self.positionCorrectionPlot.invalidate_dots()
         self.updatePlots()
 
     def onBandwidthChanged(self):
         self.matcher.update_position_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
-        self.vectorErrorPlot.invalidate_grid()
-        self.vectorErrorPlot.invalidate_meteor()
+        self.matcher.update_magnitude_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
+        self.positionCorrectionPlot.invalidate_grid()
+        self.positionCorrectionPlot.invalidate_meteor()
+        self.magnitudeCorrectionPlot.invalidate_grid()
+        self.magnitudeCorrectionPlot.invalidate_meteor()
         self.updatePlots()
 
     def onArrowScaleChanged(self):
-        self.vectorErrorPlot.invalidate_dots()
-        self.vectorErrorPlot.invalidate_meteor()
+        self.positionCorrectionPlot.invalidate_dots()
+        self.positionCorrectionPlot.invalidate_meteor()
         self.updatePlots()
 
     def onResolutionChanged(self):
-        self.vectorErrorPlot.invalidate_grid()
+        self.positionCorrectionPlot.invalidate_grid()
+        self.magnitudeCorrectionPlot.invalidate_grid()
         self.updatePlots()
 
     def updatePlots(self):
@@ -234,18 +238,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not self.positionErrorPlot.valid:
                 self.plotMagnitudeErrors()
         elif index == 5:
-            if not self.vectorErrorPlot.valid_dots:
-                self.plotVectorErrors()
-            if not self.vectorErrorPlot.valid_meteor:
-                self.plotVectorMeteor()
-            if not self.vectorErrorPlot.valid_grid:
-                self.plotVectorGrid()
+            if not self.positionCorrectionPlot.valid_dots:
+                self.plotPositionCorrectionErrors()
+            if not self.positionCorrectionPlot.valid_meteor:
+                self.plotPositionCorrectionMeteor()
+            if not self.positionCorrectionPlot.valid_grid:
+                self.plotPositionCorrectionGrid()
+        elif index == 6:
+            if not self.magnitudeCorrectionPlot.valid_dots:
+                self.plotMagnitudeCorrectionErrors()
+            if not self.magnitudeCorrectionPlot.valid_meteor:
+                self.plotMagnitudeCorrectionMeteor()
+            if not self.magnitudeCorrectionPlot.valid_grid:
+                self.plotMagnitudeCorrectionGrid()
 
     def computePositionErrors(self):
         self.position_errors = self.matcher.position_errors(self.projection, masked=True)
+        print("Position errors shape", self.position_errors.shape)
 
     def computeMagnitudeErrors(self):
         self.magnitude_errors = self.matcher.magnitude_errors(self.projection, self.calibration, masked=True)
+        print("Magnitude errors shape", self.magnitude_errors.shape)
 
     def exportFile(self):
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export constants to file", ".",
@@ -329,7 +342,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for widget, param in self.param_widgets:
             widget.blockSignals(block)
 
-    def get_constants_tuple(self):
+    def getConstantsTuple(self):
         return (
             self.dsb_x0.value(),
             self.dsb_y0.value(),
@@ -352,7 +365,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         result = self.matcher.minimize(
             #    location=self.location,
             #    time=self.time,
-            x0=self.get_constants_tuple(),
+            x0=self.getConstantsTuple(),
             maxiter=self.sb_maxiter.value()
         )
 
@@ -412,21 +425,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.onParametersChanged()
         self.showCounts()
 
+    @property
+    def paired(self) -> bool:
+        return isinstance(self.matcher, Counselor)
+
     @QtCore.pyqtSlot()
-    def showCounts(self):
+    def showCounts(self) -> None:
         if isinstance(self.matcher, Counselor):
             self.lb_mode.setText("paired")
-            self.tab_paired.setEnabled(True)
+            self.tab_correction_magnitudes_enabled.setEnabled(True)
         else:
             self.lb_mode.setText("unpaired")
-            self.tab_paired.setEnabled(False)
+            self.tab_correction_magnitudes_enabled.setEnabled(False)
 
         self.lb_catalogue_all.setText(f'{self.matcher.catalogue.count}')
         self.lb_catalogue_near.setText(f'{self.matcher.catalogue.count_valid}')
         self.lb_objects_all.setText(f'{self.matcher.sensor_data.stars.count}')
         self.lb_objects_near.setText(f'{self.matcher.sensor_data.stars.count_valid}')
 
-    def showErrors(self):
+    def showErrors(self) -> None:
         avg_error = self.matcher.avg_error(self.position_errors)
         max_error = self.matcher.max_error(self.position_errors)
         self.lb_avg_error.setText(f'{np.degrees(avg_error):.6f}°')
@@ -436,7 +453,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lb_outside_limit.setText(f'{outside_limit}')
 
     def correctMeteor(self):
-        if isinstance(self.matcher, Counselor):
+        if self.paired:
             self.matcher.print_meteor(self.projection)
 
     def plotSensorData(self):
@@ -450,7 +467,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             limit=limit,
         )
         plot.update_meteor(
-            self.matcher.sensor_data.meteor.project(self.projection),
+            self.matcher.sensor_data.meteor.project(self.projection, masked=True),
             self.matcher.sensor_data.meteor.m
         )
 
@@ -474,65 +491,98 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def plotCatalogueStarsMagnitudes(self):
         self._plotCatalogueStars(self.magnitudeSkyPlot)
 
-    def plotPositionErrors(self):
+    def _plotErrors(self, plot, errors):
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=True)
-        self.positionErrorPlot.update(positions, self.matcher.sensor_data.stars.m, self.position_errors,
-                                      limit=np.radians(self.dsb_error_limit.value()))
+        magnitudes = self.matcher.sensor_data.stars.ms(True)
+        plot.update(positions, magnitudes, errors, limit=np.radians(self.dsb_error_limit.value()))
+
+    def plotPositionErrors(self):
+        self._plotErrors(self.positionErrorPlot, self.position_errors)
 
     def plotMagnitudeErrors(self):
-        positions = self.matcher.sensor_data.stars.project(self.projection, masked=True)
-        self.magnitudeErrorPlot.update(positions, self.matcher.sensor_data.stars.m, self.magnitude_errors,
-                                       limit=np.radians(self.dsb_error_limit.value()))
+        self._plotErrors(self.magnitudeErrorPlot, self.magnitude_errors)
 
-    def plotVectorErrors(self):
+    """ Methods for updating correction plots """
+
+    def _plotCorrectionErrors(self, tabs: QStackedWidget, plot: BaseCorrectionPlot, *, intent: str) -> None:
         # Do nothing if working in unpaired mode
-        if isinstance(self.matcher, Counselor):
+        if self.paired:
+            tabs.setCurrentIndex(1)
             if self.cb_show_errors.isChecked():
-                print("Plotting vector errors")
-                self.vector_tabs.setCurrentIndex(1)
-                self.vectorErrorPlot.update_errors(
+                print(f"Plotting correction errors for {intent}")
+                plot.update_dots(
                     self.matcher.catalogue.altaz(self.location, self.time, masked=True),
                     self.matcher.sensor_data.stars.project(self.projection, masked=True),
                     limit=np.radians(self.dsb_error_limit.value()),
                     scale=1 / self.sb_arrow_scale.value(),
                 )
             else:
-                self.vectorErrorPlot.clear_errors()
+                plot.clear_errors()
         else:
-            self.vector_tabs.setCurrentIndex(0)
+            tabs.setCurrentIndex(0)
 
-    def plotVectorMeteor(self):
-        if isinstance(self.matcher, Counselor):
-            print("Plotting vector meteors")
-            self.vectorErrorPlot.update_meteor(
-                self.matcher.sensor_data.meteor.project(self.projection),
+    def plotPositionCorrectionErrors(self):
+        self._plotCorrectionErrors(self.tabs_positions, self.positionCorrectionPlot, intent="star positions")
+
+    def plotMagnitudeCorrectionErrors(self):
+        self._plotCorrectionErrors(self.tabs_magnitudes, self.magnitudeCorrectionPlot, intent="star magnitudes")
+
+    def _plotCorrectionMeteor(self, tabs, plot, *, intent: str) -> None:
+        if self.paired:
+            print(f"Plotting correction for {intent}")
+            tabs.setCurrentIndex(1)
+            plot.update_meteor(
+                self.matcher.sensor_data.meteor.project(self.projection, masked=True),
                 self.matcher.correction_meteor_xy(self.projection),
                 self.matcher.sensor_data.meteor.ms(True),
                 scale=1 / self.sb_arrow_scale.value(),
             )
         else:
-            self.vector_tabs.setCurrentIndex(0)
+            tabs.setCurrentIndex(0)
 
-    def plotVectorGrid(self):
-        if isinstance(self.matcher, Counselor):
-            self.vector_tabs.setCurrentIndex(1)
+    def plotPositionCorrectionMeteor(self) -> None:
+        self._plotCorrectionMeteor(self.tabs_positions, self.positionCorrectionPlot, intent="star positions")
 
-            if self.cb_show_grid.isChecked():
-                print("Plotting vector grid")
-                grid = self.matcher.grid(resolution=self.sb_resolution.value())
+    def plotMagnitudeCorrectionMeteor(self) -> None:
+        self._plotCorrectionMeteor(self.tabs_magnitudes, self.magnitudeCorrectionPlot, intent="star magnitudes")
 
-                xx, yy = masked_grid(self.sb_resolution.value())
-                self.vectorErrorPlot.update_grid(
-                    xx, yy, grid[..., 0].ravel(), grid[..., 1].ravel()
-                )
-            else:
-                self.vectorErrorPlot.clear_grid()
+    def switch_tabs(self, tabs, func, arg, *, message: str, intent: str) -> None:
+        if self.paired:
+            tabs.setCurrentIndex(1)
+            print(f"{message} for {intent}")
+            func(arg)
         else:
-            self.vector_tabs.setCurrentIndex(0)
+            tabs.setCurrentIndex(0)
+
+    def _plotCorrectionGrid(self, plot, grid, *, masked: bool):
+        if self.cb_show_grid.isChecked():
+            xx, yy = unit_grid(self.sb_resolution.value(), masked=masked)
+            plot.update_grid(xx, yy, grid(resolution=self.sb_resolution.value()))
+        else:
+            plot.clear_grid()
+
+    def plotPositionCorrectionGrid(self):
+        self.switch_tabs(
+            self.tabs_positions,
+            lambda x: self._plotCorrectionGrid(x, self.matcher.position_grid, masked=True),
+            self.positionCorrectionPlot,
+            message="Plotting correction grid",
+            intent="star positions",
+        )
+
+    def plotMagnitudeCorrectionGrid(self):
+        self.switch_tabs(
+            self.tabs_magnitudes,
+            lambda x: self._plotCorrectionGrid(x, self.matcher.magnitude_grid, masked=False),
+            self.magnitudeCorrectionPlot,
+            message="Plotting correction grid",
+            intent="star magnitudes",
+        )
 
     def pair(self):
         self.matcher = self.matcher.pair(self.projection)
         self.matcher.update_position_smoother(self.projection)
+        self.matcher.update_magnitude_smoother(self.projection)
 
         self.positionSkyPlot.invalidate_dots()
         self.positionSkyPlot.invalidate_stars()
@@ -540,9 +590,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.magnitudeSkyPlot.invalidate_stars()
         self.positionErrorPlot.invalidate()
         self.magnitudeErrorPlot.invalidate()
-        self.vectorErrorPlot.valid_dots = False
-        self.vectorErrorPlot.valid_grid = False
-        self.vectorErrorPlot.valid_meteor = False
+        self.positionCorrectionPlot.invalidate()
+        self.magnitudeCorrectionPlot.invalidate()
         self.showCounts()
         self.updatePlots()
 

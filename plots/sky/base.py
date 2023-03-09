@@ -1,10 +1,18 @@
 import numpy as np
 import matplotlib as mpl
 
+from abc import abstractmethod
+
 from plots.base import BasePlot
 
 
 class BaseSkyPlot(BasePlot):
+    cmap_stars = mpl.cm.get_cmap('autumn_r')
+    cmap_meteors = mpl.cm.get_cmap('Blues_r')
+    colour_stars = 'white'
+    colour_dots = 'red'
+    colour_meteor = 'cyan'
+
     @staticmethod
     def to_chart(positions):
         return np.stack(
@@ -12,9 +20,11 @@ class BaseSkyPlot(BasePlot):
             axis=1,
         )
 
+    @abstractmethod
+    def norm(self, limit):
+        """ Determine the norm to colour the data """
+
     def __init__(self, widget, **kwargs):
-        self.cmap_stars = mpl.cm.get_cmap('autumn_r')
-        self.cmap_meteors = mpl.cm.get_cmap('Blues_r')
         self.scatter_stars = None
         self.scatter_dots = None
         self.scatter_meteor = None
@@ -33,9 +43,9 @@ class BaseSkyPlot(BasePlot):
         self.axis.grid(color='white', alpha=0.3)
         self.axis.set_theta_offset(3 * np.pi / 2)
 
-        self.scatter_stars = self.axis.scatter([], [], s=[], c='white', marker='o')
-        self.scatter_dots = self.axis.scatter([], [], s=[], c='red', marker='x')
-        self.scatter_meteor = self.axis.scatter([], [], s=[], c='cyan', marker='o')
+        self.scatter_stars = self.axis.scatter([], [], s=[], c=self.colour_stars, marker='o')
+        self.scatter_dots = self.axis.scatter([], [], s=[], c=self.colour_dots, marker='x')
+        self.scatter_meteor = self.axis.scatter([], [], s=[], c=self.colour_meteor, marker='o')
 
     def invalidate_stars(self):
         self.valid_stars = False
@@ -57,8 +67,7 @@ class BaseSkyPlot(BasePlot):
     def update_dots(self, positions, magnitudes, errors, *, limit=1):
         self.scatter_dots.set_offsets(self.to_chart(positions))
 
-        norm = mpl.colors.Normalize(vmin=0, vmax=limit)
-        self.scatter_dots.set_facecolors(self.cmap_stars(norm(errors)))
+        self.scatter_dots.set_facecolors(self.cmap_stars(self.norm(limit)(errors)))
         self.scatter_dots.set_sizes(0.03 * magnitudes)
 
         self.valid_dots = True

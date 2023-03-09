@@ -3,16 +3,17 @@ from abc import abstractmethod, ABCMeta
 
 
 class Calibration(metaclass=ABCMeta):
-    def __call__(self, intensities):
-        pass
+    @abstractmethod
+    def __call__(self, intensities: np.ndarray[float]) -> np.ndarray[float]:
+        """ Transform raw intensities to magnitudes """
 
     @abstractmethod
-    def inverse(self, magnitudes):
-        pass
+    def inverse(self, magnitudes: np.ndarray[float]) -> np.ndarray[float]:
+        """ Transform magnitudes to raw intensities """
 
 
 class LogCalibration(Calibration):
-    def __init__(self, zero: float = 65535.0):
+    def __init__(self, zero: float = 10000):
         self.zero = zero
 
     def __call__(self, intensities: np.ndarray[float]) -> np.ndarray[float]:

@@ -1,2 +1,2 @@
-from .positions import PositionErrorPlot
-from .magnitudes import MagnitudeErrorPlot
+from .position import PositionErrorPlot
+from .magnitude import MagnitudeErrorPlot

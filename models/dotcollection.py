@@ -68,5 +68,5 @@ class DotCollection:
         self.mask = None
         return self
 
-    def project(self, projection, *, masked: bool = False):
+    def project(self, projection, *, masked: bool):
         return np.stack(projection(self.xs(masked), self.ys(masked)), axis=1)

@@ -17,7 +17,7 @@ class KernelSmoother(BaseCorrector):
         infl = self.kernel(distances / self.bandwidth)
         # Calculate the sum of weighted votes
         votes = np.sum(np.expand_dims(infl, 2) * np.expand_dims(self.values, 1), axis=0)
-        # Calculate the sum of weights
+        # Calculate the overall sum of weights for normalization
         sums = np.expand_dims(np.sum(infl, axis=0), 1)
         return votes / sums
 

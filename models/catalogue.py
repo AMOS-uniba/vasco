@@ -62,7 +62,7 @@ class Catalogue:
     def valid(self):
         return self.stars[self.mask]
 
-    def altaz(self, location, time, masked):
+    def altaz(self, location, time, *, masked: bool):
         altaz = AltAz(location=location, obstime=time, pressure=0, obswl=550 * u.nm)
         source = self.skycoord[self.mask] if masked else self.skycoord
         return source.transform_to(altaz)

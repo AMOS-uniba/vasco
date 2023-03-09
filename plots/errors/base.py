@@ -1,14 +1,15 @@
 import numpy as np
 import matplotlib as mpl
 
-from matplotlib.ticker import MultipleLocator
+from abc import abstractmethod
+from matplotlib.ticker import MultipleLocator, FuncFormatter
 
 from plots.base import BasePlot
-from matchers import Matcher
 
 
 class BaseErrorPlot(BasePlot):
     cmap = mpl.cm.get_cmap('autumn_r')
+    y_formatter = FuncFormatter(lambda x, pos: f'{x:+.2f}')
 
     def __init__(self, widget, **kwargs):
         self.axis_alt = None
@@ -45,19 +46,28 @@ class BaseErrorPlot(BasePlot):
     def invalidate(self):
         self.valid = False
 
+    @abstractmethod
+    def norm(self, limit):
+        """ Create the norm object for the data """
+
+    @abstractmethod
+    def set_limits(self, errors):
+        """ Set y-axis limits from the data """
+
     def update(self, positions, magnitudes, errors, *, limit=1):
+        print(positions.shape, magnitudes.shape, errors.shape)
+        assert magnitudes.shape == errors.shape
         alt = np.degrees(positions[:, 0])
         az = np.degrees(positions[:, 1])
 
-        max_error = Matcher.max_error(errors)
+        self.set_limits(errors)
 
-        if max_error is not np.nan:
-            self.axis_alt.set_ylim([0, np.degrees(max_error) * 1.05])
-            self.axis_az.set_ylim([0, np.degrees(max_error) * 1.05])
-            self.scatter_alt.set_offsets(np.stack((alt, np.degrees(errors)), axis=1))
-            self.scatter_az.set_offsets(np.stack((az, np.degrees(errors)), axis=1))
+        if errors.size > 0:
+            self.set_limits(errors)
+            self.scatter_alt.set_offsets(np.stack((alt, errors), axis=1))
+            self.scatter_az.set_offsets(np.stack((az, errors), axis=1))
 
-            norm = mpl.colors.Normalize(vmin=0, vmax=limit)
+            norm = self.norm(limit)
             self.scatter_alt.set_facecolors(self.cmap(norm(errors)))
             self.scatter_alt.set_sizes(0.05 * magnitudes)
             self.scatter_az.set_facecolors(self.cmap(norm(errors)))

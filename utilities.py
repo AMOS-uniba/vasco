@@ -23,12 +23,15 @@ def by_azimuth(uv):
     return mpl.colors.hsv_to_rgb(hsv)
 
 
-def masked_grid(res):
+def unit_grid(res, *, masked: bool):
     s = np.linspace(-1, 1, res)
     x, y = np.meshgrid(s, s)
-    xx = np.ma.masked_array(x, x**2 + y**2 > 1)
-    yy = np.ma.masked_array(y, x**2 + y**2 > 1)
-    return xx, yy
+    if masked:
+        xx = np.ma.masked_array(x, x**2 + y**2 > 1)
+        yy = np.ma.masked_array(y, x**2 + y**2 > 1)
+        return xx, yy
+    else:
+        return x, y
 
 
 def spherical(x: AltAz, y: AltAz) -> u.Quantity:
@@ -92,7 +95,10 @@ def disk_to_altaz(xy: np.ndarray) -> AltAz:
 
 
 def proj_to_disk(obs: np.ndarray) -> np.ndarray:
-    z, a = obs.T
-    x = z * np.sin(a) / np.pi * 2
-    y = -z * np.cos(a) / np.pi * 2
-    return np.stack((x, y), axis=1)
+    if obs is None:
+        return np.empty(shape=(0, 2))
+    else:
+        z, a = obs.T
+        x = z * np.sin(a) / np.pi * 2
+        y = -z * np.cos(a) / np.pi * 2
+        return np.stack((x, y), axis=1)
