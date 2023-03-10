@@ -66,7 +66,7 @@ class Matchmaker(Matcher):
         # Find which star is the nearest for every dot
         nearest = self._cartesian(self.find_nearest_index, projection, masked, 1)
         # Filter the catalogue by that index
-        obs = calibration(self.sensor_data.stars.ms(masked=masked))
+        obs = calibration(self.sensor_data.stars.intensities(masked=masked))
         cat = self.catalogue.valid.iloc[nearest].vmag.values
         return obs - cat
 

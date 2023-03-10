@@ -1,14 +1,17 @@
 import copy
 import numpy as np
 
+from projections import Projection
+from photometry import Calibration
+
 
 class DotCollection:
-    def __init__(self, xy=None, m=None, mask=None):
+    def __init__(self, xy=None, i=None, mask=None):
         self.xy = xy
-        self._m = np.empty(shape=(0,), dtype=float) if m is None else m
+        self._i = np.empty(shape=(0,), dtype=float) if i is None else i
         self.mask = mask
-        assert (xy is None) == (m is None), "Both or neither of xy and m must be set"
-        assert self._xy.shape[0] == self._m.shape[0], "xy must be of shape (N, 2) and m of shape (N,)"
+        assert (xy is None) == (i is None), "Both or neither of xy and m must be set"
+        assert self._xy.shape[0] == self._i.shape[0], "xy must be of shape (N, 2) and m of shape (N,)"
         assert self._xy.shape[0] == self._mask.shape[0], \
             f"xy must be of shape (N, 2) and is {self._xy.shape} and mask of shape (N,), is {self._mask.shape}"
 
@@ -29,8 +32,8 @@ class DotCollection:
         return self._xy[:, 1]
 
     @property
-    def m(self):
-        return self._m
+    def i(self):
+        return self._i
 
     @property
     def count(self):
@@ -46,8 +49,8 @@ class DotCollection:
     def ys(self, masked):
         return self.y[self.mask] if masked else self.y
 
-    def ms(self, masked):
-        return self.m[self.mask] if masked else self.m
+    def intensities(self, masked):
+        return self.i[self.mask] if masked else self.i
 
     @property
     def mask(self):
@@ -55,7 +58,7 @@ class DotCollection:
 
     @mask.setter
     def mask(self, m=None):
-        self._mask = np.ones_like(self.m, dtype=bool) if m is None else ~m
+        self._mask = np.ones_like(self.i, dtype=bool) if m is None else ~m
         assert self.mask.shape == self.x.shape
 
     def culled_copy(self):
@@ -64,9 +67,13 @@ class DotCollection:
 
     def cull(self):
         self._xy = self._xy[self.mask]
-        self._m = self.m[self.mask]
+        self._i = self.i[self.mask]
         self.mask = None
         return self
 
-    def project(self, projection, *, masked: bool):
+    def project(self, projection: Projection, *, masked: bool) -> np.ndarray[float]:
+        """ Project the dot collection from sensor to sky """
         return np.stack(projection(self.xs(masked), self.ys(masked)), axis=1)
+
+    def calibrate(self, calibration: Calibration, *, masked: bool) -> np.ndarray[float]:
+        return calibration(self.intensities(masked))

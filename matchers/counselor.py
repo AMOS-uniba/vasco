@@ -76,7 +76,7 @@ class Counselor(Matcher):
         )
 
     def magnitude_errors(self, projection: Projection, calibration: Calibration, *, masked: bool):
-        obs = calibration(self.sensor_data.stars.ms(masked=masked))
+        obs = calibration(self.sensor_data.stars.intensities(masked=masked))
         cat = self.catalogue.vmag(masked=masked)
         return obs - cat
 
@@ -91,25 +91,37 @@ class Counselor(Matcher):
     def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
         obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=False))
         cat = altaz_to_disk(self.catalogue.altaz(self.location, self.time, masked=False))
-        self.position_smoother = KernelSmoother(obs, cat - obs, kernel=kernels.nexp, bandwidth=bandwidth)
+        self.position_smoother = KernelSmoother(
+            obs, cat - obs,
+            kernel=kernels.nexp,
+            bandwidth=bandwidth
+        )
 
-    def update_magnitude_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
+    def update_magnitude_smoother(self, projection: Projection, calibration: Calibration, *, bandwidth: float = 0.1):
         obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=False))
         mcat = self.catalogue.vmag(masked=False)
-        mobs = self.sensor_data.stars.ms(masked=False)
-        self.magnitude_smoother = KernelSmoother(obs, np.expand_dims(mcat - mobs, 1), kernel=kernels.nexp, bandwidth=bandwidth)
+        mobs = calibration(self.sensor_data.stars.intensities(masked=False))
+        self.magnitude_smoother = KernelSmoother(
+            obs, np.expand_dims(mcat - mobs, 1),
+            kernel=kernels.nexp,
+            bandwidth=bandwidth
+        )
+
+    def _meteor_xy(self, projection):
+        """ Return on-disk xy coordinates for the meteor after applying the projection """
+        return proj_to_disk(self.sensor_data.meteor.project(projection, masked=False))
 
     def project_meteor(self, projection: Projection):
-        xy = proj_to_disk(self.sensor_data.meteor.project(projection, masked=False))
-        return disk_to_altaz(xy)
+        return disk_to_altaz(self._meteor_xy(projection))
 
     def correction_meteor_xy(self, projection: Projection):
-        return self.position_smoother(proj_to_disk(self.sensor_data.meteor.project(projection, masked=False)))
+        return self.position_smoother(self._meteor_xy(projection))
+
+    def correction_meteor_mag(self, projection: Projection):
+        return np.ravel(self.magnitude_smoother(self._meteor_xy(projection)))
 
     def correct_meteor(self, projection: Projection) -> AltAz:
-        xy = proj_to_disk(self.sensor_data.meteor.project(projection, masked=False))
-        dxdy = self.position_smoother(xy)
-        return disk_to_altaz(xy + dxdy)
+        return disk_to_altaz(self._meteor_xy(projection) + self.correction_meteor_xy(projection))
 
     @staticmethod
     def _grid(smoother, resolution=21, *, masked: bool):
@@ -135,7 +147,7 @@ class Counselor(Matcher):
         df['b'] = 0
         df['bm'] = 0
         df['Lsum'] = 0
-        df['mag'] = self.sensor_data.meteor.m
+        df['mag'] = self.sensor_data.meteor.i
         df['ra'] = 0
         df['dec'] = 0
         # print(df.to_xml(index=False, root_name='ua2_objpath', row_name='ua2_fdata2', xml_declaration=False,

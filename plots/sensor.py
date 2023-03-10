@@ -29,9 +29,9 @@ class SensorPlot(BasePlot):
         self.axis.set_xlim([data.rect.xmin, data.rect.xmax])
         self.axis.set_ylim([data.rect.ymax, data.rect.ymin])
         self.scatter_stars.set_offsets(data.stars.xy)
-        self.scatter_stars.set_sizes(data.stars.m / 100)
+        self.scatter_stars.set_sizes(data.stars.i / 100)
         self.scatter_meteor.set_offsets(data.meteor.xy)
-        self.scatter_meteor.set_sizes(data.meteor.m / 100)
+        self.scatter_meteor.set_sizes(data.meteor.i / 100)
         self.valid = True
         self.draw()
 

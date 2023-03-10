@@ -69,7 +69,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.positionCorrectionPlot = PositionCorrectionPlot(self.tab_correction_positions_enabled)
         self.magnitudeCorrectionPlot = MagnitudeCorrectionPlot(self.tab_correction_magnitudes_enabled)
 
-        self.calibration = LogCalibration(5000)
+        self.calibration = LogCalibration(4000)
 
         self.updateProjection()
 
@@ -182,7 +182,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.positionErrorPlot.invalidate()
         self.magnitudeErrorPlot.invalidate()
         self.matcher.update_position_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
+        self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=self.dsb_bandwidth.value())
         self.positionCorrectionPlot.invalidate()
+        self.magnitudeCorrectionPlot.invalidate()
 
         self.computePositionErrors()
         self.computeMagnitudeErrors()
@@ -196,7 +198,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def onBandwidthChanged(self):
         self.matcher.update_position_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
-        self.matcher.update_magnitude_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
+        self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=self.dsb_bandwidth.value())
         self.positionCorrectionPlot.invalidate_grid()
         self.positionCorrectionPlot.invalidate_meteor()
         self.magnitudeCorrectionPlot.invalidate_grid()
@@ -254,11 +256,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def computePositionErrors(self):
         self.position_errors = self.matcher.position_errors(self.projection, masked=True)
-        print("Position errors shape", self.position_errors.shape)
 
     def computeMagnitudeErrors(self):
         self.magnitude_errors = self.matcher.magnitude_errors(self.projection, self.calibration, masked=True)
-        print("Magnitude errors shape", self.magnitude_errors.shape)
 
     def exportFile(self):
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export constants to file", ".",
@@ -462,13 +462,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _plotObservedStars(self, plot, errors, *, limit=None):
         plot.update_dots(
             self.matcher.sensor_data.stars.project(self.projection, masked=True),
-            self.matcher.sensor_data.stars.m,
+            self.matcher.sensor_data.stars.i,
             errors,
             limit=limit,
         )
         plot.update_meteor(
             self.matcher.sensor_data.meteor.project(self.projection, masked=True),
-            self.matcher.sensor_data.meteor.m
+            self.matcher.sensor_data.meteor.i
         )
 
     def plotObservedStarsPositions(self):
@@ -493,7 +493,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def _plotErrors(self, plot, errors):
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=True)
-        magnitudes = self.matcher.sensor_data.stars.ms(True)
+        magnitudes = self.matcher.sensor_data.stars.intensities(True)
         plot.update(positions, magnitudes, errors, limit=np.radians(self.dsb_error_limit.value()))
 
     def plotPositionErrors(self):
@@ -513,6 +513,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 plot.update_dots(
                     self.matcher.catalogue.altaz(self.location, self.time, masked=True),
                     self.matcher.sensor_data.stars.project(self.projection, masked=True),
+                    self.matcher.catalogue.vmag(masked=True),
+                    self.matcher.sensor_data.stars.calibrate(self.calibration, masked=True),
                     limit=np.radians(self.dsb_error_limit.value()),
                     scale=1 / self.sb_arrow_scale.value(),
                 )
@@ -534,7 +536,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             plot.update_meteor(
                 self.matcher.sensor_data.meteor.project(self.projection, masked=True),
                 self.matcher.correction_meteor_xy(self.projection),
-                self.matcher.sensor_data.meteor.ms(True),
+                self.matcher.sensor_data.meteor.calibrate(self.calibration, masked=True),
+                self.matcher.correction_meteor_mag(self.projection),
                 scale=1 / self.sb_arrow_scale.value(),
             )
         else:
@@ -581,8 +584,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def pair(self):
         self.matcher = self.matcher.pair(self.projection)
-        self.matcher.update_position_smoother(self.projection)
-        self.matcher.update_magnitude_smoother(self.projection)
+        self.matcher.update_position_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
+        self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=self.dsb_bandwidth.value())
 
         self.positionSkyPlot.invalidate_dots()
         self.positionSkyPlot.invalidate_stars()

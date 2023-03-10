@@ -48,30 +48,30 @@ class BaseCorrectionPlot(BasePlot):
         self.invalidate_grid()
         self.invalidate_meteor()
 
-    def update_dots(self, cat, obs, *, limit=1, scale=0.05):
-        cat = altaz_to_disk(cat)
-        obs = proj_to_disk(obs)
+    def update_dots(self, pos_cat, pos_obs, mag_cat, mag_obs, *, limit=1, scale=0.05):
+        pos_cat = altaz_to_disk(pos_cat)
+        pos_obs = proj_to_disk(pos_obs)
 
-        self._update_dots(cat, obs, limit=limit, scale=scale)
+        self._update_dots(pos_obs, pos_cat, mag_cat, mag_obs, limit=limit, scale=scale)
         self.valid_dots = True
         self.draw()
 
     @abstractmethod
-    def _update_dots(self, cat, obs, *, limit, scale):
+    def _update_dots(self, pos_cat, pos_obs, mag_cat, mag_obs, *, limit, scale):
         """ Inner method for updating the dots """
 
     def clear_errors(self):
         self.update_dots(None, None)
 
-    def update_meteor(self, obs, corr, magnitudes, scale=0.05):
-        obs = proj_to_disk(obs)
+    def update_meteor(self, pos_obs, pos_corr, mag_obs, mag_corr, scale=0.05):
+        pos_obs = proj_to_disk(pos_obs)
 
-        self._update_meteor(obs, corr, magnitudes, scale)
+        self._update_meteor(pos_obs, pos_corr, mag_obs, mag_corr, scale=scale)
         self.valid_meteor = True
         self.draw()
 
     @abstractmethod
-    def _update_meteor(self, obs, corr, magnitudes, scale=0.05):
+    def _update_meteor(self, pos_obs, pos_corr, mag_obs, mag_corr, scale=0.05):
         """ Inner method for updating the displayed meteor """
 
     def update_grid(self, x, y, grid, *, limit: float = 1):
