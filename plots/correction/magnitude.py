@@ -5,6 +5,7 @@ from .base import BaseCorrectionPlot
 
 
 class MagnitudeCorrectionPlot(BaseCorrectionPlot):
+    cmap_dots = mpl.cm.get_cmap('bwr')
     cmap_grid = mpl.cm.get_cmap('bwr')
     norm_grid = mpl.colors.TwoSlopeNorm(0, vmin=-2, vmax=2)
 
@@ -14,24 +15,32 @@ class MagnitudeCorrectionPlot(BaseCorrectionPlot):
         self.magnitude_grid = None
         self.magnitude_meteor = None
 
+    def _update_scatter(self, scatter, pos_obs, mag_obs, dmags, *, cmap):
+        scatter.set_offsets(pos_obs)
+        scatter.set_sizes(np.exp(-mag_obs / 3) * 100)
+        scatter.set_facecolors(cmap(self.norm_grid(dmags)))
+
     def _update_dots(self, pos_obs, pos_cat, mag_obs, mag_cat, *, limit, scale):
-        self.scatter_dots.set_offsets(pos_cat)
-        self.scatter_dots.set_sizes(np.ones_like(pos_cat[:, 0]) * 20)
-        self.scatter_dots.set_facecolors(self.cmap_dots(self.norm_grid(mag_cat - mag_obs)))
+        self._update_scatter(self.scatter_dots, pos_obs, mag_obs, mag_cat - mag_obs, cmap=self.cmap_dots)
 
-    def _update_meteor(self, pos_obs, pos_corr, mag_obs, mag_corr, scale=0.05):
-        self.scatter_meteor.set_offsets(pos_obs)
-        self.scatter_meteor.set_sizes(np.exp(np.ones_like(mag_obs)))
-        self.scatter_meteor.set_facecolors(self.cmap_meteor(self.norm_grid(mag_obs - mag_corr)))
+    def _update_meteor(self, pos_obs, pos_corr, mag_obs, mag_corr, *, scale=0.05):
+        self._update_scatter(self.scatter_meteor, pos_obs, mag_obs, mag_obs - mag_corr, cmap=self.cmap_meteor)
 
-    def _update_grid(self, x, y, grid, *, limit: float = 1):
+    def _update_grid(self, x, y, grid, *, limit: float = 1, **kwargs):
         if self.magnitude_grid is not None:
             self.magnitude_grid.remove()
 
+        xres, yres, zres = grid.shape
+        assert xres == yres, f"Magnitude grid shape is not square, is ({xres}, {yres}, {zres})"
+        assert zres == 1, f"Magnitude grid shape should be (R, R, 1), is ({xres}, {yres}, {zres})"
+
+        xext = (xres + 1) / xres
+        yext = (yres + 1) / yres
         self.magnitude_grid = self.axis.imshow(
             grid[..., 0],
             cmap=self.cmap_grid,
             norm=self.norm_grid,
-            extent=[-1, 1, -1, 1],
-            interpolation='bicubic',
+            extent=[-xext, xext, -yext, yext],
+            origin='lower',
+            interpolation=kwargs.get('interpolation', 'nearest'),
         )

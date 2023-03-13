@@ -2,32 +2,22 @@
 
 import sys
 import yaml
-import dotmap
 import datetime
-import functools
 import zoneinfo
 import numpy as np
+import dotmap
+
+from PyQt6 import QtCore
+from PyQt6.QtWidgets import QApplication, QFileDialog
 
 from astropy import units as u
 from astropy.coordinates import EarthLocation
 
-from PyQt6 import QtCore, QtWidgets
-from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget
-
 import matplotlib as mpl
-from matplotlib import pyplot as plt
 
 from matchers import Matchmaker, Counselor
 from projections import BorovickaProjection
-from photometry import Calibration, LogCalibration
-
-from plots import SensorPlot
-from plots.sky import PositionSkyPlot, MagnitudeSkyPlot
-from plots.errors import PositionErrorPlot, MagnitudeErrorPlot
-from plots.correction import BaseCorrectionPlot, PositionCorrectionPlot, MagnitudeCorrectionPlot
-from utilities import unit_grid
-
-from main_ui import Ui_MainWindow
+from plotting import MainWindowPlots
 
 from amos import AMOS, Station
 
@@ -36,48 +26,10 @@ mpl.use('Qt5Agg')
 COUNT = 100
 
 
-class MainWindow(QMainWindow, Ui_MainWindow):
+class MainWindow(MainWindowPlots):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.position_errors = None
-        self.magnitude_errors = None
-        self.location = None
-        self.time = None
-        self.projection = None
-        self.calibration = None
-        self.matcher = None
-
-        self.setupUi(self)
-        self.param_widgets = [
-            (self.dsb_x0, 'x0'), (self.dsb_y0, 'y0'), (self.dsb_a0, 'a0'), (self.dsb_A, 'A'), (self.dsb_F, 'F'),
-            (self.dsb_V, 'V'), (self.dsb_S, 'S'), (self.dsb_D, 'D'), (self.dsb_P, 'P'), (self.dsb_Q, 'Q'),
-            (self.dsb_eps, 'eps'), (self.dsb_E, 'E')
-        ]
-
-        self.settings = dotmap.DotMap(dict(
-            resolution=dict(left=-1, bottom=-1, right=1, top=1)
-        ))
-
-        self.populateStations()
-
-        plt.style.use('dark_background')
-        self.sensorPlot = SensorPlot(self.tab_sensor)
-        self.positionSkyPlot = PositionSkyPlot(self.tab_sky_positions)
-        self.magnitudeSkyPlot = MagnitudeSkyPlot(self.tab_sky_magnitudes)
-        self.positionErrorPlot = PositionErrorPlot(self.tab_errors_positions)
-        self.magnitudeErrorPlot = MagnitudeErrorPlot(self.tab_errors_magnitudes)
-        self.positionCorrectionPlot = PositionCorrectionPlot(self.tab_correction_positions_enabled)
-        self.magnitudeCorrectionPlot = MagnitudeCorrectionPlot(self.tab_correction_magnitudes_enabled)
-
-        self.calibration = LogCalibration(4000)
-
-        self.updateProjection()
-
-        self.loadYAML('data/M20120922_225744_AGO__00007.yaml')  # temporary
-        self.importConstants('AGO.yaml')  # temporary
-
         self.onParametersChanged()
-        self.connectSignalSlots()
 
     def populateStations(self):
         for name, station in AMOS.stations.items():
@@ -96,38 +48,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.updateMatcher()
         self.onLocationTimeChanged()
-
-    def connectSignalSlots(self):
-        self.ac_load.triggered.connect(self.loadYAMLFile)
-
-        for widget, param in self.param_widgets:
-            widget.valueChanged.connect(self.onParametersChanged)
-
-        self.dt_time.dateTimeChanged.connect(self.updateTime)
-        self.dt_time.dateTimeChanged.connect(self.onTimeChanged)
-
-        self.dsb_lat.valueChanged.connect(self.onLocationChanged)
-        self.dsb_lon.valueChanged.connect(self.onLocationChanged)
-
-        self.pb_optimize.clicked.connect(self.minimize)
-        self.pb_pair.clicked.connect(self.pair)
-        self.pb_export.clicked.connect(self.exportFile)
-        self.pb_import.clicked.connect(self.importFile)
-
-        self.pb_mask_unidentified.clicked.connect(self.maskSensor)
-        self.pb_mask_distant.clicked.connect(self.maskCatalogueDistant)
-        self.pb_mask_faint.clicked.connect(self.maskCatalogueFaint)
-        self.pb_reset.clicked.connect(self.resetValid)
-        self.dsb_error_limit.valueChanged.connect(self.onErrorLimitChanged)
-
-        self.dsb_bandwidth.valueChanged.connect(self.onBandwidthChanged)
-        self.sb_arrow_scale.valueChanged.connect(self.onArrowScaleChanged)
-        self.sb_resolution.valueChanged.connect(self.onResolutionChanged)
-
-        self.cb_show_errors.clicked.connect(self.plotPositionCorrectionErrors)
-        self.cb_show_grid.clicked.connect(self.plotPositionCorrectionGrid)
-
-        self.tw_charts.currentChanged.connect(self.updatePlots)
 
     def onTimeChanged(self):
         self.updateTime()
@@ -215,44 +135,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.magnitudeCorrectionPlot.invalidate_grid()
         self.updatePlots()
 
-    def updatePlots(self):
-        self.showErrors()
-        self.correctMeteor()
-        index = self.tw_charts.currentIndex()
-
-        if index == 0:
-            if not self.sensorPlot.valid:
-                self.plotSensorData()
-        elif index == 1:
-            if not self.positionSkyPlot.valid_dots:
-                self.plotObservedStarsPositions()
-            if not self.positionSkyPlot.valid_stars:
-                self.plotCatalogueStarsPositions()
-        elif index == 2:
-            if not self.magnitudeSkyPlot.valid_dots:
-                self.plotObservedStarsMagnitudes()
-            if not self.magnitudeSkyPlot.valid_stars:
-                self.plotCatalogueStarsMagnitudes()
-        elif index == 3:
-            if not self.positionErrorPlot.valid:
-                self.plotPositionErrors()
-        elif index == 4:
-            if not self.positionErrorPlot.valid:
-                self.plotMagnitudeErrors()
-        elif index == 5:
-            if not self.positionCorrectionPlot.valid_dots:
-                self.plotPositionCorrectionErrors()
-            if not self.positionCorrectionPlot.valid_meteor:
-                self.plotPositionCorrectionMeteor()
-            if not self.positionCorrectionPlot.valid_grid:
-                self.plotPositionCorrectionGrid()
-        elif index == 6:
-            if not self.magnitudeCorrectionPlot.valid_dots:
-                self.plotMagnitudeCorrectionErrors()
-            if not self.magnitudeCorrectionPlot.valid_meteor:
-                self.plotMagnitudeCorrectionMeteor()
-            if not self.magnitudeCorrectionPlot.valid_grid:
-                self.plotMagnitudeCorrectionGrid()
 
     def computePositionErrors(self):
         self.position_errors = self.matcher.position_errors(self.projection, masked=True)
@@ -261,7 +143,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.magnitude_errors = self.matcher.magnitude_errors(self.projection, self.calibration, masked=True)
 
     def exportFile(self):
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export constants to file", ".",
+        filename, _ = QFileDialog.getSaveFileName(self, "Export constants to file", ".",
                                                             "YAML files (*.yaml)")
         if filename is not None:
             self.exportConstants(filename)
@@ -290,7 +172,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             print(f"Could not export constants: {exc}")
 
     def loadYAMLFile(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data",
+        filename, _ = QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data",
                                                             "YAML files (*.yml *.yaml)")
         if filename == '':
             print("No file provided, loading aborted")
@@ -317,7 +199,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.matcher.load_catalogue('catalogue/HYG30.tsv')
 
     def importFile(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Import constants from file", ".",
+        filename, _ = QFileDialog.getOpenFileName(self, "Import constants from file", ".",
                                                             "YAML files (*.yml *.yaml)")
         self.importConstants(filename)
         self.onParametersChanged()
@@ -456,131 +338,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.paired:
             self.matcher.print_meteor(self.projection)
 
-    def plotSensorData(self):
-        self.sensorPlot.update(self.matcher.sensor_data)
-
-    def _plotObservedStars(self, plot, errors, *, limit=None):
-        plot.update_dots(
-            self.matcher.sensor_data.stars.project(self.projection, masked=True),
-            self.matcher.sensor_data.stars.i,
-            errors,
-            limit=limit,
-        )
-        plot.update_meteor(
-            self.matcher.sensor_data.meteor.project(self.projection, masked=True),
-            self.matcher.sensor_data.meteor.i
-        )
-
-    def plotObservedStarsPositions(self):
-        self._plotObservedStars(self.positionSkyPlot, self.position_errors,
-                                limit=np.radians(self.dsb_error_limit.value()))
-
-    def plotObservedStarsMagnitudes(self):
-        self._plotObservedStars(self.magnitudeSkyPlot, self.magnitude_errors,
-                                limit=np.radians(self.dsb_error_limit.value()))
-
-    def _plotCatalogueStars(self, plot):
-        plot.update_stars(
-            self.matcher.catalogue.to_altaz_chart(self.location, self.time, masked=True),
-            self.matcher.catalogue.vmag(masked=True)
-        )
-
-    def plotCatalogueStarsPositions(self):
-        self._plotCatalogueStars(self.positionSkyPlot)
-
-    def plotCatalogueStarsMagnitudes(self):
-        self._plotCatalogueStars(self.magnitudeSkyPlot)
-
-    def _plotErrors(self, plot, errors):
-        positions = self.matcher.sensor_data.stars.project(self.projection, masked=True)
-        magnitudes = self.matcher.sensor_data.stars.intensities(True)
-        plot.update(positions, magnitudes, errors, limit=np.radians(self.dsb_error_limit.value()))
-
-    def plotPositionErrors(self):
-        self._plotErrors(self.positionErrorPlot, self.position_errors)
-
-    def plotMagnitudeErrors(self):
-        self._plotErrors(self.magnitudeErrorPlot, self.magnitude_errors)
-
-    """ Methods for updating correction plots """
-
-    def _plotCorrectionErrors(self, tabs: QStackedWidget, plot: BaseCorrectionPlot, *, intent: str) -> None:
-        # Do nothing if working in unpaired mode
-        if self.paired:
-            tabs.setCurrentIndex(1)
-            if self.cb_show_errors.isChecked():
-                print(f"Plotting correction errors for {intent}")
-                plot.update_dots(
-                    self.matcher.catalogue.altaz(self.location, self.time, masked=True),
-                    self.matcher.sensor_data.stars.project(self.projection, masked=True),
-                    self.matcher.catalogue.vmag(masked=True),
-                    self.matcher.sensor_data.stars.calibrate(self.calibration, masked=True),
-                    limit=np.radians(self.dsb_error_limit.value()),
-                    scale=1 / self.sb_arrow_scale.value(),
-                )
-            else:
-                plot.clear_errors()
-        else:
-            tabs.setCurrentIndex(0)
-
-    def plotPositionCorrectionErrors(self):
-        self._plotCorrectionErrors(self.tabs_positions, self.positionCorrectionPlot, intent="star positions")
-
-    def plotMagnitudeCorrectionErrors(self):
-        self._plotCorrectionErrors(self.tabs_magnitudes, self.magnitudeCorrectionPlot, intent="star magnitudes")
-
-    def _plotCorrectionMeteor(self, tabs, plot, *, intent: str) -> None:
-        if self.paired:
-            print(f"Plotting correction for {intent}")
-            tabs.setCurrentIndex(1)
-            plot.update_meteor(
-                self.matcher.sensor_data.meteor.project(self.projection, masked=True),
-                self.matcher.correction_meteor_xy(self.projection),
-                self.matcher.sensor_data.meteor.calibrate(self.calibration, masked=True),
-                self.matcher.correction_meteor_mag(self.projection),
-                scale=1 / self.sb_arrow_scale.value(),
-            )
-        else:
-            tabs.setCurrentIndex(0)
-
-    def plotPositionCorrectionMeteor(self) -> None:
-        self._plotCorrectionMeteor(self.tabs_positions, self.positionCorrectionPlot, intent="star positions")
-
-    def plotMagnitudeCorrectionMeteor(self) -> None:
-        self._plotCorrectionMeteor(self.tabs_magnitudes, self.magnitudeCorrectionPlot, intent="star magnitudes")
-
-    def switch_tabs(self, tabs, func, arg, *, message: str, intent: str) -> None:
-        if self.paired:
-            tabs.setCurrentIndex(1)
-            print(f"{message} for {intent}")
-            func(arg)
-        else:
-            tabs.setCurrentIndex(0)
-
-    def _plotCorrectionGrid(self, plot, grid, *, masked: bool):
-        if self.cb_show_grid.isChecked():
-            xx, yy = unit_grid(self.sb_resolution.value(), masked=masked)
-            plot.update_grid(xx, yy, grid(resolution=self.sb_resolution.value()))
-        else:
-            plot.clear_grid()
-
-    def plotPositionCorrectionGrid(self):
-        self.switch_tabs(
-            self.tabs_positions,
-            lambda x: self._plotCorrectionGrid(x, self.matcher.position_grid, masked=True),
-            self.positionCorrectionPlot,
-            message="Plotting correction grid",
-            intent="star positions",
-        )
-
-    def plotMagnitudeCorrectionGrid(self):
-        self.switch_tabs(
-            self.tabs_magnitudes,
-            lambda x: self._plotCorrectionGrid(x, self.matcher.magnitude_grid, masked=False),
-            self.magnitudeCorrectionPlot,
-            message="Plotting correction grid",
-            intent="star magnitudes",
-        )
+    @property
+    def grid_resolution(self):
+        return self.sb_resolution.value()
 
     def pair(self):
         self.matcher = self.matcher.pair(self.projection)

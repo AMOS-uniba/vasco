@@ -31,8 +31,12 @@ class BaseCorrectionPlot(BasePlot):
         self.axis.set_aspect('equal')
         self.axis.grid(color='white', alpha=0.2)
 
-        self.scatter_dots = self.axis.scatter([], [], s=[], marker='o', c=self.colour_dots)
-        self.scatter_meteor = self.axis.scatter([], [], s=[], marker='o', c=self.colour_meteor)
+        self.scatter_dots = self.axis.scatter([], [],
+                                              s=[], marker='o', c=self.colour_dots,
+                                              linewidth=0.3, edgecolor='black')
+        self.scatter_meteor = self.axis.scatter([], [],
+                                                s=[], marker='o', c=self.colour_meteor,
+                                                linewidth=0.2, edgecolor='black')
 
     def invalidate_dots(self):
         self.valid_dots = False
@@ -52,7 +56,7 @@ class BaseCorrectionPlot(BasePlot):
         pos_cat = altaz_to_disk(pos_cat)
         pos_obs = proj_to_disk(pos_obs)
 
-        self._update_dots(pos_obs, pos_cat, mag_cat, mag_obs, limit=limit, scale=scale)
+        self._update_dots(pos_cat, pos_obs, mag_cat, mag_obs, limit=limit, scale=scale)
         self.valid_dots = True
         self.draw()
 
@@ -63,7 +67,7 @@ class BaseCorrectionPlot(BasePlot):
     def clear_errors(self):
         self.update_dots(None, None)
 
-    def update_meteor(self, pos_obs, pos_corr, mag_obs, mag_corr, scale=0.05):
+    def update_meteor(self, pos_obs, pos_corr, mag_obs, mag_corr, *, scale=0.05):
         pos_obs = proj_to_disk(pos_obs)
 
         self._update_meteor(pos_obs, pos_corr, mag_obs, mag_corr, scale=scale)
@@ -71,16 +75,16 @@ class BaseCorrectionPlot(BasePlot):
         self.draw()
 
     @abstractmethod
-    def _update_meteor(self, pos_obs, pos_corr, mag_obs, mag_corr, scale=0.05):
+    def _update_meteor(self, pos_obs, pos_corr, mag_obs, mag_corr, *, scale=0.05):
         """ Inner method for updating the displayed meteor """
 
-    def update_grid(self, x, y, grid, *, limit: float = 1):
-        self._update_grid(x, y, grid, limit=limit)
+    def update_grid(self, x, y, grid, *, limit: float = 1, **kwargs):
+        self._update_grid(x, y, grid, limit=limit, **kwargs)
         self.valid_grid = True
         self.draw()
 
     @abstractmethod
-    def _update_grid(self, x, y, grid, *, limit: float = 1):
+    def _update_grid(self, x, y, grid, *, limit: float = 1, **kwargs):
         """ Inner method for updating the grid """
 
     def clear_grid(self):

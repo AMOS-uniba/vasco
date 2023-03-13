@@ -55,8 +55,9 @@ class BaseErrorPlot(BasePlot):
         """ Set y-axis limits from the data """
 
     def update(self, positions, magnitudes, errors, *, limit=1):
-        print(positions.shape, magnitudes.shape, errors.shape)
-        assert magnitudes.shape == errors.shape
+        assert magnitudes.shape == errors.shape,\
+            f"Magnitudes and errors should have the same shape, are {magnitudes.shape} and {errors.shape}"
+
         alt = np.degrees(positions[:, 0])
         az = np.degrees(positions[:, 1])
 

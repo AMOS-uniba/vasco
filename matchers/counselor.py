@@ -92,7 +92,7 @@ class Counselor(Matcher):
         obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=False))
         cat = altaz_to_disk(self.catalogue.altaz(self.location, self.time, masked=False))
         self.position_smoother = KernelSmoother(
-            obs, cat - obs,
+            obs, obs - cat,
             kernel=kernels.nexp,
             bandwidth=bandwidth
         )
@@ -102,7 +102,7 @@ class Counselor(Matcher):
         mcat = self.catalogue.vmag(masked=False)
         mobs = calibration(self.sensor_data.stars.intensities(masked=False))
         self.magnitude_smoother = KernelSmoother(
-            obs, np.expand_dims(mcat - mobs, 1),
+            obs, np.expand_dims(mobs - mcat, 1),
             kernel=kernels.nexp,
             bandwidth=bandwidth
         )
