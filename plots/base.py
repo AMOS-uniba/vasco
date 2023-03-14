@@ -5,6 +5,9 @@ from matplotlib.figure import Figure
 
 
 class BasePlot:
+    intent: str
+    target: str
+
     def __init__(self, widget, *, figsize=(8, 6)):
         self.figure = Figure(figsize=figsize)
         self.canvas = FigureCanvasQTAgg(self.figure)

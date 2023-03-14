@@ -8,6 +8,7 @@ class MagnitudeCorrectionPlot(BaseCorrectionPlot):
     cmap_dots = mpl.cm.get_cmap('bwr')
     cmap_grid = mpl.cm.get_cmap('bwr')
     norm_grid = mpl.colors.TwoSlopeNorm(0, vmin=-2, vmax=2)
+    target = "star magnitudes"
 
     def __init__(self, widget, **kwargs):
         super().__init__(widget, **kwargs)

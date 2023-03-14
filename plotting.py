@@ -1,5 +1,7 @@
 import numpy as np
 
+from typing import Callable
+
 from PyQt6.QtWidgets import QStackedWidget
 
 
@@ -23,39 +25,51 @@ class MainWindowPlots(MainWindowBase):
         self.positionCorrectionPlot = PositionCorrectionPlot(self.tab_correction_positions_enabled)
         self.magnitudeCorrectionPlot = MagnitudeCorrectionPlot(self.tab_correction_magnitudes_enabled)
 
-    @staticmethod
-    def _updateIfInvalid(valid, function):
-        if not valid:
-            function()
-
     def updatePlots(self):
         self.showErrors()
         self.correctMeteor()
-        index = self.tw_charts.currentIndex()
+        links = [
+            [
+                (self.sensorPlot.valid, self.plotSensorData),
+            ],
+            [
+                (self.positionSkyPlot.valid_dots, self.plotObservedStarsPositions),
+                (self.positionSkyPlot.valid_stars, self.plotCatalogueStarsPositions),
+            ],
+            [
+                (self.magnitudeSkyPlot.valid_dots, self.plotObservedStarsMagnitudes),
+                (self.magnitudeSkyPlot.valid_stars, self.plotCatalogueStarsMagnitudes),
+            ],
+            [
+                (self.positionErrorPlot.valid_dots, self.plotPositionErrorsDots),
+                (self.positionErrorPlot.valid_meteor, self.plotPositionErrorsMeteor),
+            ],
+            [
+                (self.magnitudeErrorPlot.valid_dots, self.plotMagnitudeErrorsDots),
+                (self.magnitudeErrorPlot.valid_meteor, self.plotMagnitudeErrorsMeteor),
+            ],
+            [
+                (self.positionCorrectionPlot.valid_dots, self.plotPositionCorrectionErrors),
+                (self.positionCorrectionPlot.valid_meteor, self.plotPositionCorrectionMeteor),
+                (self.positionCorrectionPlot.valid_grid, self.plotPositionCorrectionGrid),
+            ],
+            [
+                (self.magnitudeCorrectionPlot.valid_dots, self.plotMagnitudeCorrectionErrors),
+                (self.magnitudeCorrectionPlot.valid_meteor, self.plotMagnitudeCorrectionMeteor),
+                (self.magnitudeCorrectionPlot.valid_grid, self.plotMagnitudeCorrectionGrid),
+            ],
+        ][self.tw_charts.currentIndex()]
 
-        if index == 0:
-            self._updateIfInvalid(self.sensorPlot.valid, self.plotSensorData)
-        elif index == 1:
-            self._updateIfInvalid(self.positionSkyPlot.valid_dots, self.plotObservedStarsPositions)
-            self._updateIfInvalid(self.positionSkyPlot.valid_stars, self.plotCatalogueStarsPositions)
-        elif index == 2:
-            self._updateIfInvalid(self.magnitudeSkyPlot.valid_dots, self.plotObservedStarsMagnitudes)
-            self._updateIfInvalid(self.magnitudeSkyPlot.valid_stars, self.plotCatalogueStarsMagnitudes)
-        elif index == 3:
-            self._updateIfInvalid(self.positionErrorPlot.valid, self.plotPositionErrors)
-        elif index == 4:
-            self._updateIfInvalid(self.positionErrorPlot.valid, self.plotMagnitudeErrors)
-        elif index == 5:
-            self._updateIfInvalid(self.positionCorrectionPlot.valid_dots, self.plotPositionCorrectionErrors)
-            self._updateIfInvalid(self.positionCorrectionPlot.valid_meteor, self.plotPositionCorrectionMeteor)
-            self._updateIfInvalid(self.positionCorrectionPlot.valid_grid, self.plotPositionCorrectionGrid)
-        elif index == 6:
-            self._updateIfInvalid(self.magnitudeCorrectionPlot.valid_dots, self.plotMagnitudeCorrectionErrors)
-            self._updateIfInvalid(self.magnitudeCorrectionPlot.valid_meteor, self.plotMagnitudeCorrectionMeteor)
-            self._updateIfInvalid(self.magnitudeCorrectionPlot.valid_grid, self.plotMagnitudeCorrectionGrid)
+        for valid, function in links:
+            if not valid:
+                function()
+
+    """ Methods for plotting sensor data """
 
     def plotSensorData(self):
         self.sensorPlot.update(self.matcher.sensor_data)
+
+    """ Methods for plotting sky charts """
 
     def _plotObservedStars(self, plot, errors, *, limit=None):
         plot.update_dots(
@@ -89,71 +103,80 @@ class MainWindowPlots(MainWindowBase):
     def plotCatalogueStarsMagnitudes(self):
         self._plotCatalogueStars(self.magnitudeSkyPlot)
 
-    def _plotErrors(self, plot, errors):
+    """ Methods for plotting error charts """
+
+    def _plotErrorsDots(self, plot, errors):
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=True)
         magnitudes = self.matcher.sensor_data.stars.intensities(True)
-        plot.update(positions, magnitudes, errors, limit=np.radians(self.dsb_error_limit.value()))
+        plot.update_dots(positions, magnitudes, errors, limit=np.radians(self.dsb_error_limit.value()))
 
-    def plotPositionErrors(self):
-        self._plotErrors(self.positionErrorPlot, self.position_errors)
+    def plotPositionErrorsDots(self):
+        self._plotErrorsDots(self.positionErrorPlot, self.position_errors)
 
-    def plotMagnitudeErrors(self):
-        self._plotErrors(self.magnitudeErrorPlot, self.magnitude_errors)
+    def plotMagnitudeErrorsDots(self):
+        self._plotErrorsDots(self.magnitudeErrorPlot, self.magnitude_errors)
+
+    def _plotErrorsMeteor(self, plot, errors):
+        positions = self.matcher.sensor_data.meteor.project(self.projection, masked=True)
+        magnitudes = self.matcher.sensor_data.meteor.intensities(True)
+        plot.update_meteor(positions, magnitudes, errors, limit=np.radians(self.dsb_error_limit.value()))
+
+    def plotPositionErrorsMeteor(self):
+        if self.paired:
+            xy = self.matcher.correction_meteor_xy(self.projection)
+            correction = np.degrees(np.sqrt(xy[..., 0]**2 + xy[..., 1]**2))
+            self._plotErrorsMeteor(self.positionErrorPlot, correction)
+
+    def plotMagnitudeErrorsMeteor(self):
+        if self.paired:
+            self._plotErrorsMeteor(self.magnitudeErrorPlot, self.matcher.correction_meteor_mag(self.projection))
 
     """ Methods for updating correction plots """
 
-    def _plotCorrectionErrors(self, tabs: QStackedWidget, plot: BaseCorrectionPlot, *, intent: str) -> None:
-        # Do nothing if working in unpaired mode
+    def _switch_tabs(self,
+                     tabs: QStackedWidget,
+                     func: Callable[[BaseCorrectionPlot, ...], None],
+                     *args, **kwargs) -> None:
         if self.paired:
             tabs.setCurrentIndex(1)
-            if self.cb_show_errors.isChecked():
-                print(f"Plotting correction errors for {intent}")
-                plot.update_dots(
-                    self.matcher.catalogue.altaz(self.location, self.time, masked=True),
-                    self.matcher.sensor_data.stars.project(self.projection, masked=True),
-                    self.matcher.catalogue.vmag(masked=True),
-                    self.matcher.sensor_data.stars.calibrate(self.calibration, masked=True),
-                    limit=np.radians(self.dsb_error_limit.value()),
-                    scale=1 / self.sb_arrow_scale.value(),
-                )
-            else:
-                plot.clear_errors()
+            func(*args, **kwargs)
         else:
             tabs.setCurrentIndex(0)
 
-    def plotPositionCorrectionErrors(self):
-        self._plotCorrectionErrors(self.tabs_positions, self.positionCorrectionPlot, intent="star positions")
-
-    def plotMagnitudeCorrectionErrors(self):
-        self._plotCorrectionErrors(self.tabs_magnitudes, self.magnitudeCorrectionPlot, intent="star magnitudes")
-
-    def _plotCorrectionMeteor(self, tabs, plot, *, intent: str) -> None:
-        if self.paired:
-            print(f"Plotting correction for {intent}")
-            tabs.setCurrentIndex(1)
-            plot.update_meteor(
-                self.matcher.sensor_data.meteor.project(self.projection, masked=True),
-                self.matcher.correction_meteor_xy(self.projection),
-                self.matcher.sensor_data.meteor.calibrate(self.calibration, masked=True),
-                self.matcher.correction_meteor_mag(self.projection),
+    def _plotCorrectionErrors(self, plot: BaseCorrectionPlot) -> None:
+        if self.cb_show_errors.isChecked():
+            print(f"Plotting {plot.intent} for {plot.target}")
+            plot.update_dots(
+                self.matcher.catalogue.altaz(self.location, self.time, masked=True),
+                self.matcher.sensor_data.stars.project(self.projection, masked=True),
+                self.matcher.catalogue.vmag(masked=True),
+                self.matcher.sensor_data.stars.calibrate(self.calibration, masked=True),
+                limit=np.radians(self.dsb_error_limit.value()),
                 scale=1 / self.sb_arrow_scale.value(),
             )
         else:
-            tabs.setCurrentIndex(0)
+            plot.clear_errors()
+
+    def plotPositionCorrectionErrors(self) -> None:
+        self._switch_tabs(self.tabs_positions, self._plotCorrectionErrors, self.positionCorrectionPlot)
+
+    def plotMagnitudeCorrectionErrors(self) -> None:
+        self._switch_tabs(self.tabs_magnitudes, self._plotCorrectionErrors, self.magnitudeCorrectionPlot)
+
+    def _plotCorrectionMeteor(self, plot) -> None:
+        plot.update_meteor(
+            self.matcher.sensor_data.meteor.project(self.projection, masked=True),
+            self.matcher.correction_meteor_xy(self.projection),
+            self.matcher.sensor_data.meteor.calibrate(self.calibration, masked=True),
+            self.matcher.correction_meteor_mag(self.projection),
+            scale=1 / self.sb_arrow_scale.value(),
+        )
 
     def plotPositionCorrectionMeteor(self) -> None:
-        self._plotCorrectionMeteor(self.tabs_positions, self.positionCorrectionPlot, intent="star positions")
+        self._switch_tabs(self.tabs_positions, self._plotCorrectionMeteor, self.positionCorrectionPlot)
 
     def plotMagnitudeCorrectionMeteor(self) -> None:
-        self._plotCorrectionMeteor(self.tabs_magnitudes, self.magnitudeCorrectionPlot, intent="star magnitudes")
-
-    def switch_tabs(self, tabs, func, arg, *, message: str, intent: str) -> None:
-        if self.paired:
-            tabs.setCurrentIndex(1)
-            print(f"{message} for {intent}: resolution {self.sb_resolution.value()}, ")
-            func(arg)
-        else:
-            tabs.setCurrentIndex(0)
+        self._switch_tabs(self.tabs_magnitudes, self._plotCorrectionMeteor, self.magnitudeCorrectionPlot)
 
     def _plotCorrectionGrid(self, plot, grid, *, masked: bool, **kwargs):
         if self.cb_show_grid.isChecked():
@@ -163,21 +186,16 @@ class MainWindowPlots(MainWindowBase):
             plot.clear_grid()
 
     def plotPositionCorrectionGrid(self):
-        self.switch_tabs(
+        self._switch_tabs(
             self.tabs_positions,
-            lambda x: self._plotCorrectionGrid(x, self.matcher.position_grid, masked=True),
+            lambda plot: self._plotCorrectionGrid(plot, self.matcher.position_grid, masked=True),
             self.positionCorrectionPlot,
-            message="Plotting correction grid",
-            intent="star positions",
         )
 
     def plotMagnitudeCorrectionGrid(self):
-        self.switch_tabs(
+        self._switch_tabs(
             self.tabs_magnitudes,
-            lambda x: self._plotCorrectionGrid(x, self.matcher.magnitude_grid,
-                                               masked=False,
-                                               interpolation=self.cb_interpolation.currentText()),
+            lambda plot: self._plotCorrectionGrid(plot, self.matcher.magnitude_grid, masked=False,
+                                                  interpolation=self.cb_interpolation.currentText()),
             self.magnitudeCorrectionPlot,
-            message="Plotting correction grid",
-            intent="star magnitudes",
         )

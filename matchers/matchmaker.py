@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import Optional, Callable
+from typing import Callable
 
 from .base import Matcher
 from .counselor import Counselor
@@ -71,13 +71,17 @@ class Matchmaker(Matcher):
         return obs - cat
 
     @staticmethod
-    def compute_distances(observed, catalogue):
+    def compute_distances(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float, float]:
         """
         Compute distance matrix for observed points projected to the sky and catalogue stars
+
+        Parameters
+        ----------
         observed:   np.ndarray(M, 2)
         catalogue:  np.ndarray(N, 2)
 
         Returns
+        -------
         np.ndarray(M, N)
         """
         observed = np.expand_dims(observed, 1)

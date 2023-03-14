@@ -5,6 +5,8 @@ from .base import BaseCorrectionPlot
 
 
 class PositionCorrectionPlot(BaseCorrectionPlot):
+    target = "star positions"
+
     def __init__(self, widget, **kwargs):
         super().__init__(widget, **kwargs)
         self.quiver_dots = None

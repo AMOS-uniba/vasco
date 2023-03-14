@@ -6,16 +6,10 @@ from matchers import Matcher
 
 
 class MagnitudeErrorPlot(BaseErrorPlot):
-    y_formatter = FuncFormatter(lambda x, pos: f'{x:+.2f}m')
-    cmap = mpl.cm.get_cmap('bwr')
+    y_formatter = FuncFormatter(lambda x, pos: f'{x:+.1f}m')
+    cmap_dots = mpl.cm.get_cmap('bwr')
 
-    def __init__(self, widget, **kwargs):
-        super().__init__(widget, **kwargs)
-
-    def add_axes(self):
-        super().add_axes()
-        self.axis_alt.set_ylim([0, None])
-        self.axis_az.set_ylim([0, None])
+    target: str = "star magnitudes"
 
     def norm(self, limit):
         return mpl.colors.TwoSlopeNorm(0, vmin=-2, vmax=2)

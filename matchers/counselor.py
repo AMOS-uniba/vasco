@@ -6,7 +6,7 @@ from .base import Matcher
 from astropy.coordinates import AltAz
 
 from projections import Projection
-from photometry import Calibration, LogCalibration
+from photometry import Calibration
 from correctors import KernelSmoother
 from correctors import kernels
 from utilities import spherical_distance, spherical_difference, disk_to_altaz, altaz_to_disk, proj_to_disk, unit_grid

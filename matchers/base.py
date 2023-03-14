@@ -44,6 +44,12 @@ class Matcher(metaclass=ABCMeta):
     def errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray:
         """ Find position error for each star """
 
+    def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
+        pass
+
+    def update_magnitude_smoother(self, projection: Projection, calibration: Calibration, *, bandwidth: float = 0.1):
+        pass
+
     @abstractmethod
     def magnitude_errors(self,
                          projection: Projection,

@@ -14,6 +14,9 @@ class BaseCorrectionPlot(BasePlot):
     colour_dots = 'white'
     colour_meteor = 'cyan'
 
+    intent: str = "correction plot"
+    target: str
+
     def __init__(self, widget, **kwargs):
         self.scatter_dots = None
         self.scatter_meteor = None
@@ -65,7 +68,7 @@ class BaseCorrectionPlot(BasePlot):
         """ Inner method for updating the dots """
 
     def clear_errors(self):
-        self.update_dots(None, None)
+        self.update_dots(None, None, None, None)
 
     def update_meteor(self, pos_obs, pos_corr, mag_obs, mag_corr, *, scale=0.05):
         pos_obs = proj_to_disk(pos_obs)

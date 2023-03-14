@@ -29,6 +29,11 @@ COUNT = 100
 class MainWindow(MainWindowPlots):
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        self.loadYAML('data/M20220531_041513_00128.yaml')  # temporary
+        self.importConstants('calibrations/out.yaml')  # temporary
+
+        self.connectSignalSlots()
         self.onParametersChanged()
 
     def populateStations(self):
@@ -135,7 +140,6 @@ class MainWindow(MainWindowPlots):
         self.magnitudeCorrectionPlot.invalidate_grid()
         self.updatePlots()
 
-
     def computePositionErrors(self):
         self.position_errors = self.matcher.position_errors(self.projection, masked=True)
 
@@ -143,8 +147,7 @@ class MainWindow(MainWindowPlots):
         self.magnitude_errors = self.matcher.magnitude_errors(self.projection, self.calibration, masked=True)
 
     def exportFile(self):
-        filename, _ = QFileDialog.getSaveFileName(self, "Export constants to file", ".",
-                                                            "YAML files (*.yaml)")
+        filename, _ = QFileDialog.getSaveFileName(self, "Export constants to file", ".", "YAML files (*.yaml)")
         if filename is not None:
             self.exportConstants(filename)
 

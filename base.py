@@ -38,11 +38,6 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
 
         self.updateProjection()
 
-        self.loadYAML('data/M20120922_225744_AGO__00007.yaml')  # temporary
-        self.importConstants('AGO.yaml')  # temporary
-
-        self.connectSignalSlots()
-
     def connectSignalSlots(self):
         self.ac_load.triggered.connect(self.loadYAMLFile)
 
