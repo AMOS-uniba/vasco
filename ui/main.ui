@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1176</width>
-    <height>919</height>
+    <width>1253</width>
+    <height>979</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1624,31 +1624,69 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1176</width>
-     <height>19</height>
+     <width>1253</width>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuData">
     <property name="title">
      <string>Data</string>
     </property>
-    <addaction name="ac_load"/>
-    <addaction name="actionSave"/>
+    <addaction name="ac_import_sensor"/>
+    <addaction name="ac_save_xml"/>
    </widget>
+   <widget class="QMenu" name="menuCatalogue">
+    <property name="title">
+     <string>Catalogue</string>
+    </property>
+    <addaction name="ac_load_catalogue"/>
+   </widget>
+   <widget class="QMenu" name="menuProjection">
+    <property name="title">
+     <string>Projection</string>
+    </property>
+    <addaction name="ac_load_constants"/>
+    <addaction name="ac_save_constants"/>
+   </widget>
+   <addaction name="menuCatalogue"/>
    <addaction name="menuData"/>
+   <addaction name="menuProjection"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="ac_load">
+  <action name="ac_import_sensor">
    <property name="text">
-    <string>Load stars</string>
+    <string>Import YAML data</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
+   </property>
+  </action>
+  <action name="ac_save_xml">
+   <property name="text">
+    <string>Export meteor XML</string>
+   </property>
+  </action>
+  <action name="ac_load_catalogue">
+   <property name="text">
+    <string>Load catalogue</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+L</string>
    </property>
   </action>
-  <action name="actionSave">
+  <action name="ac_save_meteor">
    <property name="text">
-    <string>Save constants</string>
+    <string>Save meteor XML</string>
+   </property>
+  </action>
+  <action name="ac_load_constants">
+   <property name="text">
+    <string>Import constants</string>
+   </property>
+  </action>
+  <action name="ac_save_constants">
+   <property name="text">
+    <string>Export constants</string>
    </property>
   </action>
  </widget>

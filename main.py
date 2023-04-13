@@ -38,12 +38,6 @@ class MainWindow(MainWindowPlots):
         self.connectSignalSlots()
         self.onParametersChanged()
 
-    def populateStations(self):
-        for name, station in AMOS.stations.items():
-            self.cb_stations.addItem(station.name)
-
-        self.cb_stations.currentIndexChanged.connect(self.selectStation)
-
     def selectStation(self, index):
         if index == 0:
             station = Station("custom", self.dsb_lat.value(), self.dsb_lon.value(), 0)

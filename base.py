@@ -35,11 +35,10 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
 
         self.calibration = LogCalibration(4000)
         self.populateStations()
-
         self.updateProjection()
 
     def connectSignalSlots(self):
-        self.ac_load.triggered.connect(self.loadYAMLFile)
+        self.ac_import_sensor.triggered.connect(self.loadYAMLFile)
 
         for widget, param in self.param_widgets:
             widget.valueChanged.connect(self.onParametersChanged)
@@ -70,3 +69,9 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         self.cb_interpolation.currentIndexChanged.connect(self.plotMagnitudeCorrectionGrid)
 
         self.tw_charts.currentChanged.connect(self.updatePlots)
+
+    def populateStations(self):
+        for name, station in AMOS.stations.items():
+            self.cb_stations.addItem(station.name)
+
+        self.cb_stations.currentIndexChanged.connect(self.selectStation)

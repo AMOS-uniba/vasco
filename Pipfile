@@ -4,19 +4,21 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-pyyaml = "*"
-dotmap = "*"
 argparse = "*"
 argparsedirs = "*"
-physics-fields = "*"
-numpy = "*"
-scipy = "*"
-matplotlib = "*"
-pandas = "*"
-pyqt6 = "*"
 astropy = "*"
-lxml = "*"
+dotmap = "*"
 flake8 = "*"
+lxml = "*"
+matplotlib = "*"
+numpy = "*"
+pandas = "*"
+physics-fields = "*"
+pyqt6 = "*"
+pytest = "*"
+pyyaml = "*"
+scipy = "*"
+pyqt6-tools = "*"
 
 [dev-packages]
 
