@@ -41,7 +41,7 @@ class Matcher(metaclass=ABCMeta):
         """ Find position error for each dot """
 
     @abstractmethod
-    def errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray:
+    def position_errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray:
         """ Find position error for each star """
 
     def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
@@ -70,6 +70,10 @@ class Matcher(metaclass=ABCMeta):
             return np.nan
         else:
             return np.max(errors)
+
+    @abstractmethod
+    def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
+        """ Correct a meteor and return a XML fragment """
 
     def func(self, x):
         return self.avg_error(self.position_errors(self.projection_cls(*x), masked=True))

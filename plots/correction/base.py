@@ -10,7 +10,7 @@ from utilities import altaz_to_disk, proj_to_disk
 class BaseCorrectionPlot(BasePlot):
     cmap_dots = mpl.cm.get_cmap('autumn_r')
     cmap_grid = mpl.cm.get_cmap('Greens')
-    cmap_meteor = mpl.cm.get_cmap('Blues')
+    cmap_meteor = mpl.cm.get_cmap('RdYlGn')
     colour_dots = 'white'
     colour_meteor = 'cyan'
 

@@ -56,7 +56,7 @@ class Matchmaker(Matcher):
     def position_errors(self, projection: Projection, *, masked: bool) -> np.ndarray:
         return self._cartesian(self.find_nearest_value, projection, masked, 1)
 
-    def errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray:
+    def position_errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray:
         return self._cartesian(self.find_nearest_value, projection, masked, 0)
 
     def magnitude_errors(self,
@@ -69,6 +69,9 @@ class Matchmaker(Matcher):
         obs = calibration(self.sensor_data.stars.intensities(masked=masked))
         cat = self.catalogue.valid.iloc[nearest].vmag.values
         return obs - cat
+
+    def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
+        raise NotImplementedError("Matchmaker cannot print corrected meteors, use a Counselor instead")
 
     @staticmethod
     def compute_distances(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float, float]:

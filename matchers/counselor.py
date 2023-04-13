@@ -80,7 +80,7 @@ class Counselor(Matcher):
         cat = self.catalogue.vmag(masked=masked)
         return obs - cat
 
-    def errors_inverse(self, projection: Projection, *, masked: bool):
+    def position_errors_inverse(self, projection: Projection, *, masked: bool):
         return self.position_errors(projection, masked=masked)
 
     def pair(self, projection):
@@ -120,8 +120,13 @@ class Counselor(Matcher):
     def correction_meteor_mag(self, projection: Projection):
         return np.ravel(self.magnitude_smoother(self._meteor_xy(projection)))
 
-    def correct_meteor(self, projection: Projection) -> AltAz:
+    def correct_meteor_position(self, projection: Projection) -> AltAz:
         return disk_to_altaz(self._meteor_xy(projection) + self.correction_meteor_xy(projection))
+
+    def correct_meteor_magnitude(self, projection: Projection, calibration: Calibration) -> np.ndarray[float]:
+        return calibration.inverse(
+            calibration(self.sensor_data.meteor.intensities(masked=False)) + self.correction_meteor_mag(projection)
+        )
 
     @staticmethod
     def _grid(smoother, resolution=21, *, masked: bool):
@@ -135,20 +140,24 @@ class Counselor(Matcher):
     def magnitude_grid(self, resolution=21):
         return self._grid(self.magnitude_smoother, resolution, masked=False)
 
-    def print_meteor(self, projection):
-        raw = self.project_meteor(projection)
-        corr = self.correct_meteor(projection)
+    def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
+        position_raw = self.project_meteor(projection)
+        position_corrected = self.correct_meteor_position(projection)
+        intensities_raw = self.sensor_data.meteor.intensities(masked=False)
+        intensities_corrected = self.correct_meteor_magnitude(projection, calibration)
+
         df = pd.DataFrame()
-        df['ev_r'] = raw.alt.degree
-        df['ev'] = corr.alt.degree
-        df['az_r'] = raw.az.degree
-        df['az'] = corr.az.degree
+        df['ev_r'] = position_raw.alt.degree
+        df['ev'] = position_corrected.alt.degree
+        df['az_r'] = position_raw.az.degree
+        df['az'] = position_corrected.az.degree
         df['fno'] = 0
         df['b'] = 0
         df['bm'] = 0
         df['Lsum'] = 0
-        df['mag'] = self.sensor_data.meteor.i
+        df['mag_r'] = intensities_raw
+        df['mag'] = intensities_corrected
         df['ra'] = 0
         df['dec'] = 0
-        # print(df.to_xml(index=False, root_name='ua2_objpath', row_name='ua2_fdata2', xml_declaration=False,
-        #                 attr_cols=['fno', 'b', 'bm', 'Lsum', 'mag', 'az', 'ev', 'az_r', 'ev_r', 'ra', 'dec']))
+        return df.to_xml(index=False, root_name='ua2_objpath', row_name='ua2_fdata2', xml_declaration=False,
+                         attr_cols=['fno', 'b', 'bm', 'Lsum', 'mag', 'mag_r', 'az', 'ev', 'az_r', 'ev_r', 'ra', 'dec'])

@@ -671,6 +671,9 @@
           </item>
           <item row="9" column="3">
            <widget class="QComboBox" name="cb_interpolation">
+            <property name="currentIndex">
+             <number>1</number>
+            </property>
             <item>
              <property name="text">
               <string>nearest</string>

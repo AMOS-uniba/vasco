@@ -30,8 +30,10 @@ class MainWindow(MainWindowPlots):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.loadYAML('data/M20220531_041513_00128.yaml')  # temporary
-        self.importConstants('calibrations/out.yaml')  # temporary
+        self.loadYAML('data/M20230313_131755_KY_00006.yaml')  # temporary
+        self.importConstants('calibrations/KY.yaml')  # temporary
+        self.maskCatalogueDistant()
+        self.pair()
 
         self.connectSignalSlots()
         self.onParametersChanged()
@@ -176,7 +178,7 @@ class MainWindow(MainWindowPlots):
 
     def loadYAMLFile(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data",
-                                                            "YAML files (*.yml *.yaml)")
+                                                  "YAML files (*.yml *.yaml)")
         if filename == '':
             print("No file provided, loading aborted")
         else:
@@ -203,7 +205,7 @@ class MainWindow(MainWindowPlots):
 
     def importFile(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Import constants from file", ".",
-                                                            "YAML files (*.yml *.yaml)")
+                                                  "YAML files (*.yml *.yaml)")
         self.importConstants(filename)
         self.onParametersChanged()
 
@@ -283,7 +285,7 @@ class MainWindow(MainWindowPlots):
         self.showCounts()
 
     def maskCatalogueDistant(self):
-        errors = self.matcher.errors_inverse(self.projection, masked=False)
+        errors = self.matcher.position_errors_inverse(self.projection, masked=False)
         self.matcher.mask_catalogue(errors > np.radians(self.dsb_distance_limit.value()))
         print(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: "
               f"{self.matcher.catalogue.count_valid} stars used")
@@ -339,7 +341,77 @@ class MainWindow(MainWindowPlots):
 
     def correctMeteor(self):
         if self.paired:
-            self.matcher.print_meteor(self.projection)
+            filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", ".", "XML files (*.xml)")
+            if filename is not None:
+                with open(filename, 'w') as file:
+                    file.write(f"""
+<?xml version="1.0" encoding="UTF-8" ?>
+<ufoanalyzer_record version ="200"
+    clip_name="M20120922_225744_ago_" o="1" y="2012" mo="9"
+    d="22" h="22" m="57" s="44.0"
+    tz="0" tme="0" lid="ago" sid="kvant"
+    lng="{self.dsb_lon.value()}" lat="{self.dsb_lat.value()}" alt="{self.dsb_alt.value()}"
+    cx="{self.matcher.sensor_data.rect.xmax} cy="{self.matcher.sensor_data.rect.ymax}" fps="15" interlaced="0" bbf="0"
+    frames="{self.matcher.sensor_data.meteor.count}" head="19" tail="0" drop="-1"
+    dlev="0" dsize="0" sipos="0" sisize="0"
+    trig="0" observer="ago" cam="" lens=""
+    cap="" u2="0" ua="0" memo=""
+    az="0" ev="0" rot="0" vx="0"
+    yx="0" dx="0" dy="0" k4="0"
+    k3="0" k2="0" atc="0" BVF="0"
+    maxLev="0" maxMag="0" minLev="0" mimMag="0"
+    dl="0" leap="0" pixs="0" rstar="0.0283990702993807"
+    ddega="0.03276" ddegm="0" errm="0" Lmrgn="0"
+    Rmrgn="0" Dmrgn="0" Umrgn="0">
+    <ua2_objects>
+        <ua2_object
+            fs="20" fe="64" fN="45" sN="45"
+            sec="3" av="0" pix="0" bmax="0"
+            bN="0" Lmax="0" mag="0" cdeg="0"
+            cdegmax="0" io="0" raP="0" dcP="0"
+            av1="0" x1="0" y1="0" x2="0"
+            y2="0" az1="0" ev1="0" az2="0"
+            ev2="0" azm="0" evm="0" ra1="0"
+            dc1="0" ra2="0" dc2="0" ram="0"
+            dcm="0" class="spo" m="0" dr="0"
+            dv="0" Vo="0" lng1="0" lat1="0"
+            h1="0" dist1="0" gd1="0" azL1="0"
+            evL1="0" lng2="0" lat2="0" h2="0"
+            dist2="0" gd2="0" len="0" GV="0"
+            rao="0" dco="0" Voo="0" rat="0"
+            dct="0" memo=""
+            CodeRed="G"
+            ACOM="324"
+            sigma="0.03276"
+            sigma.azi="0.0283990702993807"
+            sigma.zen="0.0354915982362712"
+            A0="-0.05584542"
+            X0="-0.00874173"
+            Y0="0.01862264"
+            V="0.64574381"
+            S="-0.46404608"
+            D="0.25"
+            EPS="0.00206778"
+            E="3.36956865"
+            A="0.0015977"
+            F0="0.75477673"
+            P="0.150045"
+            Q="0.066"
+            C="1"
+            CH1="690"
+            CH2="0.00494625"
+            CH3="535"
+            CH4="0.004992"
+            magA="7.34131408453742"
+            magB="1.50852603934261"
+            magR2="0.548439901974541"
+            magS="0.399746731883133"
+            usingPrecession="True">""")
+                    file.write(self.matcher.print_meteor(self.projection, self.calibration))
+                    file.write("""
+        </ua2_object>
+    </ua2_objects>
+</ufoanalyzer_record>""")
 
     @property
     def grid_resolution(self):
