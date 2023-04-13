@@ -24,7 +24,7 @@ class Catalogue:
         self.reset_mask()
 
     def update_coord(self):
-        self.skycoord = SkyCoord(self.stars.ra * u.deg, self.stars.dec * u.deg)
+        self.skycoord = SkyCoord(self.stars.ra.to_numpy() * u.deg, self.stars.dec.to_numpy() * u.deg)
 
     def filter_by_vmag(self, vmag):
         self.stars[self.stars.vmag <= vmag]['use'] = False

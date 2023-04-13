@@ -27,7 +27,6 @@ class MainWindowPlots(MainWindowBase):
 
     def updatePlots(self):
         self.showErrors()
-        self.correctMeteor()
         links = [
             [
                 (self.sensorPlot.valid, self.plotSensorData),

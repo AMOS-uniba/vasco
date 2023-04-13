@@ -4,23 +4,21 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-pyqt6 = "*"
+pyyaml = "*"
+dotmap = "*"
+argparse = "*"
+argparsedirs = "*"
+physics-fields = "*"
 numpy = "*"
 scipy = "*"
 matplotlib = "*"
 pandas = "*"
-argparsedirs = "*"
-physics-fields = "*"
-pyqt6-tools = "*"
+pyqt6 = "*"
 astropy = "*"
-dotmap = "*"
-vptree = "*"
-pytest = "*"
-pyyaml = "*"
-flake8 = "*"
 lxml = "*"
+flake8 = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.9"
+python_version = "3.11"

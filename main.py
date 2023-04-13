@@ -342,7 +342,7 @@ class MainWindow(MainWindowPlots):
     def correctMeteor(self):
         if self.paired:
             filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", ".", "XML files (*.xml)")
-            if filename is not None:
+            if filename is not None and filename != '':
                 with open(filename, 'w') as file:
                     file.write(f"""
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -350,7 +350,7 @@ class MainWindow(MainWindowPlots):
     clip_name="M20120922_225744_ago_" o="1" y="2012" mo="9"
     d="22" h="22" m="57" s="44.0"
     tz="0" tme="0" lid="ago" sid="kvant"
-    lng="{self.dsb_lon.value()}" lat="{self.dsb_lat.value()}" alt="{self.dsb_alt.value()}"
+    lng="{self.dsb_lon.value()}" lat="{self.dsb_lat.value()}" alt="0"
     cx="{self.matcher.sensor_data.rect.xmax} cy="{self.matcher.sensor_data.rect.ymax}" fps="15" interlaced="0" bbf="0"
     frames="{self.matcher.sensor_data.meteor.count}" head="19" tail="0" drop="-1"
     dlev="0" dsize="0" sipos="0" sisize="0"

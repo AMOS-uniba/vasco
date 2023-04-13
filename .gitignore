@@ -2,4 +2,5 @@
 *.pyc
 build/*
 output/*
+dist*
 main_ui.py

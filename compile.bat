@@ -1,0 +1,3 @@
+@echo Compiling Python file to EXE...
+pyinstaller.exe --onedir --paths C:\Users\Kvik\.virtualenvs\vasco-xWjI8DYk\Lib\site-packages --paths . main.py
+@pause
