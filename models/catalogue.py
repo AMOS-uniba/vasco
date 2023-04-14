@@ -12,9 +12,16 @@ class Catalogue:
         self.skycoord = None
         self.name = None
 
-        if stars is not None:
+        if stars is None:
+            self.stars = pd.DataFrame(dict(
+                ra=pd.Series(dtype=float),
+                dec=pd.Series(dtype=float),
+                vmag=pd.Series(dtype=float),
+            ))
+        else:
+            assert isinstance(stars, pd.DataFrame)
             self.stars = copy.deepcopy(stars)
-            self.update_coord()
+        self.update_coord()
         self.reset_mask()
 
     def load(self, filename):

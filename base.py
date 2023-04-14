@@ -7,6 +7,7 @@ from main_ui import Ui_MainWindow
 from matplotlib import pyplot as plt
 
 from photometry import Calibration, LogCalibration
+from amos import AMOS, Station
 
 
 class MainWindowBase(QMainWindow, Ui_MainWindow):
@@ -38,7 +39,10 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         self.updateProjection()
 
     def connectSignalSlots(self):
-        self.ac_import_sensor.triggered.connect(self.loadYAMLFile)
+        self.ac_load_sighting.triggered.connect(self.loadSighting)
+        self.ac_load_catalogue.triggered.connect(self.loadCatalogue)
+        self.ac_load_constants.triggered.connect(self.importProjectionConstants)
+        self.ac_save_constants.triggered.connect(self.exportProjectionConstants)
 
         for widget, param in self.param_widgets:
             widget.valueChanged.connect(self.onParametersChanged)
@@ -51,8 +55,8 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
 
         self.pb_optimize.clicked.connect(self.minimize)
         self.pb_pair.clicked.connect(self.pair)
-        self.pb_export.clicked.connect(self.exportFile)
-        self.pb_import.clicked.connect(self.importFile)
+        self.pb_export.clicked.connect(self.exportProjectionConstants)
+        self.pb_import.clicked.connect(self.importProjectionConstants)
 
         self.pb_mask_unidentified.clicked.connect(self.maskSensor)
         self.pb_mask_distant.clicked.connect(self.maskCatalogueDistant)

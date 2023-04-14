@@ -1632,7 +1632,7 @@
     <property name="title">
      <string>Data</string>
     </property>
-    <addaction name="ac_import_sensor"/>
+    <addaction name="ac_load_sighting"/>
     <addaction name="ac_save_xml"/>
    </widget>
    <widget class="QMenu" name="menuCatalogue">
@@ -1653,7 +1653,7 @@
    <addaction name="menuProjection"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="ac_import_sensor">
+  <action name="ac_load_sighting">
    <property name="text">
     <string>Import YAML data</string>
    </property>

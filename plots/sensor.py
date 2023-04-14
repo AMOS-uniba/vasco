@@ -1,14 +1,18 @@
+import matplotlib as mpl
 from matplotlib.ticker import MultipleLocator
 
 from .base import BasePlot
 
 
 class SensorPlot(BasePlot):
+    cmap_meteors = mpl.cm.get_cmap('Blues_r')
+
     def __init__(self, widget, **kwargs):
         self.scatter_meteor = None
         self.scatter_stars = None
         self.valid = False
         super().__init__(widget, **kwargs)
+        self.figure.tight_layout(rect=(0.04, 0, 1, 1))
 
     def add_axes(self):
         self.axis = self.figure.add_subplot()
@@ -31,6 +35,9 @@ class SensorPlot(BasePlot):
         self.scatter_stars.set_offsets(data.stars.xy)
         self.scatter_stars.set_sizes(data.stars.i / 100)
         self.scatter_meteor.set_offsets(data.meteor.xy)
+        norm = mpl.colors.Normalize(vmin=0, vmax=None)
+        normalized = norm(data.meteor.i) if data.meteor.i.size > 0 else []
+        self.scatter_meteor.set_facecolors(self.cmap_meteors(normalized))
         self.scatter_meteor.set_sizes(data.meteor.i / 100)
         self.valid = True
         self.draw()

@@ -19,13 +19,7 @@ class Matchmaker(Matcher):
     """
 
     def __init__(self, location, time, projection_cls=BorovickaProjection):
-        self.catalogue = None
         super().__init__(location, time, projection_cls)
-        self.sensor_data = SensorData()
-
-    def load_catalogue(self, filename: str):
-        self.catalogue = Catalogue()
-        self.catalogue.load(filename)
 
     def load_sensor(self, filename: str):
         self.sensor_data = SensorData(filename)
@@ -68,6 +62,10 @@ class Matchmaker(Matcher):
         # Filter the catalogue by that index
         obs = calibration(self.sensor_data.stars.intensities(masked=masked))
         cat = self.catalogue.valid.iloc[nearest].vmag.values
+        if cat.size == 0:
+            cat = np.tile(np.nan, obs.shape)
+        if obs.size == 0:
+            obs = np.tile(np.nan, cat.shape)
         return obs - cat
 
     def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
@@ -115,7 +113,7 @@ class Matchmaker(Matcher):
             1 for nearest dot to every star
         """
         dist = self.compute_distances(observed, catalogue)
-        return np.min(dist, axis=axis)
+        return np.min(dist, axis=axis, initial=np.inf)
 
     def find_nearest_index(self, observed, catalogue, *, axis):
         """
@@ -126,7 +124,10 @@ class Matchmaker(Matcher):
             1 for nearest dot to every star
         """
         dist = self.compute_distances(observed, catalogue)
-        return np.argmin(dist, axis=axis)
+        if dist.size > 0:
+            return np.argmin(dist, axis=axis)
+        else:
+            return np.empty(shape=((observed.size, catalogue.size)[axis],), dtype=float)
 
     def pair(self, projection: Projection) -> Counselor:
         # Find which star is the nearest for every dot

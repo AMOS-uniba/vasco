@@ -5,6 +5,7 @@ from abc import ABCMeta, abstractmethod
 
 from projections import Projection, BorovickaProjection
 from photometry import Calibration
+from models import Catalogue, SensorData
 
 
 class Matcher(metaclass=ABCMeta):
@@ -12,9 +13,18 @@ class Matcher(metaclass=ABCMeta):
         self.projection_cls = projection_cls
         self.location = None
         self.time = None
-        self.catalogue = None
-        self.sensor_data = None
+        self.catalogue = Catalogue()
+        self.sensor_data = SensorData()
         self.update(location, time)
+
+    def load_catalogue(self, filename: str):
+        del self.catalogue
+        self.catalogue = Catalogue()
+        self.catalogue.load(filename)
+
+    @property
+    def valid(self) -> bool:
+        return self.catalogue is not None and self.sensor_data is not None
 
     @abstractmethod
     def mask_catalogue(self, mask):
@@ -66,10 +76,7 @@ class Matcher(metaclass=ABCMeta):
 
     @staticmethod
     def max_error(errors) -> float:
-        if errors.size == 0:
-            return np.nan
-        else:
-            return np.max(errors)
+        return np.max(errors, initial=np.pi)
 
     @abstractmethod
     def print_meteor(self, projection: Projection, calibration: Calibration) -> str:

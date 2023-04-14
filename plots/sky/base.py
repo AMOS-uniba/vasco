@@ -77,7 +77,8 @@ class BaseSkyPlot(BasePlot):
         self.scatter_meteor.set_offsets(self.to_chart(positions))
 
         norm = mpl.colors.Normalize(vmin=0, vmax=None)
-        self.scatter_meteor.set_facecolors(self.cmap_meteors(norm(magnitudes)))
+        normalized = norm(magnitudes) if magnitudes.size > 0 else []
+        self.scatter_meteor.set_facecolors(self.cmap_meteors(normalized))
         self.scatter_meteor.set_sizes(0.0005 * magnitudes)
 
         self.valid_meteor = True

@@ -23,19 +23,14 @@ from amos import AMOS, Station
 
 mpl.use('Qt5Agg')
 
-COUNT = 100
-
 
 class MainWindow(MainWindowPlots):
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        self.loadYAML('data/M20230313_131755_KY_00006.yaml')  # temporary
-        self.importConstants('calibrations/KY.yaml')  # temporary
-        self.maskCatalogueDistant()
-        self.pair()
-
         self.connectSignalSlots()
+        self.updateLocation()
+        self.updateTime()
+        self.matcher = Matchmaker(self.location, self.time)
         self.onParametersChanged()
 
     def selectStation(self, index):
@@ -141,13 +136,22 @@ class MainWindow(MainWindowPlots):
 
     def computeMagnitudeErrors(self):
         self.magnitude_errors = self.matcher.magnitude_errors(self.projection, self.calibration, masked=True)
+        
+    def loadCatalogue(self):
+        filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "catalogues",
+                                                  "Tab-separated values (*.tsv)")
+        if filename == '':
+            print("No file provided, loading aborted")
+        else:
+            self.matcher.load_catalogue(filename)
+            self.onParametersChanged()
 
-    def exportFile(self):
+    def exportProjection(self):
         filename, _ = QFileDialog.getSaveFileName(self, "Export constants to file", ".", "YAML files (*.yaml)")
-        if filename is not None:
-            self.exportConstants(filename)
+        if filename is not None and filename != '':
+            self.exportProjectionConstants(filename)
 
-    def exportConstants(self, filename):
+    def exportProjectionConstants(self, filename):
         try:
             with open(filename, 'w+') as file:
                 yaml.dump(dict(
@@ -170,13 +174,13 @@ class MainWindow(MainWindowPlots):
         except FileNotFoundError as exc:
             print(f"Could not export constants: {exc}")
 
-    def loadYAMLFile(self):
+    def loadSighting(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data",
                                                   "YAML files (*.yml *.yaml)")
         if filename == '':
             print("No file provided, loading aborted")
         else:
-            self.loadYAML(filename)
+            self._loadSighting(filename)
 
         self.cb_stations.setCurrentIndex(0)
         self.onLocationTimeChanged()
@@ -184,7 +188,7 @@ class MainWindow(MainWindowPlots):
         self.sensorPlot.invalidate()
         self.updatePlots()
 
-    def loadYAML(self, file):
+    def _loadSighting(self, file):
         data = dotmap.DotMap(yaml.safe_load(open(file, 'r')))
         self.setLocation(data.Latitude, data.Longitude)
         self.updateLocation()
@@ -193,17 +197,17 @@ class MainWindow(MainWindowPlots):
                      .replace(tzinfo=zoneinfo.ZoneInfo('UTC')))
         self.updateTime()
 
+        del self.matcher
         self.matcher = Matchmaker(self.location, self.time)
         self.matcher.sensor_data.load(data)
-        self.matcher.load_catalogue('catalogue/HYG30.tsv')
 
-    def importFile(self):
+    def importProjectionConstants(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Import constants from file", ".",
                                                   "YAML files (*.yml *.yaml)")
-        self.importConstants(filename)
+        self._importProjectionConstants(filename)
         self.onParametersChanged()
 
-    def importConstants(self, filename):
+    def _importProjectionConstants(self, filename):
         try:
             with open(filename, 'r') as file:
                 try:

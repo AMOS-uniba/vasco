@@ -15,7 +15,7 @@ mpl.use('Agg')
 mpl.rc('font', family='Minion Pro')
 
 
-class Expander():
+class Expander:
     quiver_options = dict(
         pivot='middle',
         color='black',
