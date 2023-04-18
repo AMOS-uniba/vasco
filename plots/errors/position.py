@@ -17,8 +17,8 @@ class PositionErrorPlot(BaseErrorPlot):
 
     def set_limits(self, errors):
         max_error = Matcher.max_error(errors)
-        if np.isnan(max_error):
-            max_error = np.pi
+        if np.isnan(max_error) or not np.isfinite(max_error):
+            max_error = 180
 
         self.axis_alt.set_ylim([0, max_error])
         self.axis_az.set_ylim([0, max_error])

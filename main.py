@@ -198,8 +198,6 @@ class MainWindow(MainWindowPlots):
                      .replace(tzinfo=zoneinfo.ZoneInfo('UTC')))
         self.updateTime()
 
-        del self.matcher
-        self.matcher = Matchmaker(self.location, self.time)
         self.matcher.sensor_data.load(data)
 
     def importProjectionConstants(self):
