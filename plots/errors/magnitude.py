@@ -18,9 +18,9 @@ class MagnitudeErrorPlot(BaseErrorPlot):
     def set_limits(self, errors):
         min_error = -Matcher.max_error(-errors)
         max_error = Matcher.max_error(errors)
-        if np.isnan(min_error):
+        if np.isnan(min_error) or not np.isfinite(min_error):
             min_error = -5
-        if np.isnan(max_error):
+        if np.isnan(max_error) or not np.isfinite(max_error):
             max_error = 5
         self.axis_alt.set_ylim([min_error * 1.05, max_error * 1.05])
         self.axis_az.set_ylim([min_error * 1.05, max_error * 1.05])

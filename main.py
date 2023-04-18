@@ -147,12 +147,12 @@ class MainWindow(MainWindowPlots):
             self.matcher.load_catalogue(filename)
             self.onParametersChanged()
 
-    def exportProjection(self):
+    def exportProjectionConstants(self):
         filename, _ = QFileDialog.getSaveFileName(self, "Export constants to file", ".", "YAML files (*.yaml)")
         if filename is not None and filename != '':
-            self.exportProjectionConstants(filename)
+            self._exportProjectionConstants(filename)
 
-    def exportProjectionConstants(self, filename):
+    def _exportProjectionConstants(self, filename):
         try:
             with open(filename, 'w+') as file:
                 yaml.dump(dict(
