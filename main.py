@@ -31,6 +31,7 @@ class MainWindow(MainWindowPlots):
         self.updateLocation()
         self.updateTime()
         self.matcher = Matchmaker(self.location, self.time)
+        self.matcher.load_catalogue('catalogues/HYG30.tsv')
         self.onParametersChanged()
 
     def selectStation(self, index):
@@ -136,7 +137,7 @@ class MainWindow(MainWindowPlots):
 
     def computeMagnitudeErrors(self):
         self.magnitude_errors = self.matcher.magnitude_errors(self.projection, self.calibration, masked=True)
-        
+
     def loadCatalogue(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "catalogues",
                                                   "Tab-separated values (*.tsv)")
