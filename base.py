@@ -43,6 +43,7 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         self.ac_load_catalogue.triggered.connect(self.loadCatalogue)
         self.ac_load_constants.triggered.connect(self.importProjectionConstants)
         self.ac_save_constants.triggered.connect(self.exportProjectionConstants)
+        self.ac_export_meteor.triggered.connect(self.exportCorrectedMeteor)
 
         for widget, param in self.param_widgets:
             widget.valueChanged.connect(self.onParametersChanged)

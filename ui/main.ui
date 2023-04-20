@@ -829,7 +829,7 @@
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_sensor">
        <attribute name="title">
@@ -845,7 +845,7 @@
       </widget>
       <widget class="QWidget" name="tab_sky_magnitudes">
        <attribute name="title">
-        <string>Sky magnitudes</string>
+        <string>Sk&amp;y magnitudes</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_7"/>
       </widget>
@@ -1633,7 +1633,7 @@
      <string>Data</string>
     </property>
     <addaction name="ac_load_sighting"/>
-    <addaction name="ac_save_xml"/>
+    <addaction name="ac_export_meteor"/>
    </widget>
    <widget class="QMenu" name="menuCatalogue">
     <property name="title">
@@ -1661,7 +1661,7 @@
     <string>Ctrl+I</string>
    </property>
   </action>
-  <action name="ac_save_xml">
+  <action name="ac_export_meteor">
    <property name="text">
     <string>Export meteor XML</string>
    </property>
@@ -1683,10 +1683,16 @@
    <property name="text">
     <string>Import constants</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+I</string>
+   </property>
   </action>
   <action name="ac_save_constants">
    <property name="text">
     <string>Export constants</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+E</string>
    </property>
   </action>
  </widget>

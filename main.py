@@ -148,7 +148,8 @@ class MainWindow(MainWindowPlots):
             self.onParametersChanged()
 
     def exportProjectionConstants(self):
-        filename, _ = QFileDialog.getSaveFileName(self, "Export constants to file", ".", "YAML files (*.yaml)")
+        filename, _ = QFileDialog.getSaveFileName(self, "Export constants to file", "calibrations",
+                                                  "YAML files (*.yaml)")
         if filename is not None and filename != '':
             self._exportProjectionConstants(filename)
 
@@ -201,7 +202,7 @@ class MainWindow(MainWindowPlots):
         self.matcher.sensor_data.load(data)
 
     def importProjectionConstants(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Import constants from file", ".",
+        filename, _ = QFileDialog.getOpenFileName(self, "Import constants from file", "calibrations",
                                                   "YAML files (*.yml *.yaml)")
         self._importProjectionConstants(filename)
         self.onParametersChanged()
@@ -336,7 +337,7 @@ class MainWindow(MainWindowPlots):
         outside_limit = self.position_errors[self.position_errors > np.radians(self.dsb_error_limit.value())].size
         self.lb_outside_limit.setText(f'{outside_limit}')
 
-    def correctMeteor(self):
+    def exportCorrectedMeteor(self):
         if self.paired:
             filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", ".", "XML files (*.xml)")
             if filename is not None and filename != '':

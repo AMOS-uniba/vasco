@@ -6,7 +6,7 @@ from models.catalogue import Catalogue
 @pytest.fixture
 def hyg30():
     cat = Catalogue()
-    cat.load('catalogue/HYG30.tsv')
+    cat.load('catalogues/HYG30.tsv')
     return cat
 
 

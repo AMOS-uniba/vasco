@@ -76,7 +76,7 @@ class Matcher(metaclass=ABCMeta):
 
     @staticmethod
     def max_error(errors) -> float:
-        return np.max(errors, initial=np.pi)
+        return np.max(errors, initial=0)
 
     @abstractmethod
     def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
