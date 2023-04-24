@@ -41,4 +41,3 @@ class TestZenithShifter(TestProjection):
 
     def test_general_2(self, general_2, r, t):
         assert general_2.invert(*general_2(r, t)) == pytest.approx((r, t), abs=1e-9)
-

@@ -4,7 +4,7 @@ from .base import BaseCorrector
 from . import kernels
 from .kernelsmoother import KernelSmoother
 
-from physfields import ZernikeVector, VectorField
+from physfields import ZernikeVector
 
 
 np.set_printoptions(edgeitems=30999, linewidth=100000, formatter={'float': lambda x: f"{x:8.6f}"})
@@ -17,17 +17,16 @@ class ZernikeFitter():
         count = sampled.count() / 2
         return np.sum(field * sampled) / count
 
-
     def __call__(self, nodes, field, order=7):
         result = np.zeros_like(field)
 
-        disk = np.sum(np.square(nodes), axis=1) > 1
-        mask = np.stack((disk, disk), axis=1)
+        # disk = np.sum(np.square(nodes), axis=1) > 1
+        # mask = np.stack((disk, disk), axis=1)
 
-        for n in range(1, order + 1):
-            for l in range(-n, n + 1, 2):
-                for r in [None] if abs(l) == n else [True, False]:
-                    basic = ZernikeVector(n, l, r)
+        for radial in range(1, order + 1):
+            for axial in range(-radial, radial + 1, 2):
+                for r in [None] if abs(axial) == radial else [True, False]:
+                    basic = ZernikeVector(radial, axial, r)
                     evaluated = basic.eval(nodes)
                     proj = np.sum(evaluated * field) * evaluated / (nodes.count() / 2)
                     result += proj
@@ -44,7 +43,6 @@ class ZernikeExpander(BaseCorrector):
         ks = KernelSmoother(self.points, self.values, bandwidth=self.bandwidth)
         uv = ks(nodes)
         return ZernikeFitter()(nodes, uv, order)
-
 
     def test(self, nodes):
         for k, v in self.v.items():

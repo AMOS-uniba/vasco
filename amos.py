@@ -1,5 +1,4 @@
 import dotmap
-import astropy
 from astropy.coordinates import EarthLocation
 from astropy import units as u
 
@@ -24,8 +23,8 @@ AMOS = dotmap.DotMap({
         SC  =Station("Senec",                       48.22021,   17.39512,  138),
         SP  =Station("San Pedro de Atacama",       -22.95341,  -68.17934, 2403),
         PC  =Station("Paniri Caur",                -22.33535,  -68.64417, 2535),
-        HK  =Station("Haleakala",                   20.70740,  156.25615, 3068),
-        MK  =Station("Mauna Kea",                   19.82366,  155.47717, 4126),
+        HK  =Station("Haleakala",                   20.70740, -156.25615, 3068),
+        MK  =Station("Mauna Kea",                   19.82366, -155.47717, 4126),
         CE  =Station("Cederberg",                  -32.49940,   19.25276,  873),
         RC  =Station("Rogge Cloof",                -32.54822,   20.73456, 1550),
         FO  =Station("Forrest",                    -30.85805,  128.11504,  164),

@@ -6,8 +6,8 @@ from main_ui import Ui_MainWindow
 
 from matplotlib import pyplot as plt
 
-from photometry import Calibration, LogCalibration
-from amos import AMOS, Station
+from photometry import LogCalibration
+from amos import AMOS
 
 
 class MainWindowBase(QMainWindow, Ui_MainWindow):
@@ -71,6 +71,7 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         self.hs_bandwidth.actionTriggered.connect(self.onBandwidthSettingChanged)
         self.hs_bandwidth.sliderMoved.connect(self.onBandwidthSettingChanged)
         self.hs_bandwidth.actionTriggered.connect(self.onBandwidthChanged)
+        self.hs_bandwidth.sliderReleased.connect(self.onBandwidthChanged)
         self.sb_arrow_scale.valueChanged.connect(self.onArrowScaleChanged)
         self.sb_resolution.valueChanged.connect(self.onResolutionChanged)
 

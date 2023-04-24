@@ -7,10 +7,10 @@ from astropy.coordinates import SkyCoord, AltAz
 
 
 class Catalogue:
-    def __init__(self, stars=None):
+    def __init__(self, stars=None, *, name=None):
         self.stars = pd.DataFrame()
         self.skycoord = None
-        self.name = None
+        self.name = name
 
         if stars is None:
             self.stars = pd.DataFrame(dict(

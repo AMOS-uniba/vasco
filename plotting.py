@@ -107,6 +107,7 @@ class MainWindowPlots(MainWindowBase):
     def _plotErrorsDots(self, plot, errors):
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=True)
         magnitudes = self.matcher.sensor_data.stars.intensities(True)
+        print(positions.shape, magnitudes.shape, errors.shape)
         plot.update_dots(positions, magnitudes, errors, limit=np.radians(self.dsb_error_limit.value()))
 
     def plotPositionErrorsDots(self):

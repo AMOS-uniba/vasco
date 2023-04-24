@@ -1,7 +1,11 @@
 import pytest
-import numpy as np
 
 from projections.transformers import LinearTransformer, ExponentialTransformer, BiexponentialTransformer
+
+
+@pytest.fixture
+def lin():
+    return LinearTransformer(1.25)
 
 
 @pytest.fixture
@@ -12,6 +16,11 @@ def vsd():
 @pytest.fixture
 def vsdpq():
     return BiexponentialTransformer(1.2, 0.3, -0.05, 0.2, 0.01)
+
+
+class TestLinearTransformer:
+    def test_inverse(self, lin):
+        assert lin.invert(lin(4.05)) == pytest.approx(4.05, rel=1e-12)
 
 
 class TestBiexpTransformer():
@@ -40,4 +49,3 @@ class TestExponentialTransformer():
 
     def test_inverse_3(self, vsd):
         assert vsd.invert(vsd(0.999)) == pytest.approx(0.999, rel=1e-12)
-

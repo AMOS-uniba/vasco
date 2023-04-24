@@ -71,7 +71,9 @@ class Corrector():
 
     def plot_raw_data(self, axes):
         axes.scatter(self.points[:, 0], self.points[:, 1], s=3, color='blue')
-        axes.quiver(self.points[:, 0], self.points[:, 1], self.values[:, 0], self.values[:, 1], width=0.0025, color='red')
+        axes.quiver(self.points[:, 0], self.points[:, 1],
+                    self.values[:, 0], self.values[:, 1],
+                    width=0.0025, color='red')
 
     def plot_data(self, filename):
         fig, ax_data, ax_grid = self.empty_plot()
@@ -140,17 +142,16 @@ class Corrector():
         print(f"Plotting to {self.outdir / filename}")
 
 
-
 corr = Corrector()
 corr.load()
-#corr.generate()
+# corr.generate()
 corr.plot_data('raw.pdf')
 corr.plot(corr.interpolate, 'interpolated.pdf')
 corr.plot(corr.interpolate_twostep, 'interpolated-nearest.pdf')
 corr.plot(corr.kernel_smooth, 'kernel-smoothed.pdf', kernel=kernels.nexp, bandwidth=0.05)
 corr.plot(corr.zernike_expand, 'zerniked.pdf', kernel=kernels.nexp, bandwidth=0.05, order=19)
 
-#for i in np.arange(-20, 11):
+# for i in np.arange(-20, 11):
 #    bw = 10**(i / 10)
 #    corr.plot_kernel_smoothed(f'kernel-smoothed-{i + 20:02d}.png', kernel=kernels.nexp, bandwidth=bw)
 #    print(i, bw)

@@ -136,6 +136,6 @@ class Matchmaker(Matcher):
         # Filter the catalogue by that index
         cat = self.catalogue.valid.iloc[nearest]
 
-        catalogue = Catalogue(cat[['dec', 'ra', 'vmag']])
+        catalogue = Catalogue(cat[['dec', 'ra', 'vmag']], name=self.catalogue.name)
         sensor_data = self.sensor_data.culled_copy()
         return Counselor(self.location, self.time, self.projection_cls, catalogue, sensor_data)

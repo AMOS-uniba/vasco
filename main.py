@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import sys
-import math
 import yaml
 import datetime
 import zoneinfo
@@ -24,8 +23,9 @@ from amos import AMOS, Station
 
 mpl.use('Qt5Agg')
 
-VERSION = "0.6.0"
+VERSION = "0.6.1"
 BUILD_DATE = "2023-04-24"
+
 
 class MainWindow(MainWindowPlots):
     def __init__(self, parent=None):
@@ -70,7 +70,7 @@ class MainWindow(MainWindowPlots):
         self.dt_time.setDateTime(time)
 
     def updateTime(self):
-        self.time = self.dt_time.dateTime().toPyDateTime()#toString('yyyy-MM-dd HH:mm:ss')
+        self.time = self.dt_time.dateTime().toPyDateTime()
 
     def updateMatcher(self):
         self.matcher.update(self.location, self.time)
@@ -124,7 +124,10 @@ class MainWindow(MainWindowPlots):
         bandwidth = self.bandwidth()
         self.lb_bandwidth.setText(f"{bandwidth:.03f}")
 
-    def onBandwidthChanged(self, action):
+    def onBandwidthChanged(self, action=0):
+        if action == 7:
+            return
+
         bandwidth = self.bandwidth()
         self.matcher.update_position_smoother(self.projection, bandwidth=bandwidth)
         self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=bandwidth)
@@ -358,11 +361,11 @@ class MainWindow(MainWindowPlots):
             print("Cannot export a meteor before pairing dots to the catalogue")
             return None
 
-        filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", "output/", "XML files (*.xml)")
+        filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", "output/",
+                                                  "XML files (*.xml)")
         if filename is not None and filename != '':
             with open(filename, 'w') as file:
-                file.write(
-f"""<?xml version="1.0" encoding="UTF-8" ?>
+                file.write(f"""<?xml version="1.0" encoding="UTF-8" ?>
 <ufoanalyzer_record version ="200"
     clip_name="{self.matcher.sensor_data.id}"
     o="1"
@@ -432,7 +435,7 @@ f"""<?xml version="1.0" encoding="UTF-8" ?>
             usingPrecession="True">
 """)
                 file.write(self.matcher.print_meteor(self.projection, self.calibration))
-                file.write(f"""
+                file.write("""
         </ua2_object>
     </ua2_objects>
 </ufoanalyzer_record>""")
@@ -466,6 +469,7 @@ f"""<?xml version="1.0" encoding="UTF-8" ?>
         msg.show()
         msg.move((self.width() - msg.width()) // 2, (self.height() - msg.height()) // 2)
         return msg.exec()
+
 
 app = QApplication(sys.argv)
 window = MainWindow()
