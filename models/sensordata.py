@@ -15,6 +15,11 @@ class SensorData:
         self.meteor = DotCollection(meteor_positions, meteor_intensities, None)
 
     def load(self, data):
+        assert np.min(np.asarray([star.intensity for star in data.Refstars])) > 0,\
+            "All reference stars must have positive intensity!"
+        assert np.min(np.asarray([snapshot.intensity for snapshot in data.Trail])) > 0,\
+            "All meteor snapshots must have positive intensity!"
+
         w, h = tuple(map(int, data.Resolution.split('x')))
         self.rect = Rect(0, w, 0, h)
         self.time = datetime.datetime.strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f")
