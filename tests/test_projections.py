@@ -96,7 +96,7 @@ class TestBorovickaProjection(TestProjection):
         assert boro_identity(0, 0) == (0, 0)
 
     def test_identity_east(self, boro_identity):
-        assert boro_identity(0, -1) == pytest.approx((0.5 * math.tau, 0.75 * math.tau), abs=1e-14)
+        assert boro_identity(0, -1) == pytest.approx((0.25 * math.tau, 0.75 * math.tau), abs=1e-14)
 
     def test_identity_south(self, boro_identity):
         assert boro_identity(-1, 0) == pytest.approx((0.25 * math.tau, 0.5 * math.tau), abs=1e-14)
