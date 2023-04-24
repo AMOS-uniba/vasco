@@ -17,12 +17,12 @@ class TestBase:
 
 @pytest.fixture
 def boro_identity():
-    return BorovickaProjection(0, 0, 0, 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0)
+    return BorovickaProjection(0, 0, 0, 0, 0, math.tau / 4, 0, 0, 0, 0, 0, 0)
 
 
 @pytest.fixture
 def boro_rotated():
-    return BorovickaProjection(0, 0, math.radians(1.2), 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0)
+    return BorovickaProjection(0, 0, math.radians(1.2), 0, 0, math.tau / 4, 0, 0, 0, 0, 0, 0)
 
 
 @pytest.fixture
@@ -96,16 +96,16 @@ class TestBorovickaProjection(TestProjection):
         assert boro_identity(0, 0) == (0, 0)
 
     def test_identity_east(self, boro_identity):
-        assert boro_identity(0, -1) == pytest.approx((np.pi / 2, 3 * np.pi / 2), abs=1e-14)
+        assert boro_identity(0, -1) == pytest.approx((0.5 * math.tau, 0.75 * math.tau), abs=1e-14)
 
     def test_identity_south(self, boro_identity):
-        assert boro_identity(-1, 0) == pytest.approx((np.pi / 2, np.pi), abs=1e-14)
+        assert boro_identity(-1, 0) == pytest.approx((0.25 * math.tau, 0.5 * math.tau), abs=1e-14)
 
     def test_identity_north(self, boro_identity):
-        assert boro_identity(1, 0) == pytest.approx((np.pi / 2, 0), abs=1e-14)
+        assert boro_identity(1, 0) == pytest.approx((0.25 * math.tau, 0), abs=1e-14)
 
     def test_identity_somewhere(self, boro_identity):
-        assert boro_identity(0.5, -0.5) == pytest.approx((np.sqrt(2) * np.pi / 4, np.pi * 1.75), abs=1e-14)
+        assert boro_identity(0.5, -0.5) == pytest.approx((np.sqrt(2) / 8 * math.tau, math.tau * 0.875), abs=1e-14)
 
     def test_identity_invert(self, boro_identity, x, y):
         assert boro_identity.invert(*boro_identity(x, y)) == pytest.approx((x, y), abs=1e-9)

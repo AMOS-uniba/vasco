@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import matplotlib as mpl
 
@@ -35,17 +36,22 @@ class BaseSkyPlot(BasePlot):
 
     def add_axes(self):
         self.axis = self.figure.add_subplot(projection='polar')
-        self.axis.set_xlim([0, 2 * np.pi])
+        self.axis.set_xlim([0, math.tau])
         self.axis.set_ylim([0, 90])
         self.axis.set_rlabel_position(0)
         self.axis.set_rticks([15, 30, 45, 60, 75])
         self.axis.yaxis.set_major_formatter('{x}°')
         self.axis.grid(color='white', alpha=0.3)
-        self.axis.set_theta_offset(3 * np.pi / 2)
+        self.axis.set_theta_offset(0.75 * math.tau)
 
         self.scatter_stars = self.axis.scatter([], [], s=[], c=self.colour_stars, marker='o')
         self.scatter_dots = self.axis.scatter([], [], s=[], c=self.colour_dots, marker='x')
         self.scatter_meteor = self.axis.scatter([], [], s=[], c=self.colour_meteor, marker='o')
+
+    def invalidate(self):
+        self.invalidate_stars()
+        self.invalidate_dots()
+        self.invalidate_meteor()
 
     def invalidate_stars(self):
         self.valid_stars = False

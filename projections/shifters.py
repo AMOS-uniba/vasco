@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import scipy as sp
 from typing import Tuple
@@ -29,7 +30,7 @@ class OpticalAxisShifter:
         ys = y - self.y0
         r = np.sqrt(np.square(xs) + np.square(ys))
         b = self.a0 - self.E + np.arctan2(ys, xs)
-        b = np.mod(b, 2 * np.pi)
+        b = np.mod(b, math.tau)
         return r, b
 
     def invert(self, r: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -72,7 +73,7 @@ class TiltShifter(OpticalAxisShifter):
 
     def func(self, vec, r, b):
         q = self.__call__(vec[0], vec[1])
-        err = q[0] - r, np.mod(q[1] - b + np.pi, 2 * np.pi) - np.pi
+        err = q[0] - r, np.mod(q[1] - b + 0.5 * math.tau, math.tau) - math.tau / 2
         return err
 
     def invert(self, r: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:

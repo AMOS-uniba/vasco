@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import matplotlib as mpl
 
@@ -7,7 +8,7 @@ import astropy.units as u
 from typing import Tuple, Union
 
 
-HalfPi = np.pi / 2
+QuarterTau = math.tau / 4
 
 
 def polar_to_cart(z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -17,9 +18,9 @@ def polar_to_cart(z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]
 def by_azimuth(uv):
     uv = np.nan_to_num(uv, nan=0)
     r = np.sqrt(np.sum(np.square(uv), axis=-1))
-    f = (np.arctan2(uv[..., 1], uv[..., 0]) + 2 * np.pi) % (2 * np.pi)
+    f = (np.arctan2(uv[..., 1], uv[..., 0]) + math.tau) % math.tau
     r = r / np.max(r)
-    hsv = np.stack((f / (2 * np.pi), r, np.ones_like(r)), axis=1)
+    hsv = np.stack((f / math.tau, r, np.ones_like(r)), axis=1)
     return mpl.colors.hsv_to_rgb(hsv)
 
 
@@ -81,16 +82,16 @@ def altaz_to_disk(altaz: Union[None, AltAz]) -> np.ndarray:
     else:
         return np.stack(
             (
-                np.sin(altaz.az.radian) * (HalfPi - altaz.alt.radian) / HalfPi,
-                -np.cos(altaz.az.radian) * (HalfPi - altaz.alt.radian) / HalfPi,
+                np.sin(altaz.az.radian) * (QuarterTau - altaz.alt.radian) / QuarterTau,
+                -np.cos(altaz.az.radian) * (QuarterTau - altaz.alt.radian) / QuarterTau,
             ), axis=1,
         )
 
 
 def disk_to_altaz(xy: np.ndarray) -> AltAz:
     return AltAz(
-        (HalfPi + np.arctan2(xy[:, 1], xy[:, 0])) * u.rad,          # Add pi/2 since our 0° is at the bottom
-        np.sqrt(xy[:, 0] ** 2 + xy[:, 1] ** 2) / HalfPi * u.rad,
+        (QuarterTau + np.arctan2(xy[:, 1], xy[:, 0])) * u.rad,          # Add pi/2 since our 0° is at the bottom
+        np.sqrt(xy[:, 0] ** 2 + xy[:, 1] ** 2) * QuarterTau * u.rad,
     )
 
 
@@ -99,6 +100,6 @@ def proj_to_disk(obs: np.ndarray) -> np.ndarray:
         return np.empty(shape=(0, 2))
     else:
         z, a = obs.T
-        x = z * np.sin(a) / np.pi * 2
-        y = -z * np.cos(a) / np.pi * 2
+        x = z * np.sin(a) / math.tau * 4
+        y = -z * np.cos(a) / math.tau * 4
         return np.stack((x, y), axis=1)

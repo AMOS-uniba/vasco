@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import scipy as sp
 
@@ -85,7 +86,7 @@ class Matcher(metaclass=ABCMeta):
     def func(self, x):
         return self.avg_error(self.position_errors(self.projection_cls(*x), masked=True))
 
-    def minimize(self, x0=(0, 0, 0, 0, 0, np.pi / 2, 0, 0, 0, 0, 0, 0), maxiter=30):
+    def minimize(self, x0=(0, 0, 0, 0, 0, math.tau / 4, 0, 0, 0, 0, 0, 0), maxiter=30):
         result = sp.optimize.minimize(
             self.func, x0,
             method='Nelder-Mead',

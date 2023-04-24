@@ -25,3 +25,7 @@ class BasePlot:
 
     def draw(self):
         self.canvas.draw()
+
+    @abstractmethod
+    def invalidate(self):
+        pass

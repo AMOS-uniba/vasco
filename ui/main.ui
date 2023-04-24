@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1253</width>
-    <height>979</height>
+    <height>1003</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -662,10 +662,47 @@
           <string>Grid plots</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_7">
-          <item row="9" column="2">
-           <widget class="QLabel" name="lx_interpolation">
+          <item row="3" column="2">
+           <widget class="QLabel" name="lx_resolution">
             <property name="text">
-             <string>Interpolation</string>
+             <string>Resolution</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4" colspan="2">
+           <widget class="QCheckBox" name="cb_show_grid">
+            <property name="text">
+             <string>Show grid</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="4">
+           <widget class="QLabel" name="lx_arrow_scale">
+            <property name="text">
+             <string>Arrow scale</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="lx_bandwidth">
+            <property name="text">
+             <string>Bandwidth</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2" colspan="2">
+           <widget class="QCheckBox" name="cb_show_errors">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Show errors</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -691,13 +728,6 @@
             </item>
            </widget>
           </item>
-          <item row="9" column="4">
-           <widget class="QLabel" name="lx_arrow_scale">
-            <property name="text">
-             <string>Arrow scale</string>
-            </property>
-           </widget>
-          </item>
           <item row="9" column="5">
            <widget class="QSpinBox" name="sb_arrow_scale">
             <property name="alignment">
@@ -717,17 +747,10 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="2">
-           <widget class="QLabel" name="lx_resolution">
+          <item row="9" column="2">
+           <widget class="QLabel" name="lx_interpolation">
             <property name="text">
-             <string>Resolution</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="4">
-           <widget class="QLabel" name="lx_bandwidth">
-            <property name="text">
-             <string>Bandwidth</string>
+             <string>Interpolation</string>
             </property>
            </widget>
           </item>
@@ -750,54 +773,38 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="5">
-           <widget class="QDoubleSpinBox" name="dsb_bandwidth">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="suffix">
-             <string/>
-            </property>
-            <property name="decimals">
-             <number>3</number>
-            </property>
+          <item row="2" column="3" colspan="2">
+           <widget class="QSlider" name="hs_bandwidth">
             <property name="minimum">
-             <double>0.001000000000000</double>
+             <number>-100</number>
             </property>
             <property name="maximum">
-             <double>0.500000000000000</double>
+             <number>200</number>
             </property>
-            <property name="singleStep">
-             <double>0.010000000000000</double>
-            </property>
-            <property name="stepType">
-             <enum>QAbstractSpinBox::DefaultStepType</enum>
+            <property name="pageStep">
+             <number>20</number>
             </property>
             <property name="value">
-             <double>0.100000000000000</double>
+             <number>100</number>
             </property>
-           </widget>
-          </item>
-          <item row="1" column="4" colspan="2">
-           <widget class="QCheckBox" name="cb_show_grid">
-            <property name="text">
-             <string>Show grid</string>
+            <property name="tracking">
+             <bool>true</bool>
             </property>
-            <property name="checked">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="invertedAppearance">
              <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="1" column="2" colspan="2">
-           <widget class="QCheckBox" name="cb_show_errors">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
+          <item row="2" column="5">
+           <widget class="QLabel" name="lb_bandwidth">
             <property name="text">
-             <string>Show errors</string>
+             <string>0.100</string>
             </property>
-            <property name="checked">
-             <bool>true</bool>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -1634,6 +1641,8 @@
     </property>
     <addaction name="ac_load_sighting"/>
     <addaction name="ac_export_meteor"/>
+    <addaction name="ac_create_pairing"/>
+    <addaction name="ac_mask_unmatched"/>
    </widget>
    <widget class="QMenu" name="menuCatalogue">
     <property name="title">
@@ -1648,9 +1657,16 @@
     <addaction name="ac_load_constants"/>
     <addaction name="ac_save_constants"/>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="ac_about"/>
+   </widget>
    <addaction name="menuCatalogue"/>
    <addaction name="menuData"/>
    <addaction name="menuProjection"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="ac_load_sighting">
@@ -1664,6 +1680,9 @@
   <action name="ac_export_meteor">
    <property name="text">
     <string>Export meteor XML</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
    </property>
   </action>
   <action name="ac_load_catalogue">
@@ -1693,6 +1712,30 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+E</string>
+   </property>
+  </action>
+  <action name="ac_create_pairing">
+   <property name="text">
+    <string>Create pairing</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="ac_mask_unmatched">
+   <property name="text">
+    <string>Mask unmatched dots</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+M</string>
+   </property>
+  </action>
+  <action name="ac_about">
+   <property name="text">
+    <string>About</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
    </property>
   </action>
  </widget>

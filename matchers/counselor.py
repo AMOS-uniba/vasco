@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import pandas as pd
 
@@ -55,7 +56,7 @@ class Counselor(Matcher):
         np.ndarray(N): spherical distance between the dot and the associated star
         """
         catalogue = np.radians(catalogue)
-        observed[..., 0] = np.pi / 2 - observed[..., 0]   # Convert observed altitude to co-altitude
+        observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed altitude to co-altitude
         return spherical_distance(observed, catalogue)
 
     @staticmethod
@@ -65,7 +66,7 @@ class Counselor(Matcher):
         np.ndarray(N, 2): vector errors
         """
         catalogue = np.radians(catalogue)
-        observed[..., 0] = np.pi / 2 - observed[..., 0]   # Convert observed altitude to co-altitude
+        observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed altitude to co-altitude
         return spherical_difference(observed, catalogue)
         # BROKEN
 
@@ -151,7 +152,7 @@ class Counselor(Matcher):
         df['ev'] = position_corrected.alt.degree
         df['az_r'] = position_raw.az.degree
         df['az'] = position_corrected.az.degree
-        df['fno'] = 0
+        df['fno'] = self.sensor_data.meteor.fnos(masked=False)
         df['b'] = 0
         df['bm'] = 0
         df['Lsum'] = 0

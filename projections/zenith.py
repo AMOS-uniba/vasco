@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 from .base import Projection
@@ -36,7 +37,7 @@ class ZenithShifter(Projection):
             z = np.arccos(cosz)
             a = self.E + np.arctan2(sna, cna)
 
-        return z, np.mod(a, 2 * np.pi)  # wrap around to [0, 2pi)
+        return z, np.mod(a, math.tau)  # wrap around to [0, 2pi)
 
     def invert(self, z, a):
         if abs(self.epsilon) < 1e-14:
@@ -49,7 +50,7 @@ class ZenithShifter(Projection):
             u = np.arccos(cosu)
             b = np.arctan2(sna, cna)
 
-        return u, np.mod(b, 2 * np.pi)  # wrap around to [0, 2pi)
+        return u, np.mod(b, math.tau)  # wrap around to [0, 2pi)
 
     def __str__(self):
         return f"<{self.__class__.__name__} epsilon={self.epsilon} E={self.E}>"

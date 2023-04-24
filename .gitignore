@@ -5,3 +5,4 @@ output/*
 dist*
 main_ui.py
 main.spec
+.idea*

@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 from typing import Callable
@@ -88,7 +89,7 @@ class Matchmaker(Matcher):
         observed = np.expand_dims(observed, 1)
         catalogue = np.expand_dims(catalogue, 0)
         catalogue = np.radians(catalogue)
-        observed[..., 0] = np.pi / 2 - observed[..., 0]   # Convert observed altitude to zenith distance
+        observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed altitude to zenith distance
         return spherical_distance(observed, catalogue)
 
     def compute_vector_errors(self, observed, catalogue):
@@ -101,7 +102,7 @@ class Matchmaker(Matcher):
         observed = np.expand_dims(observed, 1)
         catalogue = np.expand_dims(catalogue, 0)
         catalogue = np.radians(catalogue)
-        observed[..., 0] = np.pi / 2 - observed[..., 0]   # Convert observed altitude to zenith distance
+        observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed altitude to zenith distance
         raise NotImplementedError
 
     def find_nearest_value(self, observed, catalogue, *, axis):

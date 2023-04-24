@@ -24,8 +24,8 @@ def general_2():
 class TestZenithShifter(TestProjection):
     grid = [
         dict(r=r, t=t)
-        for r in np.linspace(0.01, np.pi / 2, 11)
-        for t in np.linspace(0.1, 2 * np.pi + 0.1, 11, endpoint=False)
+        for r in np.linspace(0.01, math.tau / 4, 11)
+        for t in np.linspace(0.1, math.tau + 0.1, 11, endpoint=False)
     ]
     params = dict(
         test_zenith_aligned=grid,

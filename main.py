@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import math
 import yaml
 import datetime
 import zoneinfo
@@ -8,7 +9,7 @@ import numpy as np
 import dotmap
 
 from PyQt6 import QtCore
-from PyQt6.QtWidgets import QApplication, QFileDialog
+from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
 from astropy import units as u
 from astropy.coordinates import EarthLocation
@@ -23,6 +24,8 @@ from amos import AMOS, Station
 
 mpl.use('Qt5Agg')
 
+VERSION = "0.6.0"
+BUILD_DATE = "2023-04-24"
 
 class MainWindow(MainWindowPlots):
     def __init__(self, parent=None):
@@ -32,6 +35,8 @@ class MainWindow(MainWindowPlots):
         self.updateTime()
         self.matcher = Matchmaker(self.location, self.time)
         self.matcher.load_catalogue('catalogues/HYG30.tsv')
+        self._loadSighting('data/M20121022_234351_AGO__00002.yaml')
+        self._importProjectionConstants('calibrations/AGO2.yaml')
         self.onParametersChanged()
 
     def selectStation(self, index):
@@ -65,7 +70,7 @@ class MainWindow(MainWindowPlots):
         self.dt_time.setDateTime(time)
 
     def updateTime(self):
-        self.time = self.dt_time.dateTime().toString('yyyy-MM-dd HH:mm:ss')
+        self.time = self.dt_time.dateTime().toPyDateTime()#toString('yyyy-MM-dd HH:mm:ss')
 
     def updateMatcher(self):
         self.matcher.update(self.location, self.time)
@@ -86,7 +91,7 @@ class MainWindow(MainWindowPlots):
         self.magnitudeErrorPlot.invalidate()
         self.positionCorrectionPlot.invalidate()
         self.magnitudeCorrectionPlot.invalidate()
-        self.matcher.update_position_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
+        self.matcher.update_position_smoother(self.projection, bandwidth=self.bandwidth())
 
         self.computePositionErrors()
         self.computeMagnitudeErrors()
@@ -98,8 +103,10 @@ class MainWindow(MainWindowPlots):
         self.magnitudeSkyPlot.invalidate_stars()
         self.positionErrorPlot.invalidate()
         self.magnitudeErrorPlot.invalidate()
-        self.matcher.update_position_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
-        self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=self.dsb_bandwidth.value())
+
+        bandwidth = self.bandwidth()
+        self.matcher.update_position_smoother(self.projection, bandwidth=bandwidth)
+        self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=bandwidth)
         self.positionCorrectionPlot.invalidate()
         self.magnitudeCorrectionPlot.invalidate()
 
@@ -113,9 +120,14 @@ class MainWindow(MainWindowPlots):
         self.positionCorrectionPlot.invalidate_dots()
         self.updatePlots()
 
-    def onBandwidthChanged(self):
-        self.matcher.update_position_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
-        self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=self.dsb_bandwidth.value())
+    def onBandwidthSettingChanged(self):
+        bandwidth = self.bandwidth()
+        self.lb_bandwidth.setText(f"{bandwidth:.03f}")
+
+    def onBandwidthChanged(self, action):
+        bandwidth = self.bandwidth()
+        self.matcher.update_position_smoother(self.projection, bandwidth=bandwidth)
+        self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=bandwidth)
         self.positionCorrectionPlot.invalidate_grid()
         self.positionCorrectionPlot.invalidate_meteor()
         self.magnitudeCorrectionPlot.invalidate_grid()
@@ -131,6 +143,9 @@ class MainWindow(MainWindowPlots):
         self.positionCorrectionPlot.invalidate_grid()
         self.magnitudeCorrectionPlot.invalidate_grid()
         self.updatePlots()
+
+    def bandwidth(self):
+        return 10**(-self.hs_bandwidth.value() / 100)
 
     def computePositionErrors(self):
         self.position_errors = self.matcher.position_errors(self.projection, masked=True)
@@ -198,6 +213,7 @@ class MainWindow(MainWindowPlots):
                      .strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f")
                      .replace(tzinfo=zoneinfo.ZoneInfo('UTC')))
         self.updateTime()
+        self.sensorPlot.invalidate()
 
         self.matcher.sensor_data.load(data)
 
@@ -339,20 +355,26 @@ class MainWindow(MainWindowPlots):
 
     def exportCorrectedMeteor(self):
         if self.paired:
-            filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", ".", "XML files (*.xml)")
+            filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", "output/", "XML files (*.xml)")
             if filename is not None and filename != '':
                 with open(filename, 'w') as file:
-                    file.write(f"""
-<?xml version="1.0" encoding="UTF-8" ?>
+                    file.write(
+f"""<?xml version="1.0" encoding="UTF-8" ?>
 <ufoanalyzer_record version ="200"
-    clip_name="M20120922_225744_ago_" o="1" y="2012" mo="9"
-    d="22" h="22" m="57" s="44.0"
-    tz="0" tme="0" lid="ago" sid="kvant"
+    clip_name="{self.matcher.sensor_data.id}"
+    o="1"
+    y="{self.time.strftime("%Y")}"
+    mo="{self.time.strftime("%m")}"
+    d="{self.time.strftime("%d")}"
+    h="{self.time.strftime("%H")}"
+    m="{self.time.strftime("%M")}"
+    s="{self.time.strftime('%S.%f')}"
+    tz="0" tme="0" lid="{self.matcher.sensor_data.station}" sid="kvant"
     lng="{self.dsb_lon.value()}" lat="{self.dsb_lat.value()}" alt="0"
-    cx="{self.matcher.sensor_data.rect.xmax} cy="{self.matcher.sensor_data.rect.ymax}" fps="15" interlaced="0" bbf="0"
-    frames="{self.matcher.sensor_data.meteor.count}" head="19" tail="0" drop="-1"
+    cx="{self.matcher.sensor_data.rect.xmax}" cy="{self.matcher.sensor_data.rect.ymax}" fps="15" interlaced="0" bbf="0"
+    frames="{self.matcher.sensor_data.meteor.count}" head="0" tail="0" drop="-1"
     dlev="0" dsize="0" sipos="0" sisize="0"
-    trig="0" observer="ago" cam="" lens=""
+    trig="0" observer="{self.matcher.sensor_data.station}" cam="" lens=""
     cap="" u2="0" ua="0" memo=""
     az="0" ev="0" rot="0" vx="0"
     yx="0" dx="0" dy="0" k4="0"
@@ -386,9 +408,9 @@ class MainWindow(MainWindowPlots):
             A0="-0.05584542"
             X0="-0.00874173"
             Y0="0.01862264"
-            V="0.64574381"
-            S="-0.46404608"
-            D="0.25"
+            V="{self.projection.radial_transform.linear}"
+            S="{self.projection.radial_transform.lin_coef}"
+            D="{self.projection.radial_transform.lin_exp}"
             EPS="0.00206778"
             E="3.36956865"
             A="0.0015977"
@@ -417,8 +439,8 @@ class MainWindow(MainWindowPlots):
 
     def pair(self):
         self.matcher = self.matcher.pair(self.projection)
-        self.matcher.update_position_smoother(self.projection, bandwidth=self.dsb_bandwidth.value())
-        self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=self.dsb_bandwidth.value())
+        self.matcher.update_position_smoother(self.projection, bandwidth=self.bandwidth())
+        self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=self.bandwidth())
 
         self.positionSkyPlot.invalidate_dots()
         self.positionSkyPlot.invalidate_stars()
@@ -431,6 +453,15 @@ class MainWindow(MainWindowPlots):
         self.showCounts()
         self.updatePlots()
 
+    def displayAbout(self):
+        msg = QMessageBox(parent=self, text="VASCO Virtual All-Sky CorrectOr plate")
+        msg.setIcon(QMessageBox.Icon.Information)
+        msg.setWindowTitle("About")
+        msg.setModal(True)
+        msg.setInformativeText(f"Version {VERSION}, built on {BUILD_DATE}")
+        msg.show()
+        msg.move((self.width() - msg.width()) // 2, (self.height() - msg.height()) // 2)
+        return msg.exec()
 
 app = QApplication(sys.argv)
 window = MainWindow()

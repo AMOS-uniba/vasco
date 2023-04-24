@@ -44,6 +44,9 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         self.ac_load_constants.triggered.connect(self.importProjectionConstants)
         self.ac_save_constants.triggered.connect(self.exportProjectionConstants)
         self.ac_export_meteor.triggered.connect(self.exportCorrectedMeteor)
+        self.ac_mask_unmatched.triggered.connect(self.maskSensor)
+        self.ac_create_pairing.triggered.connect(self.pair)
+        self.ac_about.triggered.connect(self.displayAbout)
 
         for widget, param in self.param_widgets:
             widget.valueChanged.connect(self.onParametersChanged)
@@ -65,7 +68,9 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         self.pb_reset.clicked.connect(self.resetValid)
         self.dsb_error_limit.valueChanged.connect(self.onErrorLimitChanged)
 
-        self.dsb_bandwidth.valueChanged.connect(self.onBandwidthChanged)
+        self.hs_bandwidth.actionTriggered.connect(self.onBandwidthSettingChanged)
+        self.hs_bandwidth.sliderMoved.connect(self.onBandwidthSettingChanged)
+        self.hs_bandwidth.actionTriggered.connect(self.onBandwidthChanged)
         self.sb_arrow_scale.valueChanged.connect(self.onArrowScaleChanged)
         self.sb_resolution.valueChanged.connect(self.onResolutionChanged)
 

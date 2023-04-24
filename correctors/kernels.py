@@ -1,10 +1,11 @@
+import math
 import numpy as np
 
 from typing import Callable
 
 
 def gaussian(x: np.ndarray[float], mu: float, sigma: float) -> np.ndarray[float]:
-    return 1 / (np.sqrt(2 * np.pi) * sigma) * np.exp(-((x - mu)**2) / (2 * sigma**2))
+    return 1 / (np.sqrt(math.tau) * sigma) * np.exp(-((x - mu)**2) / (2 * sigma**2))
 
 
 def nexp(x):
