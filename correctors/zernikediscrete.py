@@ -54,7 +54,5 @@ class ZernikeDiscreteExpander(BaseCorrector):
             ax.quiver(self.points[:, 0], self.points[:, 1], self.values[:, 0], self.values[:, 1], scale=0.2, width=0.0025, color='red')
             plt.show()
 
-        f = VectorField(lambda x, y: np.sum(np.stack([v(x, y) for v in z.values()]), axis=0))
-
         return f(nodes[0], nodes[1])
 
