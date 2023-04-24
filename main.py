@@ -354,11 +354,14 @@ class MainWindow(MainWindowPlots):
         self.lb_outside_limit.setText(f'{outside_limit}')
 
     def exportCorrectedMeteor(self):
-        if self.paired:
-            filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", "output/", "XML files (*.xml)")
-            if filename is not None and filename != '':
-                with open(filename, 'w') as file:
-                    file.write(
+        if not self.paired:
+            print("Cannot export a meteor before pairing dots to the catalogue")
+            return None
+
+        filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", "output/", "XML files (*.xml)")
+        if filename is not None and filename != '':
+            with open(filename, 'w') as file:
+                file.write(
 f"""<?xml version="1.0" encoding="UTF-8" ?>
 <ufoanalyzer_record version ="200"
     clip_name="{self.matcher.sensor_data.id}"
@@ -426,9 +429,10 @@ f"""<?xml version="1.0" encoding="UTF-8" ?>
             magB="1.50852603934261"
             magR2="0.548439901974541"
             magS="0.399746731883133"
-            usingPrecession="True">""")
-                    file.write(self.matcher.print_meteor(self.projection, self.calibration))
-                    file.write("""
+            usingPrecession="True">
+""")
+                file.write(self.matcher.print_meteor(self.projection, self.calibration))
+                file.write(f"""
         </ua2_object>
     </ua2_objects>
 </ufoanalyzer_record>""")

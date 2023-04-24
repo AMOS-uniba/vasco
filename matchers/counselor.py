@@ -125,9 +125,7 @@ class Counselor(Matcher):
         return disk_to_altaz(self._meteor_xy(projection) + self.correction_meteor_xy(projection))
 
     def correct_meteor_magnitude(self, projection: Projection, calibration: Calibration) -> np.ndarray[float]:
-        return calibration.inverse(
-            calibration(self.sensor_data.meteor.intensities(masked=False)) + self.correction_meteor_mag(projection)
-        )
+        return calibration(self.sensor_data.meteor.intensities(masked=False)) + self.correction_meteor_mag(projection)
 
     @staticmethod
     def _grid(smoother, resolution=21, *, masked: bool):
@@ -146,6 +144,8 @@ class Counselor(Matcher):
         position_corrected = self.correct_meteor_position(projection)
         intensities_raw = self.sensor_data.meteor.intensities(masked=False)
         intensities_corrected = self.correct_meteor_magnitude(projection, calibration)
+        magnitudes_raw = calibration(intensities_raw)
+        magnitudes_corrected = intensities_corrected
 
         df = pd.DataFrame()
         df['ev_r'] = position_raw.alt.degree
@@ -156,9 +156,10 @@ class Counselor(Matcher):
         df['b'] = 0
         df['bm'] = 0
         df['Lsum'] = 0
-        df['mag_r'] = intensities_raw
-        df['mag'] = intensities_corrected
+        df['mag_r'] = magnitudes_raw
+        df['mag'] = magnitudes_corrected
         df['ra'] = 0
         df['dec'] = 0
-        return df.to_xml(index=False, root_name='ua2_objpath', row_name='ua2_fdata2', xml_declaration=False,
+        return df.to_xml(index=False, root_name='ua2_objpath', row_name='ua2_fdata2',
+                         xml_declaration=False, pretty_print=True,
                          attr_cols=['fno', 'b', 'bm', 'Lsum', 'mag', 'mag_r', 'az', 'ev', 'az_r', 'ev_r', 'ra', 'dec'])

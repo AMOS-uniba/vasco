@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
-from correctors import Interpolator, ZernikeExpander, ZernikeFitter, ZernikeDiscreteExpander, KernelSmoother, kernels
+from correctors import Interpolator, ZernikeExpander, ZernikeFitter, KernelSmoother, kernels
 from physfields import ZernikeVector, VectorField
 
 import matplotlib as mpl
