@@ -107,7 +107,6 @@ class MainWindowPlots(MainWindowBase):
     def _plotErrorsDots(self, plot, errors):
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=True)
         magnitudes = self.matcher.sensor_data.stars.intensities(True)
-        print(positions.shape, magnitudes.shape, errors.shape)
         plot.update_dots(positions, magnitudes, errors, limit=np.radians(self.dsb_error_limit.value()))
 
     def plotPositionErrorsDots(self):
@@ -119,7 +118,7 @@ class MainWindowPlots(MainWindowBase):
     def _plotErrorsMeteor(self, plot, errors):
         positions = self.matcher.sensor_data.meteor.project(self.projection, masked=True)
         magnitudes = self.matcher.sensor_data.meteor.intensities(True)
-        plot.update_meteor(positions, magnitudes, errors, limit=np.radians(self.dsb_error_limit.value()))
+        plot.update_meteor(positions, magnitudes, errors, limit=0.1)
 
     def plotPositionErrorsMeteor(self):
         if self.paired:

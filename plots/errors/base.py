@@ -77,7 +77,7 @@ class BaseErrorPlot(BasePlot):
                         *, cmap, limit: float = 1, use_extent: bool = False):
         """ Common method for drawing error data to a scatter """
         assert magnitudes.shape == errors.shape, \
-            f"Magnitudes and errors should have the same shape, are {magnitudes.shape} and {errors.shape}"
+            f"Magnitudes and errors must have the same shape, but are {magnitudes.shape} and {errors.shape}"
 
         alt = np.degrees(positions[:, 0])
         az = np.degrees(positions[:, 1])

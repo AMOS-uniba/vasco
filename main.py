@@ -41,12 +41,13 @@ class MainWindow(MainWindowPlots):
 
     def selectStation(self, index):
         if index == 0:
-            station = Station("custom", self.dsb_lat.value(), self.dsb_lon.value(), 0)
+            station = Station("custom", self.dsb_lat.value(), self.dsb_lon.value(), self.dsb_alt.value())
         else:
             station = list(AMOS.stations.values())[index - 1]
 
         self.dsb_lat.setValue(station.latitude)
         self.dsb_lon.setValue(station.longitude)
+        self.dsb_alt.setValue(station.altitude)
 
         self.updateMatcher()
         self.onLocationTimeChanged()
@@ -59,12 +60,15 @@ class MainWindow(MainWindowPlots):
         self.updateLocation()
         self.onLocationTimeChanged()
 
-    def setLocation(self, lat, lon):
+    def setLocation(self, lat, lon, alt):
         self.dsb_lat.setValue(lat)
         self.dsb_lon.setValue(lon)
+        self.dsb_alt.setValue(alt)
 
     def updateLocation(self):
-        self.location = EarthLocation(self.dsb_lon.value() * u.deg, self.dsb_lat.value() * u.deg)
+        self.location = EarthLocation(self.dsb_lon.value() * u.deg,
+                                      self.dsb_lat.value() * u.deg,
+                                      self.dsb_alt.value() * u.m)
 
     def setTime(self, time):
         self.dt_time.setDateTime(time)
@@ -210,7 +214,7 @@ class MainWindow(MainWindowPlots):
 
     def _loadSighting(self, file):
         data = dotmap.DotMap(yaml.safe_load(open(file, 'r')))
-        self.setLocation(data.Latitude, data.Longitude)
+        self.setLocation(data.Latitude, data.Longitude, data.Altitude)
         self.updateLocation()
         self.setTime(datetime.datetime
                      .strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f")
@@ -376,7 +380,7 @@ class MainWindow(MainWindowPlots):
     m="{self.time.strftime("%M")}"
     s="{self.time.strftime('%S.%f')}"
     tz="0" tme="0" lid="{self.matcher.sensor_data.station}" sid="kvant"
-    lng="{self.dsb_lon.value()}" lat="{self.dsb_lat.value()}" alt="0"
+    lng="{self.dsb_lon.value()}" lat="{self.dsb_lat.value()}" alt="{self.dsb_alt.value()}"
     cx="{self.matcher.sensor_data.rect.xmax}" cy="{self.matcher.sensor_data.rect.ymax}" fps="15" interlaced="0" bbf="0"
     frames="{self.matcher.sensor_data.meteor.count}" head="0" tail="0" drop="-1"
     dlev="0" dsize="0" sipos="0" sisize="0"
@@ -411,18 +415,18 @@ class MainWindow(MainWindowPlots):
             sigma="0.03276"
             sigma.azi="0.0283990702993807"
             sigma.zen="0.0354915982362712"
-            A0="-0.05584542"
-            X0="-0.00874173"
-            Y0="0.01862264"
+            A0="{self.projection.axis_shifter.a0}"
+            X0="{self.projection.axis_shifter.x0}"
+            Y0="{self.projection.axis_shifter.y0}"
             V="{self.projection.radial_transform.linear}"
             S="{self.projection.radial_transform.lin_coef}"
             D="{self.projection.radial_transform.lin_exp}"
-            EPS="0.00206778"
-            E="3.36956865"
-            A="0.0015977"
-            F0="0.75477673"
-            P="0.150045"
-            Q="0.066"
+            EPS="{self.projection.zenith_shifter.epsilon}"
+            E="{self.projection.zenith_shifter.E}"
+            A="{self.projection.axis_shifter.A}"
+            F0="{self.projection.axis_shifter.F}"
+            P="{self.projection.radial_transform.quad_coef}"
+            Q="{self.projection.radial_transform.quad_exp}"
             C="1"
             CH1="690"
             CH2="0.00494625"
