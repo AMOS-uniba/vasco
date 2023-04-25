@@ -12,6 +12,9 @@ from plots.correction import BaseCorrectionPlot, PositionCorrectionPlot, Magnitu
 from utilities import unit_grid
 
 from base import MainWindowBase
+from logger import setupLog
+
+log = setupLog(__name__)
 
 
 class MainWindowPlots(MainWindowBase):
@@ -144,7 +147,7 @@ class MainWindowPlots(MainWindowBase):
 
     def _plotCorrectionErrors(self, plot: BaseCorrectionPlot) -> None:
         if self.cb_show_errors.isChecked():
-            print(f"Plotting {plot.intent} for {plot.target}")
+            log.debug(f"Plotting {plot.intent} for {plot.target}")
             plot.update_dots(
                 self.matcher.catalogue.altaz(self.location, self.time, masked=True),
                 self.matcher.sensor_data.stars.project(self.projection, masked=True),

@@ -6,6 +6,7 @@ import dotmap
 
 from PyQt6 import QtCore
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
+from PyQt6.QtCore import QDateTime, Qt
 
 from astropy import units as u
 from astropy.coordinates import EarthLocation
@@ -15,12 +16,16 @@ from matchers import Matchmaker, Counselor
 from projections import BorovickaProjection
 from plotting import MainWindowPlots
 
+import colour as c
 from amos import AMOS, Station
+from logger import setupLog
 
 mpl.use('Qt5Agg')
 
 VERSION = "0.6.2"
 DATE = "2023-04-25"
+
+log = setupLog(__name__)
 
 
 class MainWindow(MainWindowPlots):
@@ -119,6 +124,7 @@ class MainWindow(MainWindowPlots):
                                       self.dsb_alt.value() * u.m)
 
     def setTime(self, time):
+        time = QDateTime(time.date(), time.time(), Qt.TimeSpec.UTC)
         self.dt_time.setDateTime(time)
 
     def updateTime(self):
@@ -132,7 +138,7 @@ class MainWindow(MainWindowPlots):
         self.projection = BorovickaProjection(*self.getConstantsTuple())
 
     def onParametersChanged(self):
-        print("Parameters changed")
+        log.info("Parameters changed")
         self.updateProjection()
 
         self.positionSkyPlot.invalidate_dots()
@@ -212,7 +218,7 @@ class MainWindow(MainWindowPlots):
         filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "catalogues",
                                                   "Tab-separated values (*.tsv)")
         if filename == '':
-            print("No file provided, loading aborted")
+            log.warn("No file provided, loading aborted")
         else:
             self.matcher.load_catalogue(filename)
             self.onParametersChanged()
@@ -244,13 +250,13 @@ class MainWindow(MainWindowPlots):
                     )
                 ), file)
         except FileNotFoundError as exc:
-            print(f"Could not export constants: {exc}")
+            log.error(f"Could not export constants: {exc}")
 
     def loadSighting(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data",
                                                   "YAML files (*.yml *.yaml)")
         if filename == '':
-            print("No file provided, loading aborted")
+            log.warn("No file provided, loading aborted")
         else:
             self._loadSighting(filename)
 
@@ -288,9 +294,9 @@ class MainWindow(MainWindowPlots):
 
                     self.updateProjection()
                 except yaml.YAMLError as exc:
-                    print(f"Could not open file {filename}: {exc}")
+                    log.error(f"Could not parse file {filename} as YAML: {exc}")
         except FileNotFoundError as exc:
-            print(f"Could not import constants: {exc}")
+            log.error(f"Could not import constants: {exc}")
 
     def blockParameterSignals(self, block):
         for widget, param in self.param_widgets:
@@ -346,15 +352,15 @@ class MainWindow(MainWindowPlots):
     def maskSensor(self):
         errors = self.matcher.position_errors(self.projection, masked=False)
         self.matcher.mask_sensor_data(errors > np.radians(self.dsb_error_limit.value()))
-        print(f"Culled the dots to {self.dsb_error_limit.value()}°: "
-              f"{self.matcher.sensor_data.stars.count_valid} are valid")
+        log.info(f"Culled the dots to {c.param(self.dsb_error_limit.value())}°: "
+              f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
         self.onParametersChanged()
         self.showCounts()
 
     def maskCatalogueDistant(self):
         errors = self.matcher.position_errors_inverse(self.projection, masked=False)
         self.matcher.mask_catalogue(errors > np.radians(self.dsb_distance_limit.value()))
-        print(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: "
+        log.info(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: "
               f"{self.matcher.catalogue.count_valid} stars used")
         self.positionSkyPlot.invalidate_stars()
 
@@ -365,7 +371,7 @@ class MainWindow(MainWindowPlots):
 
     def maskCatalogueFaint(self):
         self.matcher.mask_catalogue(self.matcher.catalogue.vmag(False) > self.dsb_magnitude_limit.value())
-        print(f"Culled the catalogue to magnitude {self.dsb_magnitude_limit.value()}m: "
+        log.info(f"Culled the catalogue to magnitude {self.dsb_magnitude_limit.value()}m: "
               f"{self.matcher.catalogue.count_valid} stars used")
         self.positionSkyPlot.invalidate_stars()
 
@@ -404,7 +410,7 @@ class MainWindow(MainWindowPlots):
 
     def exportCorrectedMeteor(self):
         if not self.paired:
-            print("Cannot export a meteor before pairing dots to the catalogue")
+            log.warn("Cannot export a meteor before pairing dots to the catalogue")
             return None
 
         filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", "output/",

@@ -7,6 +7,9 @@ from physfields import ZernikeVector, VectorField
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 from utilities import by_azimuth
+from logger import setupLog
+
+log = setupLog(__name__)
 
 RADIUS = 1
 RESOLUTION = 50
@@ -76,7 +79,7 @@ class Expander:
         ax_data.quiver(xx, yy, uv[:, :, 0], uv[:, :, 1], **self.quiver_options)
         fig.savefig(filename, dpi=200)
         plt.close('all')
-        print(f"Plotting to {filename}")
+        log.info(f"Plotting to {filename}")
 
     def go(self, true, expanded):
         self.field = ZernikeVector.create(4, 0, True)
@@ -91,7 +94,7 @@ class Expander:
         for i in range(1, 21):
             expansion = self.expand(self.field, xx, yy, i).reshape(RESOLUTION, RESOLUTION, -1)
             gof = np.sum(np.square(raw - expansion)) / raw.count() * 2
-            print(gof)
+            log.debug(gof)
             self.plot(expansion, xx, yy, expanded.format(i))
 
 

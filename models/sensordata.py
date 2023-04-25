@@ -2,6 +2,7 @@ import copy
 import datetime
 import numpy as np
 
+import colour as c
 from .dotcollection import DotCollection
 from .rect import Rect
 
@@ -53,5 +54,5 @@ class SensorData:
         return out
 
     def __str__(self):
-        return f"<Sensor data with {self.stars.count_valid} / {self.stars.count} " \
-               f"reference stars and {self.meteor.count} meteor snapshots>"
+        return f"<Sensor data with {c.num(self.stars.count_valid)} / {c.num(self.stars.count)} " \
+               f"reference stars and {c.num(self.meteor.count)} meteor snapshots>"

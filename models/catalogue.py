@@ -5,6 +5,11 @@ import pandas as pd
 from astropy import units as u
 from astropy.coordinates import SkyCoord, AltAz
 
+import colour as c
+from logger import setupLog
+
+log = setupLog(__name__)
+
 
 class Catalogue:
     def __init__(self, stars=None, *, name=None):
@@ -45,11 +50,11 @@ class Catalogue:
             self.stars.loc[:]['use'] = True
         else:
             self.stars['use'] = True
-        print(f"Catalogue mask reset: {self.count_valid} / {self.count} stars used")
+        log.info(f"Catalogue mask reset: {c.num(self.count_valid)} / {c.num(self.count)} stars used")
 
     def cull(self):
         """ Retain only currently unmasked data """
-        print("Culling the catalogue")
+        log.info("Culling the catalogue")
         self.stars = self.stars[self.stars.use]
         self.update_coord()
 
@@ -93,4 +98,4 @@ class Catalogue:
         return self.stars[self.mask].vmag.to_numpy() if masked else self.stars.vmag.to_numpy()
 
     def __str__(self):
-        return f'<Catalogue "{self.name}" with {self.count_valid} of {self.count} stars>'
+        return f'<Catalogue "{c.name(self.name)}" with {c.num(self.count_valid)} of {c.num(self.count)} stars>'

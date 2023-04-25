@@ -11,6 +11,9 @@ from photometry import Calibration
 from correctors import KernelSmoother
 from correctors import kernels
 from utilities import spherical_distance, spherical_difference, disk_to_altaz, altaz_to_disk, proj_to_disk, unit_grid
+from logger import setupLog
+
+log = setupLog(__name__)
 
 
 class Counselor(Matcher):
@@ -28,9 +31,9 @@ class Counselor(Matcher):
         self.position_smoother = None
         self.magnitude_smoother = None
 
-        print(f"Counselor created with {self.catalogue.count} pairs:")
-        print(" - " + self.catalogue.__str__())
-        print(" - " + self.sensor_data.__str__())
+        log.info(f"Counselor created with {self.catalogue.count} pairs:")
+        log.info(" - " + self.catalogue.__str__())
+        log.info(" - " + self.sensor_data.__str__())
 
     @property
     def count(self):
