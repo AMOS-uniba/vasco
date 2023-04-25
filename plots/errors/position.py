@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import matplotlib as mpl
 from matplotlib.ticker import FuncFormatter
@@ -18,7 +19,9 @@ class PositionErrorPlot(BaseErrorPlot):
     def set_limits(self, errors):
         max_error = Matcher.max_error(errors)
         if np.isnan(max_error) or not np.isfinite(max_error):
-            max_error = 180
+            max_error = 180 # On an empty set show the entire range
+        else:
+            max_error = np.minimum(180, max_error * 1.05) # Otherwise just add some small margin
 
         self.axis_alt.set_ylim([0, max_error])
         self.axis_az.set_ylim([0, max_error])
