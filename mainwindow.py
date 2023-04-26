@@ -352,7 +352,7 @@ class MainWindow(MainWindowPlots):
     def maskSensor(self):
         errors = self.matcher.position_errors(self.projection, masked=False)
         self.matcher.mask_sensor_data(errors > np.radians(self.dsb_error_limit.value()))
-        log.info(f"Culled the dots to {c.param(self.dsb_error_limit.value())}°: "
+        log.info(f"Culled the dots to {c.param(f'{self.dsb_error_limit.value():.3f}')}°: "
               f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
         self.onParametersChanged()
         self.showCounts()
@@ -497,6 +497,14 @@ class MainWindow(MainWindowPlots):
         return self.sb_resolution.value()
 
     def pair(self):
+        if (avg_error := np.degrees(self.matcher.avg_error(self.position_errors))) > 0.3:
+            reply = QMessageBox.question(self, "Are you sure?",
+                                         f"Mean position error is currently {avg_error:.6f}°. This seems too high.\n"
+                                         f"Are you sure your approximate solution is correct?",
+                                         QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
+            if reply != QMessageBox.StandardButton.Ok:
+                return False
+
         self.matcher = self.matcher.pair(self.projection)
         self.matcher.update_position_smoother(self.projection, bandwidth=self.bandwidth())
         self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=self.bandwidth())
