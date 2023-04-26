@@ -1,5 +1,5 @@
 import dotmap
-
+import numpy as np
 
 from PyQt6.QtWidgets import QMainWindow
 from main_ui import Ui_MainWindow
@@ -39,3 +39,12 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
     @property
     def paired(self) -> bool:
         return isinstance(self.matcher, Counselor)
+
+    def showErrors(self) -> None:
+        avg_error = self.matcher.avg_error(self.position_errors)
+        max_error = self.matcher.max_error(self.position_errors)
+        self.lb_avg_error.setText(f'{np.degrees(avg_error):.6f}°')
+        self.lb_max_error.setText(f'{np.degrees(max_error):.6f}°')
+        self.lb_total_stars.setText(f'{self.matcher.catalogue.count}')
+        outside_limit = self.position_errors[self.position_errors > np.radians(self.dsb_error_limit.value())].size
+        self.lb_outside_limit.setText(f'{outside_limit}')

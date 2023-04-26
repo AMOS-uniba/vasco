@@ -14,6 +14,10 @@ class SensorData:
         self.rect = Rect(-1, 1, -1, 1)
         self.stars = DotCollection(star_positions, star_intensities, None)
         self.meteor = DotCollection(meteor_positions, meteor_intensities, None)
+        self.id = None
+        self.fps = None
+        self.time = None
+        self.station = None
 
     def load(self, data):
         assert np.min(np.asarray([star.intensity for star in data.Refstars])) > 0,\
@@ -35,6 +39,7 @@ class SensorData:
         )
         self.station = data.Name
         self.id = f"M{self.time.strftime('%Y%m%d_%H%M%S')}_{self.station}_"
+        self.fps = data.FPS
 
     def collection_to_disk(self, collection, masked):
         return np.stack(self.rect.shifter(collection.xs(masked), collection.ys(masked)), axis=1)

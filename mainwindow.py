@@ -37,7 +37,8 @@ class MainWindow(MainWindowPlots):
         self.connectSignalSlots()
         self.updateLocation()
         self.updateTime()
-        self.matcher = Matchmaker(self.location, self.time)
+
+        self.resetMatcher()
         self.matcher.load_catalogue('catalogues/HYG30.tsv')
         self._loadSighting('data/M20121022_234351_AGO__00002.yaml')
         self._importProjectionConstants('calibrations/AGO2.yaml')
@@ -208,6 +209,9 @@ class MainWindow(MainWindowPlots):
     def bandwidth(self):
         return 10**(-self.hs_bandwidth.value() / 100)
 
+    def resetMatcher(self):
+        self.matcher = Matchmaker(self.location, self.time)
+
     def computePositionErrors(self):
         self.position_errors = self.matcher.position_errors(self.projection, masked=True)
 
@@ -220,6 +224,8 @@ class MainWindow(MainWindowPlots):
         if filename == '':
             log.warn("No file provided, loading aborted")
         else:
+            if self.paired:
+                self.resetMatcher()
             self.matcher.load_catalogue(filename)
             self.onParametersChanged()
 
@@ -274,6 +280,8 @@ class MainWindow(MainWindowPlots):
         self.updateTime()
         self.sensorPlot.invalidate()
 
+        if self.paired:
+            self.resetMatcher()
         self.matcher.sensor_data.load(data)
 
     def importProjectionConstants(self):
@@ -399,15 +407,6 @@ class MainWindow(MainWindowPlots):
         self.lb_objects_all.setText(f'{self.matcher.sensor_data.stars.count}')
         self.lb_objects_near.setText(f'{self.matcher.sensor_data.stars.count_valid}')
 
-    def showErrors(self) -> None:
-        avg_error = self.matcher.avg_error(self.position_errors)
-        max_error = self.matcher.max_error(self.position_errors)
-        self.lb_avg_error.setText(f'{np.degrees(avg_error):.6f}°')
-        self.lb_max_error.setText(f'{np.degrees(max_error):.6f}°')
-        self.lb_total_stars.setText(f'{self.matcher.catalogue.count}')
-        outside_limit = self.position_errors[self.position_errors > np.radians(self.dsb_error_limit.value())].size
-        self.lb_outside_limit.setText(f'{outside_limit}')
-
     def exportCorrectedMeteor(self):
         if not self.paired:
             log.warn("Cannot export a meteor before pairing dots to the catalogue")
@@ -429,7 +428,8 @@ class MainWindow(MainWindowPlots):
     s="{self.time.strftime('%S.%f')}"
     tz="0" tme="0" lid="{self.matcher.sensor_data.station}" sid="kvant"
     lng="{self.dsb_lon.value()}" lat="{self.dsb_lat.value()}" alt="{self.dsb_alt.value()}"
-    cx="{self.matcher.sensor_data.rect.xmax}" cy="{self.matcher.sensor_data.rect.ymax}" fps="15" interlaced="0" bbf="0"
+    cx="{self.matcher.sensor_data.rect.xmax}" cy="{self.matcher.sensor_data.rect.ymax}"
+    fps="{self.matcher.sensor_data.fps}" interlaced="0" bbf="0"
     frames="{self.matcher.sensor_data.meteor.count}" head="0" tail="0" drop="-1"
     dlev="0" dsize="0" sipos="0" sisize="0"
     trig="0" observer="{self.matcher.sensor_data.station}" cam="" lens=""
@@ -438,8 +438,8 @@ class MainWindow(MainWindowPlots):
     yx="0" dx="0" dy="0" k4="0"
     k3="0" k2="0" atc="0" BVF="0"
     maxLev="0" maxMag="0" minLev="0" mimMag="0"
-    dl="0" leap="0" pixs="0" rstar="0.0283990702993807"
-    ddega="0.03276" ddegm="0" errm="0" Lmrgn="0"
+    dl="0" leap="0" pixs="0" rstar="0"
+    ddega="0" ddegm="0" errm="0" Lmrgn="0"
     Rmrgn="0" Dmrgn="0" Umrgn="0">
     <ua2_objects>
         <ua2_object
@@ -460,9 +460,9 @@ class MainWindow(MainWindowPlots):
             dct="0" memo=""
             CodeRed="G"
             ACOM="324"
-            sigma="0.03276"
-            sigma.azi="0.0283990702993807"
-            sigma.zen="0.0354915982362712"
+            sigma="0"
+            sigma.azi="0"
+            sigma.zen="0"
             A0="{self.projection.axis_shifter.a0}"
             X0="{self.projection.axis_shifter.x0}"
             Y0="{self.projection.axis_shifter.y0}"
@@ -476,14 +476,14 @@ class MainWindow(MainWindowPlots):
             P="{self.projection.radial_transform.quad_coef}"
             Q="{self.projection.radial_transform.quad_exp}"
             C="1"
-            CH1="690"
-            CH2="0.00494625"
-            CH3="535"
-            CH4="0.004992"
-            magA="7.34131408453742"
-            magB="1.50852603934261"
-            magR2="0.548439901974541"
-            magS="0.399746731883133"
+            CH1="0"
+            CH2="0"
+            CH3="0"
+            CH4="0"
+            magA="0"
+            magB="0"
+            magR2="0"
+            magS="0"
             usingPrecession="True">
 """)
                 file.write(self.matcher.print_meteor(self.projection, self.calibration))
@@ -498,10 +498,10 @@ class MainWindow(MainWindowPlots):
 
     def pair(self):
         if (avg_error := np.degrees(self.matcher.avg_error(self.position_errors))) > 0.3:
-            reply = QMessageBox.question(self, "Are you sure?",
-                                         f"Mean position error is currently {avg_error:.6f}°. This seems too high.\n"
-                                         f"Are you sure your approximate solution is correct?",
-                                         QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
+            reply = QMessageBox.warning(self, "Mean position error limit exceeded!",
+                                        f"Mean position error is currently {avg_error:.6f}°.\n"
+                                        f"Are you sure your approximate solution is correct?",
+                                        QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
             if reply != QMessageBox.StandardButton.Ok:
                 return False
 
@@ -521,11 +521,10 @@ class MainWindow(MainWindowPlots):
         self.updatePlots()
 
     def displayAbout(self):
-        msg = QMessageBox(parent=self, text="VASCO Virtual All-Sky CorrectOr plate")
+        msg = QMessageBox(self, text="VASCO Virtual All-Sky CorrectOr plate")
         msg.setIcon(QMessageBox.Icon.Information)
         msg.setWindowTitle("About")
         msg.setModal(True)
         msg.setInformativeText(f"Version {VERSION}, built on {DATE}")
-        msg.show()
         msg.move((self.width() - msg.width()) // 2, (self.height() - msg.height()) // 2)
         return msg.exec()

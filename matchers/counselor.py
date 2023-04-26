@@ -25,7 +25,8 @@ class Counselor(Matcher):
     def __init__(self, location, time, projection_cls, catalogue, sensor_data):
         super().__init__(location, time, projection_cls)
         # a Counselor has fixed pairs: they have to be set on creation
-        assert sensor_data.stars.count == catalogue.count
+        assert sensor_data.stars.count == catalogue.count,\
+            f"Sensor data count ({sensor_data.stars.count}) does not match the catalogue data count ({catalogue.count})"
         self.catalogue = catalogue
         self.sensor_data = sensor_data
         self.position_smoother = None
@@ -151,10 +152,10 @@ class Counselor(Matcher):
         magnitudes_corrected = intensities_corrected
 
         df = pd.DataFrame()
-        df['ev_r'] = position_raw.alt.degree
-        df['ev'] = position_corrected.alt.degree
-        df['az_r'] = position_raw.az.degree
-        df['az'] = position_corrected.az.degree
+        df['ev_r'] = 90 - position_raw.alt.degree
+        df['ev'] = 90 - position_corrected.alt.degree
+        df['az_r'] = np.fmod(position_raw.az.degree + 180, 360)
+        df['az'] = np.fmod(position_corrected.az.degree + 180, 360)
         df['fno'] = self.sensor_data.meteor.fnos(masked=False)
         df['b'] = 0
         df['bm'] = 0
