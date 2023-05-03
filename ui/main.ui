@@ -300,12 +300,6 @@
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
-               <property name="prefix">
-                <string/>
-               </property>
-               <property name="suffix">
-                <string> px</string>
-               </property>
                <property name="decimals">
                 <number>3</number>
                </property>
@@ -341,9 +335,6 @@
               <widget class="QDoubleSpinBox" name="dsb_y0">
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="suffix">
-                <string> px</string>
                </property>
                <property name="decimals">
                 <number>3</number>
@@ -405,7 +396,7 @@
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
                <property name="suffix">
-                <string> rad/px</string>
+                <string/>
                </property>
                <property name="decimals">
                 <number>6</number>
@@ -492,11 +483,8 @@
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
-               <property name="suffix">
-                <string> rad/px</string>
-               </property>
                <property name="decimals">
-                <number>6</number>
+                <number>8</number>
                </property>
                <property name="minimum">
                 <double>0.000000000000000</double>
@@ -552,9 +540,6 @@
               <widget class="QDoubleSpinBox" name="dsb_D">
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="suffix">
-                <string> px⁻¹</string>
                </property>
                <property name="decimals">
                 <number>6</number>
@@ -613,9 +598,6 @@
               <widget class="QDoubleSpinBox" name="dsb_Q">
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="suffix">
-                <string> px⁻²</string>
                </property>
                <property name="decimals">
                 <number>6</number>
@@ -1736,6 +1718,7 @@
     </property>
     <addaction name="ac_load_constants"/>
     <addaction name="ac_save_constants"/>
+    <addaction name="ac_optimize"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -1816,6 +1799,14 @@
    </property>
    <property name="shortcut">
     <string>F1</string>
+   </property>
+  </action>
+  <action name="ac_optimize">
+   <property name="text">
+    <string>Optimize</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
  </widget>

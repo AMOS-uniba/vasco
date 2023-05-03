@@ -10,8 +10,10 @@ from PyQt6.QtCore import QDateTime, Qt
 
 from astropy import units as u
 from astropy.coordinates import EarthLocation
+from pathlib import Path
 import matplotlib as mpl
 
+import amos
 from matchers import Matchmaker, Counselor
 from projections import BorovickaProjection
 from plotting import MainWindowPlots
@@ -47,11 +49,12 @@ class MainWindow(MainWindowPlots):
     def connectSignalSlots(self):
         self.ac_load_sighting.triggered.connect(self.loadSighting)
         self.ac_load_catalogue.triggered.connect(self.loadCatalogue)
-        self.ac_load_constants.triggered.connect(self.importProjectionConstants)
-        self.ac_save_constants.triggered.connect(self.exportProjectionConstants)
         self.ac_export_meteor.triggered.connect(self.exportCorrectedMeteor)
         self.ac_mask_unmatched.triggered.connect(self.maskSensor)
         self.ac_create_pairing.triggered.connect(self.pair)
+        self.ac_load_constants.triggered.connect(self.importProjectionConstants)
+        self.ac_save_constants.triggered.connect(self.exportProjectionConstants)
+        self.ac_optimize.triggered.connect(self.optimize)
         self.ac_about.triggered.connect(self.displayAbout)
 
         for widget, param in self.param_widgets:
@@ -63,7 +66,7 @@ class MainWindow(MainWindowPlots):
         self.dsb_lat.valueChanged.connect(self.onLocationChanged)
         self.dsb_lon.valueChanged.connect(self.onLocationChanged)
 
-        self.pb_optimize.clicked.connect(self.minimize)
+        self.pb_optimize.clicked.connect(self.optimize)
         self.pb_pair.clicked.connect(self.pair)
         self.pb_export.clicked.connect(self.exportProjectionConstants)
         self.pb_import.clicked.connect(self.importProjectionConstants)
@@ -95,7 +98,7 @@ class MainWindow(MainWindowPlots):
 
     def selectStation(self, index):
         if index == 0:
-            station = Station("custom", self.dsb_lat.value(), self.dsb_lon.value(), self.dsb_alt.value())
+            station = Station(0, "c", "custom", self.dsb_lat.value(), self.dsb_lon.value(), self.dsb_alt.value())
         else:
             station = list(AMOS.stations.values())[index - 1]
 
@@ -266,7 +269,18 @@ class MainWindow(MainWindowPlots):
         else:
             self._loadSighting(filename)
 
-        self.cb_stations.setCurrentIndex(0)
+        if (station := AMOS.stations.get(self.matcher.sensor_data.station, None)) is not None:
+            log.debug(f"Station {station.code} found, loading properties from AMOS database")
+            self.cb_stations.setCurrentIndex(station.id)
+            if (path := Path(f'./calibrations/{station.code}.yaml')).exists():
+                self._importProjectionConstants(path)
+                log.debug(f"Calibration file {path} found, loading projection constants")
+            else:
+                log.debug(f"Calibration file {path} not found, skipping")
+        else:
+            log.debug(f"Station {station.code} not found, marking as custom coordinates")
+            self.cb_stations.setCurrentIndex(0)
+
         self.onLocationTimeChanged()
         self.onParametersChanged()
         self.sensorPlot.invalidate()
@@ -326,7 +340,7 @@ class MainWindow(MainWindowPlots):
             np.radians(self.dsb_E.value()),
         )
 
-    def minimize(self):
+    def optimize(self):
         self.w_input.setEnabled(False)
         self.w_input.repaint()
 
