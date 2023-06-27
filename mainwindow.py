@@ -444,7 +444,9 @@ class MainWindow(MainWindowPlots):
     lng="{self.dsb_lon.value()}" lat="{self.dsb_lat.value()}" alt="{self.dsb_alt.value()}"
     cx="{self.matcher.sensor_data.rect.xmax}" cy="{self.matcher.sensor_data.rect.ymax}"
     fps="{self.matcher.sensor_data.fps}" interlaced="0" bbf="0"
-    frames="{self.matcher.sensor_data.meteor.count}" head="0" tail="0" drop="-1"
+    frames="{self.matcher.sensor_data.meteor.count}"
+    head="{self.matcher.sensor_data.meteor.fnos(False)[0] - 1}"
+    tail="0" drop="-1"
     dlev="0" dsize="0" sipos="0" sisize="0"
     trig="0" observer="{self.matcher.sensor_data.station}" cam="" lens=""
     cap="" u2="0" ua="0" memo=""
@@ -498,7 +500,7 @@ class MainWindow(MainWindowPlots):
             magB="0"
             magR2="0"
             magS="0"
-            usingPrecession="True">
+            usingPrecession="False">
 """)
                 file.write(self.matcher.print_meteor(self.projection, self.calibration))
                 file.write("""

@@ -66,7 +66,6 @@ class BaseSkyPlot(BasePlot):
         sizes = 0.2 * np.exp(-0.833 * (magnitudes - 5))
         self.scatter_stars.set_offsets(positions)
         self.scatter_stars.set_sizes(sizes)
-
         self.valid_stars = True
         self.draw()
 

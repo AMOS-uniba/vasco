@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 
 from astropy import units as u
-from astropy.coordinates import SkyCoord, AltAz
+from astropy.coordinates import SkyCoord, AltAz, FK5
+from astropy.time import Time
 
 import colour as c
 from logger import setupLog
@@ -36,7 +37,11 @@ class Catalogue:
         self.reset_mask()
 
     def update_coord(self):
-        self.skycoord = SkyCoord(self.stars.ra.to_numpy() * u.deg, self.stars.dec.to_numpy() * u.deg)
+        self.skycoord = SkyCoord(
+            self.stars.ra.to_numpy() * u.deg,
+            self.stars.dec.to_numpy() * u.deg,
+            frame=FK5(equinox=Time('J2000')),
+        )
 
     def filter_by_vmag(self, vmag):
         self.stars[self.stars.vmag <= vmag]['use'] = False
@@ -75,7 +80,7 @@ class Catalogue:
         return self.stars[self.mask]
 
     def altaz(self, location, time, *, masked: bool):
-        altaz = AltAz(location=location, obstime=time, pressure=0, obswl=550 * u.nm)
+        altaz = AltAz(location=location, obstime=time, pressure=95000 * u.pascal, obswl=550 * u.nm)
         source = self.skycoord[self.mask] if masked else self.skycoord
         return source.transform_to(altaz)
 
