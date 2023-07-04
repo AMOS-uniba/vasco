@@ -278,7 +278,7 @@ class MainWindow(MainWindowPlots):
             else:
                 log.debug(f"Calibration file {path} not found, skipping")
         else:
-            log.debug(f"Station {station.code} not found, marking as custom coordinates")
+            log.debug(f"Station not found, marking as custom coordinates")
             self.cb_stations.setCurrentIndex(0)
 
         self.onLocationTimeChanged()
