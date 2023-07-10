@@ -7,9 +7,10 @@ import scipy as sp
 from abc import ABCMeta, abstractmethod
 from typing import Callable, Optional
 
+from amosutils.catalogue import Catalogue
 from amosutils.projections import Projection, BorovickaProjection
 from photometry import Calibration
-from models import Catalogue, SensorData
+from models import SensorData
 
 log = logging.getLogger('vasco')
 

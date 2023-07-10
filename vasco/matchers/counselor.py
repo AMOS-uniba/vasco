@@ -8,8 +8,10 @@ from .base import Matcher
 
 from astropy.coordinates import AltAz
 
-from models import Catalogue, SensorData
 from amosutils.projections import Projection
+from amosutils.catalogue import Catalogue
+
+from models import SensorData
 from photometry import Calibration
 from correctors import KernelSmoother
 from correctors import kernels
@@ -51,7 +53,7 @@ class Counselor(Matcher):
         self.sensor_data.set_mask(mask)
 
     def mask_sensor_data(self, mask):
-        """ Here both methods are the same so just call the other one. """
+        """ Here both methods are the same, so just call the other one. """
         self.mask_catalogue(mask)
 
     @staticmethod

@@ -19,6 +19,8 @@ class DotCollection:
         assert self._xy.shape[0] == self._i.shape[0], "xy must be of shape (N, 2) and m of shape (N,)"
         assert self._xy.shape[0] == self._mask.shape[0], \
             f"xy must be of shape (N, 2) and is {self._xy.shape} and mask of shape (N,), is {self._mask.shape}"
+        assert self._i.shape == self._fnos.shape, \
+            f"i and fnos must have the same shape, got {self._i.shape}, {self._fnos.shape}"
 
         nonzero = self._i > 0
 
@@ -76,7 +78,7 @@ class DotCollection:
     @mask.setter
     def mask(self, m=None):
         self._mask = np.ones_like(self.x, dtype=bool) if m is None else m
-        assert self.mask.shape == self.x.shape,\
+        assert self.mask.shape == self.x.shape, \
             f"Mask shape does not match data shape: expected {self.x.shape}, got {self.mask.shape}"
 
     def culled_copy(self):

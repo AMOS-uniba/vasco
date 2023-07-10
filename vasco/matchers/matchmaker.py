@@ -9,8 +9,10 @@ from .base import Matcher
 from .counselor import Counselor
 
 from amosutils.projections import Projection, BorovickaProjection
+from amosutils.catalogue import Catalogue
+
 from photometry import Calibration
-from models import SensorData, Catalogue
+from models import SensorData
 from utilities import spherical_distance
 
 log = logging.getLogger('vasco')
