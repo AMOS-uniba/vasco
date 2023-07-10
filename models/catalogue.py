@@ -2,8 +2,9 @@ import copy
 import numpy as np
 import pandas as pd
 
+import astropy
 from astropy import units as u
-from astropy.coordinates import SkyCoord, AltAz, FK5
+from astropy.coordinates import SkyCoord, AltAz, FK5, get_body
 from astropy.time import Time
 
 import colour as c
@@ -27,20 +28,29 @@ class Catalogue:
         else:
             assert isinstance(stars, pd.DataFrame)
             self.stars = copy.deepcopy(stars)
-        self.update_coord()
+            self.planets = []
+        self.update_coord(Time('J2000'))
         self.reset_mask()
 
     def load(self, filename):
         self.name = filename
         self.stars = pd.read_csv(filename, sep='\t', header=1)
-        self.update_coord()
+        self.planets = []
+        self.update_coord(Time('J2000'))
         self.reset_mask()
 
-    def update_coord(self):
+    def update_planets(self, location, time):
+        return astropy.coordinates.concatenate([
+            get_body(planet, Time(time), location)
+            for planet in ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune']
+        ])
+
+    def update_coord(self, time):
         self.skycoord = SkyCoord(
             self.stars.ra.to_numpy() * u.deg,
             self.stars.dec.to_numpy() * u.deg,
-            frame=FK5(equinox=Time('J2000')),
+            1 * u.au,
+            frame=FK5(equinox=Time(time)),
         )
 
     def filter_by_vmag(self, vmag):
@@ -82,7 +92,8 @@ class Catalogue:
     def altaz(self, location, time, *, masked: bool):
         altaz = AltAz(location=location, obstime=time, pressure=95000 * u.pascal, obswl=550 * u.nm)
         source = self.skycoord[self.mask] if masked else self.skycoord
-        return source.transform_to(altaz)
+        planets = self.update_planets(location, time)
+        return astropy.coordinates.concatenate([source.transform_to(planets.frame), planets]).transform_to(altaz)
 
     def to_altaz(self, location, time, *, masked: bool = True):
         """ Returns a packed (N, 2) np.ndarray with altitude and azimuth in radians """

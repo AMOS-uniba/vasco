@@ -9,12 +9,14 @@ class DotCollection:
     def __init__(self, xy=None, i=None, mask=None, fnos=None):
         self.xy = xy
         self._i = np.empty(shape=(0,), dtype=float) if i is None else i
-        self._fnos = np.zeros_like(i, dtype=float) if fnos is None else fnos
+        self._fnos = np.empty(shape=(0,), dtype=float) if fnos is None else fnos
         self.mask = mask
         assert (xy is None) == (i is None), "Both or neither of xy and i must be set"
         assert self._xy.shape[0] == self._i.shape[0], "xy must be of shape (N, 2) and m of shape (N,)"
         assert self._xy.shape[0] == self._mask.shape[0], \
             f"xy must be of shape (N, 2) and is {self._xy.shape} and mask of shape (N,), is {self._mask.shape}"
+        assert self._i.shape == self._fnos.shape, \
+            f"i and fnos must have the same shape, got {self._i.shape}, {self._fnos.shape}"
 
     @property
     def xy(self):
