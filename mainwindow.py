@@ -42,8 +42,8 @@ class MainWindow(MainWindowPlots):
 
         self.resetMatcher()
         self.matcher.load_catalogue('catalogues/HYG30.tsv')
-        self._loadSighting('data/M20121022_234351_AGO__00002.yaml')
-        self._importProjectionConstants('calibrations/AGO2.yaml')
+        self._loadSighting('data/20220531_055655.yaml')
+        self._importProjectionConstants('calibrations/DRGRmod2.yaml')
         self.onParametersChanged()
 
     def connectSignalSlots(self):
@@ -230,6 +230,8 @@ class MainWindow(MainWindowPlots):
             if self.paired:
                 self.resetMatcher()
             self.matcher.load_catalogue(filename)
+            self.positionSkyPlot.invalidate_stars()
+            self.magnitudeSkyPlot.invalidate_stars()
             self.onParametersChanged()
 
     def exportProjectionConstants(self):
@@ -392,7 +394,7 @@ class MainWindow(MainWindowPlots):
         self.showCounts()
 
     def maskCatalogueFaint(self):
-        self.matcher.mask_catalogue(self.matcher.catalogue.vmag(False) > self.dsb_magnitude_limit.value())
+        self.matcher.mask_catalogue(self.matcher.catalogue.vmag(masked=False) > self.dsb_magnitude_limit.value())
         log.info(f"Culled the catalogue to magnitude {self.dsb_magnitude_limit.value()}m: "
               f"{self.matcher.catalogue.count_valid} stars used")
         self.positionSkyPlot.invalidate_stars()

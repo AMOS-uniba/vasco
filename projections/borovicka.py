@@ -5,6 +5,7 @@ from .base import Projection
 from .shifters import TiltShifter
 from .transformers import BiexponentialTransformer
 from .zenith import ZenithShifter
+from .scalers import Scaler
 
 
 class BorovickaProjection(Projection):
@@ -14,6 +15,7 @@ class BorovickaProjection(Projection):
                  epsilon: float = 0, E: float = 0):
         #        assert(epsilon >= 0 and V >= 0)
         super().__init__()
+        self.scaler = Scaler(0.00442605, 0.004436033)
         self.axis_shifter = TiltShifter(x0=x0, y0=y0, a0=a0, A=A, F=F, E=E)
         self.radial_transform = BiexponentialTransformer(V, S, D, P, Q)
         self.zenith_shifter = ZenithShifter(epsilon=epsilon, E=E)
@@ -21,6 +23,7 @@ class BorovickaProjection(Projection):
     def __call__(self,
                  x: Union[float, np.ndarray],
                  y: Union[float, np.ndarray]) -> Tuple[np.ndarray, np.ndarray]:
+        x, y = self.scaler(x, y)
         r, b = self.axis_shifter(x, y)
         u = self.radial_transform(r)
         z, a = self.zenith_shifter(u, b)
@@ -30,6 +33,7 @@ class BorovickaProjection(Projection):
         u, b = self.zenith_shifter.invert(z, a)
         r = self.radial_transform.invert(u)
         x, y = self.axis_shifter.invert(r, b)
+        x, y = self.scaler.invert(x, y)
         return x, y
 
     def __str__(self):

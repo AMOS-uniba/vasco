@@ -105,6 +105,6 @@ class Matcher(metaclass=ABCMeta):
                 (None, None),
             ),
             options=dict(maxiter=maxiter, disp=True),
-            callback=lambda x: print(x),
+            #callback=lambda x: print(x, np.degrees(self.func(x))),
         )
         return result

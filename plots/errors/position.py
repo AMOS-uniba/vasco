@@ -28,4 +28,4 @@ class PositionErrorPlot(BaseErrorPlot):
 
     def update_dots(self, positions, magnitudes, errors, *, limit=1):
         errors = np.degrees(errors)  # Convert errors in radians to degrees first
-        super().update_dots(positions, magnitudes, errors)
+        super().update_dots(positions, magnitudes, errors, limit=limit)
