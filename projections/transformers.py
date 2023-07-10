@@ -36,7 +36,7 @@ class ExponentialTransformer(LinearTransformer):
 
     def __init__(self, linear: float = 1, lin_coef: float = 0, lin_exp: float = 0):
         super().__init__(linear)
-        self.lin_coef = lin_coef  # radial stretch, exponential term, coefficient
+        self.lin_coef = lin_coef  # radial stretch, exponential term, linear coefficient
         self.lin_exp = lin_exp  # radial stretch, exponential term, exponent coefficient
 
     def __call__(self, r):
@@ -54,7 +54,7 @@ class BiexponentialTransformer(ExponentialTransformer):
                  lin_coef: float = 0, lin_exp: float = 0,
                  quad_coef: float = 0, quad_exp: float = 0):
         super().__init__(linear, lin_coef, lin_exp)
-        self.quad_coef = quad_coef  # radial stretch, square-exponential term, coefficient
+        self.quad_coef = quad_coef  # radial stretch, square-exponential term, linear coefficient
         self.quad_exp = quad_exp    # radial stretch, square-exponential term, exponent coefficient
 
     def __call__(self, r):

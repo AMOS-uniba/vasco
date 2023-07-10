@@ -44,7 +44,7 @@ class MainWindow(MainWindowPlots):
         self.matcher.load_catalogue('catalogues/HYG30.tsv')
         self._loadSighting('data/20220531_055655.yaml')
         self._importProjectionConstants('calibrations/DRGRmod2.yaml')
-        self.onParametersChanged()
+        self.onProjectionParametersChanged()
 
     def connectSignalSlots(self):
         self.ac_load_sighting.triggered.connect(self.loadSighting)
@@ -58,7 +58,7 @@ class MainWindow(MainWindowPlots):
         self.ac_about.triggered.connect(self.displayAbout)
 
         for widget, param in self.param_widgets:
-            widget.valueChanged.connect(self.onParametersChanged)
+            widget.valueChanged.connect(self.onProjectionParametersChanged)
 
         self.dt_time.dateTimeChanged.connect(self.updateTime)
         self.dt_time.dateTimeChanged.connect(self.onTimeChanged)
@@ -141,7 +141,7 @@ class MainWindow(MainWindowPlots):
     def updateProjection(self):
         self.projection = BorovickaProjection(*self.getConstantsTuple())
 
-    def onParametersChanged(self):
+    def onProjectionParametersChanged(self):
         log.info("Parameters changed")
         self.updateProjection()
 
@@ -187,7 +187,7 @@ class MainWindow(MainWindowPlots):
         self.lb_bandwidth.setText(f"{bandwidth:.03f}")
 
     def onBandwidthChanged(self, action=0):
-        if action == 7:
+        if action == 7: # do not do anything if the user did not drop the slider yet
             return
 
         bandwidth = self.bandwidth()
@@ -232,7 +232,7 @@ class MainWindow(MainWindowPlots):
             self.matcher.load_catalogue(filename)
             self.positionSkyPlot.invalidate_stars()
             self.magnitudeSkyPlot.invalidate_stars()
-            self.onParametersChanged()
+            self.onProjectionParametersChanged()
 
     def exportProjectionConstants(self):
         filename, _ = QFileDialog.getSaveFileName(self, "Export constants to file", "calibrations",
@@ -284,7 +284,7 @@ class MainWindow(MainWindowPlots):
             self.cb_stations.setCurrentIndex(0)
 
         self.onLocationTimeChanged()
-        self.onParametersChanged()
+        self.onProjectionParametersChanged()
         self.sensorPlot.invalidate()
         self.updatePlots()
 
@@ -304,7 +304,7 @@ class MainWindow(MainWindowPlots):
         filename, _ = QFileDialog.getOpenFileName(self, "Import constants from file", "calibrations",
                                                   "YAML files (*.yml *.yaml)")
         self._importProjectionConstants(filename)
-        self.onParametersChanged()
+        self.onProjectionParametersChanged()
 
     def _importProjectionConstants(self, filename):
         try:
@@ -371,14 +371,14 @@ class MainWindow(MainWindowPlots):
 
         self.w_input.setEnabled(True)
         self.w_input.repaint()
-        self.onParametersChanged()
+        self.onProjectionParametersChanged()
 
     def maskSensor(self):
         errors = self.matcher.position_errors(self.projection, masked=False)
         self.matcher.mask_sensor_data(errors > np.radians(self.dsb_error_limit.value()))
         log.info(f"Culled the dots to {c.param(f'{self.dsb_error_limit.value():.3f}')}°: "
               f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
-        self.onParametersChanged()
+        self.onProjectionParametersChanged()
         self.showCounts()
 
     def maskCatalogueDistant(self):
@@ -406,7 +406,7 @@ class MainWindow(MainWindowPlots):
 
     def resetValid(self):
         self.matcher.reset_mask()
-        self.onParametersChanged()
+        self.onProjectionParametersChanged()
         self.showCounts()
 
     @QtCore.pyqtSlot()

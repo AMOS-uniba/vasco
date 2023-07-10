@@ -222,6 +222,105 @@
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="gb_scaling">
+         <property name="title">
+          <string>Scaling</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_12">
+          <item row="0" column="0">
+           <widget class="QLabel" name="lx_xs">
+            <property name="text">
+             <string>H pixel pitch (x&lt;sub&gt;s&lt;/sub&gt;)</string>
+            </property>
+            <property name="buddy">
+             <cstring>dsb_xs</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="dsb_xs">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="decimals">
+             <number>9</number>
+            </property>
+            <property name="minimum">
+             <double>0.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>1.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.000100000000000</double>
+            </property>
+            <property name="value">
+             <double>0.004400000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="lb_xs">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>mm</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="lx_ys">
+            <property name="text">
+             <string>V pixel pitch (y&lt;sub&gt;s&lt;/sub&gt;)</string>
+            </property>
+            <property name="buddy">
+             <cstring>dsb_ys</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="dsb_ys">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="decimals">
+             <number>9</number>
+            </property>
+            <property name="minimum">
+             <double>0.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>1.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.000100000000000</double>
+            </property>
+            <property name="value">
+             <double>0.004400000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="lu_ys">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>mm</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="gb_parameters">
          <property name="enabled">
           <bool>true</bool>
@@ -237,7 +336,7 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <widget class="QGroupBox" name="gb_sensor">
+           <widget class="QGroupBox" name="gb_sensor_alignment">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
               <horstretch>0</horstretch>
@@ -263,14 +362,29 @@
              <property name="verticalSpacing">
               <number>0</number>
              </property>
-             <item row="2" column="0">
-              <widget class="QLabel" name="lb_a0">
-               <property name="text">
-                <string>Rotation (a&lt;sub&gt;0&lt;/sub&gt;)</string>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="dsb_y0">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>3</number>
+               </property>
+               <property name="minimum">
+                <double>-5.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>5.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>0.001000000000000</double>
+               </property>
+               <property name="value">
+                <double>0.000000000000000</double>
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
+             <item row="3" column="1">
               <widget class="QDoubleSpinBox" name="dsb_a0">
                <property name="wrapping">
                 <bool>true</bool>
@@ -295,7 +409,14 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
+             <item row="3" column="0">
+              <widget class="QLabel" name="lx_a0">
+               <property name="text">
+                <string>Rotation (a&lt;sub&gt;0&lt;/sub&gt;)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
               <widget class="QDoubleSpinBox" name="dsb_x0">
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -304,52 +425,69 @@
                 <number>3</number>
                </property>
                <property name="minimum">
-                <double>0.000000000000000</double>
+                <double>-5.000000000000000</double>
                </property>
                <property name="maximum">
-                <double>1600.000000000000000</double>
+                <double>5.000000000000000</double>
                </property>
                <property name="singleStep">
-                <double>1.000000000000000</double>
+                <double>0.001000000000000</double>
                </property>
                <property name="value">
-                <double>800.000000000000000</double>
+                <double>0.000000000000000</double>
                </property>
               </widget>
              </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="lb_x0">
-               <property name="text">
-                <string>H shift (x&lt;sub&gt;0&lt;/sub&gt;)</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="lb_y0">
+             <item row="2" column="0">
+              <widget class="QLabel" name="lx_y0">
                <property name="text">
                 <string>V shift (y&lt;sub&gt;0&lt;/sub&gt;)</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
-              <widget class="QDoubleSpinBox" name="dsb_y0">
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             <item row="1" column="0">
+              <widget class="QLabel" name="lx_x0">
+               <property name="text">
+                <string>H shift (x&lt;sub&gt;0&lt;/sub&gt;)</string>
                </property>
-               <property name="decimals">
-                <number>3</number>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QLabel" name="lu_x0">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
                </property>
-               <property name="minimum">
-                <double>0.000000000000000</double>
+               <property name="text">
+                <string>mm</string>
                </property>
-               <property name="maximum">
-                <double>1200.000000000000000</double>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="lu_y0">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
                </property>
-               <property name="singleStep">
-                <double>1.000000000000000</double>
+               <property name="text">
+                <string>mm</string>
                </property>
-               <property name="value">
-                <double>600.000000000000000</double>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLabel" name="lu_a0">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>mm</string>
                </property>
               </widget>
              </item>
@@ -384,9 +522,38 @@
               <number>0</number>
              </property>
              <item row="0" column="0">
-              <widget class="QLabel" name="lb_A">
+              <widget class="QLabel" name="lx_A">
                <property name="text">
                 <string>Amplitude (A)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="dsb_F">
+               <property name="wrapping">
+                <bool>true</bool>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="suffix">
+                <string/>
+               </property>
+               <property name="decimals">
+                <number>6</number>
+               </property>
+               <property name="maximum">
+                <double>359.999999000000003</double>
+               </property>
+               <property name="singleStep">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="lx_F">
+               <property name="text">
+                <string>Phase (F)</string>
                </property>
               </widget>
              </item>
@@ -412,32 +579,29 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="lb_F">
+             <item row="1" column="2">
+              <widget class="QLabel" name="lu_F">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
-                <string>Phase (F)</string>
+                <string>°</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
-              <widget class="QDoubleSpinBox" name="dsb_F">
-               <property name="wrapping">
-                <bool>true</bool>
+             <item row="0" column="2">
+              <widget class="QLabel" name="lu_A">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
                </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="suffix">
-                <string>°</string>
-               </property>
-               <property name="decimals">
-                <number>6</number>
-               </property>
-               <property name="maximum">
-                <double>359.999999000000003</double>
-               </property>
-               <property name="singleStep">
-                <double>1.000000000000000</double>
+               <property name="text">
+                <string/>
                </property>
               </widget>
              </item>
@@ -471,68 +635,10 @@
              <property name="verticalSpacing">
               <number>0</number>
              </property>
-             <item row="0" column="0">
-              <widget class="QLabel" name="lb_V">
+             <item row="4" column="0">
+              <widget class="QLabel" name="lx_Q">
                <property name="text">
-                <string>Linear (V)</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="dsb_V">
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="decimals">
-                <number>8</number>
-               </property>
-               <property name="minimum">
-                <double>0.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>10.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>0.000001000000000</double>
-               </property>
-               <property name="value">
-                <double>0.002000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="lb_S">
-               <property name="text">
-                <string>Exp coef (S)</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QDoubleSpinBox" name="dsb_S">
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="decimals">
-                <number>6</number>
-               </property>
-               <property name="minimum">
-                <double>-5.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>5.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>0.001000000000000</double>
-               </property>
-               <property name="stepType">
-                <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="lb_D">
-               <property name="text">
-                <string>Exp exp (D)</string>
+                <string>Biexp exp (Q)</string>
                </property>
               </widget>
              </item>
@@ -558,10 +664,54 @@
                </property>
               </widget>
              </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="dsb_S">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>6</number>
+               </property>
+               <property name="minimum">
+                <double>-5.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>5.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>0.001000000000000</double>
+               </property>
+               <property name="stepType">
+                <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
+               </property>
+              </widget>
+             </item>
              <item row="3" column="0">
-              <widget class="QLabel" name="lb_P">
+              <widget class="QLabel" name="lx_P">
                <property name="text">
                 <string>Biexp coef (P)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QDoubleSpinBox" name="dsb_Q">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>6</number>
+               </property>
+               <property name="minimum">
+                <double>-0.100000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>0.100000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>0.010000000000000</double>
+               </property>
+               <property name="stepType">
+                <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
                </property>
               </widget>
              </item>
@@ -587,32 +737,111 @@
                </property>
               </widget>
              </item>
-             <item row="4" column="0">
-              <widget class="QLabel" name="lb_Q">
+             <item row="0" column="0">
+              <widget class="QLabel" name="lx_V">
                <property name="text">
-                <string>Biexp exp (Q)</string>
+                <string>Linear (V)</string>
                </property>
               </widget>
              </item>
-             <item row="4" column="1">
-              <widget class="QDoubleSpinBox" name="dsb_Q">
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="dsb_V">
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
                <property name="decimals">
-                <number>6</number>
+                <number>9</number>
                </property>
                <property name="minimum">
-                <double>-0.100000000000000</double>
+                <double>0.000001000000000</double>
                </property>
                <property name="maximum">
-                <double>0.100000000000000</double>
+                <double>0.500000000000000</double>
                </property>
                <property name="singleStep">
-                <double>0.010000000000000</double>
+                <double>0.001000000000000</double>
                </property>
-               <property name="stepType">
-                <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
+               <property name="value">
+                <double>0.500000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="lx_D">
+               <property name="text">
+                <string>Exp exp (D)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="lx_S">
+               <property name="text">
+                <string>Exp coef (S)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QLabel" name="lu_V">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>rad/mm</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QLabel" name="lu_S">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>rad/mm</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="lu_D">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>mm&lt;sup&gt;-1&lt;/sup&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLabel" name="lu_P">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>rad/mm</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="2">
+              <widget class="QLabel" name="lu_Q">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>mm&lt;sup&gt;-2&lt;/sup&gt;</string>
                </property>
               </widget>
              </item>
@@ -715,159 +944,51 @@
             </property>
            </widget>
           </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="gb_grid_plots">
-         <property name="title">
-          <string>Grid plots</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_7">
-          <item row="3" column="2">
-           <widget class="QLabel" name="lx_resolution">
-            <property name="text">
-             <string>Resolution</string>
+          <item>
+           <widget class="QGroupBox" name="gb_identify">
+            <property name="title">
+             <string>Identify stars</string>
             </property>
-           </widget>
-          </item>
-          <item row="1" column="4" colspan="2">
-           <widget class="QCheckBox" name="cb_show_grid">
-            <property name="text">
-             <string>Show grid</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="4">
-           <widget class="QLabel" name="lx_arrow_scale">
-            <property name="text">
-             <string>Arrow scale</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="2">
-           <widget class="QLabel" name="lx_bandwidth">
-            <property name="text">
-             <string>Bandwidth</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2" colspan="2">
-           <widget class="QCheckBox" name="cb_show_errors">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <property name="text">
-             <string>Show errors</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="3">
-           <widget class="QComboBox" name="cb_interpolation">
-            <property name="currentIndex">
-             <number>1</number>
-            </property>
-            <item>
-             <property name="text">
-              <string>nearest</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>bilinear</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>bicubic</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="9" column="5">
-           <widget class="QSpinBox" name="sb_arrow_scale">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="minimum">
-             <number>5</number>
-            </property>
-            <property name="maximum">
-             <number>100</number>
-            </property>
-            <property name="singleStep">
-             <number>5</number>
-            </property>
-            <property name="value">
-             <number>30</number>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="2">
-           <widget class="QLabel" name="lx_interpolation">
-            <property name="text">
-             <string>Interpolation</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="3">
-           <widget class="QSpinBox" name="sb_resolution">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="minimum">
-             <number>11</number>
-            </property>
-            <property name="maximum">
-             <number>201</number>
-            </property>
-            <property name="singleStep">
-             <number>2</number>
-            </property>
-            <property name="value">
-             <number>41</number>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="3" colspan="2">
-           <widget class="QSlider" name="hs_bandwidth">
-            <property name="minimum">
-             <number>-100</number>
-            </property>
-            <property name="maximum">
-             <number>200</number>
-            </property>
-            <property name="pageStep">
-             <number>20</number>
-            </property>
-            <property name="value">
-             <number>100</number>
-            </property>
-            <property name="tracking">
-             <bool>true</bool>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="invertedAppearance">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="5">
-           <widget class="QLabel" name="lb_bandwidth">
-            <property name="text">
-             <string>0.100</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
+            <layout class="QGridLayout" name="gridLayout_6">
+             <item row="2" column="0">
+              <widget class="QPushButton" name="pb_optimize">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Optimize</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QSpinBox" name="sb_maxiter">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="suffix">
+                <string> iterations</string>
+               </property>
+               <property name="minimum">
+                <number>10</number>
+               </property>
+               <property name="maximum">
+                <number>2000</number>
+               </property>
+               <property name="singleStep">
+                <number>50</number>
+               </property>
+               <property name="stepType">
+                <enum>QAbstractSpinBox::DefaultStepType</enum>
+               </property>
+               <property name="value">
+                <number>250</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>
@@ -1614,56 +1735,154 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="gb_identify">
+        <widget class="QGroupBox" name="gb_grid_plots">
          <property name="title">
-          <string>Identify stars</string>
+          <string>Grid plots</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_6">
-          <item row="2" column="1">
-           <widget class="QSpinBox" name="sb_maxiter">
+         <layout class="QGridLayout" name="gridLayout_7">
+          <item row="1" column="4" colspan="2">
+           <widget class="QCheckBox" name="cb_show_grid">
+            <property name="text">
+             <string>Show grid</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2" colspan="2">
+           <widget class="QCheckBox" name="cb_show_errors">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Show errors</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="lx_bandwidth">
+            <property name="text">
+             <string>Bandwidth</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3" colspan="2">
+           <widget class="QSlider" name="hs_bandwidth">
+            <property name="minimum">
+             <number>-100</number>
+            </property>
+            <property name="maximum">
+             <number>200</number>
+            </property>
+            <property name="pageStep">
+             <number>20</number>
+            </property>
+            <property name="value">
+             <number>100</number>
+            </property>
+            <property name="tracking">
+             <bool>true</bool>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="invertedAppearance">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="5">
+           <widget class="QLabel" name="lb_bandwidth">
+            <property name="text">
+             <string>0.100</string>
+            </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
-            <property name="suffix">
-             <string> iterations</string>
+           </widget>
+          </item>
+          <item row="3" column="4" colspan="2">
+           <widget class="QSpinBox" name="sb_arrow_scale">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
             <property name="minimum">
-             <number>10</number>
+             <number>5</number>
             </property>
             <property name="maximum">
-             <number>1000</number>
+             <number>100</number>
             </property>
             <property name="singleStep">
-             <number>10</number>
+             <number>5</number>
             </property>
             <property name="value">
-             <number>250</number>
+             <number>30</number>
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QPushButton" name="pb_optimize">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
+          <item row="4" column="4" colspan="2">
+           <widget class="QSpinBox" name="sb_resolution">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
-            <property name="text">
-             <string>Optimize</string>
+            <property name="minimum">
+             <number>11</number>
+            </property>
+            <property name="maximum">
+             <number>201</number>
+            </property>
+            <property name="singleStep">
+             <number>2</number>
+            </property>
+            <property name="value">
+             <number>41</number>
             </property>
            </widget>
           </item>
-          <item row="3" column="0" colspan="2">
-           <widget class="QPushButton" name="pb_smoothen">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
+          <item row="3" column="2" colspan="2">
+           <widget class="QLabel" name="lx_arrow_scale">
             <property name="text">
-             <string>Smoothen</string>
+             <string>Arrow scale</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2" colspan="2">
+           <widget class="QLabel" name="lx_resolution">
+            <property name="text">
+             <string>Resolution</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="4" colspan="2">
+           <widget class="QComboBox" name="cb_interpolation">
+            <property name="currentIndex">
+             <number>1</number>
+            </property>
+            <item>
+             <property name="text">
+              <string>nearest</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>bilinear</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>bicubic</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="10" column="2" colspan="2">
+           <widget class="QLabel" name="lx_interpolation">
+            <property name="text">
+             <string>Interpolation</string>
             </property>
            </widget>
           </item>
@@ -1834,8 +2053,6 @@
   <tabstop>cb_show_grid</tabstop>
   <tabstop>hs_bandwidth</tabstop>
   <tabstop>sb_resolution</tabstop>
-  <tabstop>cb_interpolation</tabstop>
-  <tabstop>sb_arrow_scale</tabstop>
   <tabstop>tw_charts</tabstop>
   <tabstop>dsb_error_limit</tabstop>
   <tabstop>pb_mask_unidentified</tabstop>
@@ -1847,7 +2064,6 @@
   <tabstop>pb_reset</tabstop>
   <tabstop>pb_optimize</tabstop>
   <tabstop>sb_maxiter</tabstop>
-  <tabstop>pb_smoothen</tabstop>
  </tabstops>
  <resources/>
  <connections/>

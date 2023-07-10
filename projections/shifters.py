@@ -1,19 +1,19 @@
 import math
 import numpy as np
 import scipy as sp
-from typing import Tuple
 
 
 class ScalingShifter:
     """ Shifts and scales the sensor without rotation """
-    def __init__(self, *, x0: float = 0, y0: float = 0, scale: float = 0):
+    def __init__(self, *, x0: float = 0, y0: float = 0, xs: float = 1, ys: float = 1):
         self.x0 = x0
         self.y0 = y0
-        self.scale = scale
+        self.xs = xs
+        self.ys = ys
 
     def __call__(self, x: np.ndarray, y: np.ndarray):
-        xs = (x - self.x0) * self.scale
-        ys = (y - self.y0) * self.scale
+        xs = (x - self.x0) * self.xs
+        ys = (y - self.y0) * self.ys
         return xs, ys
 
 
@@ -25,7 +25,7 @@ class OpticalAxisShifter:
         self.a0 = a0                # rotation of the optical axis
         self.E = E                  # true azimuth of centre of FoV
 
-    def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def __call__(self, x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         xs = x - self.x0
         ys = y - self.y0
         r = np.sqrt(np.square(xs) + np.square(ys))
@@ -33,7 +33,7 @@ class OpticalAxisShifter:
         b = np.mod(b, math.tau)
         return r, b
 
-    def invert(self, r: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def invert(self, r: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         xi = b - self.a0 + self.E
         x = self.x0 + r * np.cos(xi)
         y = self.y0 + r * np.sin(xi)
@@ -52,12 +52,12 @@ class TiltShifter(OpticalAxisShifter):
         self.cos_term = np.cos(self.F - self.a0)
         self.sin_term = np.sin(self.F - self.a0)
 
-    def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def __call__(self, x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         r, b = super().__call__(x, y)
         r += self.A * ((y - self.y0) * self.cos_term - (x - self.x0) * self.sin_term)
         return r, b
 
-    def jacobian(self, vec, r, b) -> np.ndarray[float]:
+    def _jacobian(self, vec, r, b) -> np.ndarray[float]:
         """ Jacoian for the numerical inversion method """
         xs = vec[0] - self.x0
         ys = vec[1] - self.y0
@@ -71,23 +71,23 @@ class TiltShifter(OpticalAxisShifter):
             [dbdx, dbdy],
         ])
 
-    def func(self, vec, r, b):
+    def _func(self, vec, r: np.ndarray[float], b: np.ndarray[float]) -> np.ndarray[float]:
         q = self.__call__(vec[0], vec[1])
-        err = q[0] - r, np.mod(q[1] - b + 0.5 * math.tau, math.tau) - math.tau / 2
+        err = q[0] - r, np.mod(q[1] - b + math.pi, math.tau) - math.pi
         return err
 
-    def invert(self, r: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def invert(self, r: np.ndarray[float], b: np.ndarray[float]) -> tuple[np.ndarray[float], np.ndarray[float]]:
         vec = sp.optimize.root(
-            self.func,
+            self._func,
             np.stack(super().invert(r, b)),
             method='lm',
             args=(r, b),
-            jac=self.jacobian,
+            jac=self._jacobian,
             tol=1e-9,
         )
         x = vec.x[0]
         y = vec.x[1]
         return x, y
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"<{self.__class__} x0={self.x0} y0={self.y0} a0={self.a0} A={self.A} F={self.F} E={self.E}>"
