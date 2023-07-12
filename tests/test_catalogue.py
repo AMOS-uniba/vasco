@@ -1,4 +1,7 @@
 import pytest
+import yaml
+import dotmap
+
 from models.sensordata import SensorData
 from models.catalogue import Catalogue
 
@@ -12,7 +15,8 @@ def hyg30():
 
 @pytest.fixture
 def sd():
-    return SensorData('data/20220531_055655.yaml')
+    contents = dotmap.DotMap(yaml.safe_load(open('data/20220531_055655.yaml', 'r')))
+    return SensorData.load(contents)
 
 
 class TestCatalogue():
@@ -21,5 +25,5 @@ class TestCatalogue():
 
 
 class TestSensorData():
-    def test_dimensions(self):
-        pass
+    def test_dimensions(self, sd):
+        assert sd.stars.count == 702

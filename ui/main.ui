@@ -227,39 +227,7 @@
           <string>Scaling</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_12">
-          <item row="0" column="0">
-           <widget class="QLabel" name="lx_xs">
-            <property name="text">
-             <string>H pixel pitch (x&lt;sub&gt;s&lt;/sub&gt;)</string>
-            </property>
-            <property name="buddy">
-             <cstring>dsb_xs</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QDoubleSpinBox" name="dsb_xs">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="decimals">
-             <number>9</number>
-            </property>
-            <property name="minimum">
-             <double>0.000000000000000</double>
-            </property>
-            <property name="maximum">
-             <double>1.000000000000000</double>
-            </property>
-            <property name="singleStep">
-             <double>0.000100000000000</double>
-            </property>
-            <property name="value">
-             <double>0.004400000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
+          <item row="0" column="3">
            <widget class="QLabel" name="lb_xs">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
@@ -272,7 +240,7 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
+          <item row="1" column="1">
            <widget class="QLabel" name="lx_ys">
             <property name="text">
              <string>V pixel pitch (y&lt;sub&gt;s&lt;/sub&gt;)</string>
@@ -282,7 +250,7 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
+          <item row="1" column="2">
            <widget class="QDoubleSpinBox" name="dsb_ys">
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -304,7 +272,39 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="2">
+          <item row="0" column="2">
+           <widget class="QDoubleSpinBox" name="dsb_xs">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="decimals">
+             <number>9</number>
+            </property>
+            <property name="minimum">
+             <double>0.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>1.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.000100000000000</double>
+            </property>
+            <property name="value">
+             <double>0.004400000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="lx_xs">
+            <property name="text">
+             <string>H pixel pitch (x&lt;sub&gt;s&lt;/sub&gt;)</string>
+            </property>
+            <property name="buddy">
+             <cstring>dsb_xs</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
            <widget class="QLabel" name="lu_ys">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
@@ -362,13 +362,13 @@
              <property name="verticalSpacing">
               <number>0</number>
              </property>
-             <item row="2" column="1">
+             <item row="2" column="2">
               <widget class="QDoubleSpinBox" name="dsb_y0">
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
                <property name="decimals">
-                <number>3</number>
+                <number>6</number>
                </property>
                <property name="minimum">
                 <double>-5.000000000000000</double>
@@ -384,7 +384,20 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="1">
+             <item row="3" column="3">
+              <widget class="QLabel" name="lu_a0">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>mm</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
               <widget class="QDoubleSpinBox" name="dsb_a0">
                <property name="wrapping">
                 <bool>true</bool>
@@ -409,20 +422,46 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="0">
+             <item row="3" column="1">
               <widget class="QLabel" name="lx_a0">
                <property name="text">
                 <string>Rotation (a&lt;sub&gt;0&lt;/sub&gt;)</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
+             <item row="2" column="3">
+              <widget class="QLabel" name="lu_y0">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>mm</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QLabel" name="lu_x0">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>mm</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
               <widget class="QDoubleSpinBox" name="dsb_x0">
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
                <property name="decimals">
-                <number>3</number>
+                <number>6</number>
                </property>
                <property name="minimum">
                 <double>-5.000000000000000</double>
@@ -438,56 +477,71 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
+             <item row="2" column="1">
               <widget class="QLabel" name="lx_y0">
                <property name="text">
-                <string>V shift (y&lt;sub&gt;0&lt;/sub&gt;)</string>
+                <string>V shift (&amp;y&lt;sub&gt;0&lt;/sub&gt;)</string>
+               </property>
+               <property name="buddy">
+                <cstring>dsb_y0</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="lx_x0">
+               <property name="text">
+                <string>H shift (&amp;x&lt;sub&gt;0&lt;/sub&gt;)</string>
+               </property>
+               <property name="buddy">
+                <cstring>dsb_x0</cstring>
                </property>
               </widget>
              </item>
              <item row="1" column="0">
-              <widget class="QLabel" name="lx_x0">
-               <property name="text">
-                <string>H shift (x&lt;sub&gt;0&lt;/sub&gt;)</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="2">
-              <widget class="QLabel" name="lu_x0">
+              <widget class="QCheckBox" name="cb_x0">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>mm</string>
+                <string/>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
-             <item row="2" column="2">
-              <widget class="QLabel" name="lu_y0">
+             <item row="2" column="0">
+              <widget class="QCheckBox" name="cb_y0">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>mm</string>
+                <string/>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
-             <item row="3" column="2">
-              <widget class="QLabel" name="lu_a0">
+             <item row="3" column="0">
+              <widget class="QCheckBox" name="cb_a0">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>mm</string>
+                <string/>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -521,14 +575,17 @@
              <property name="verticalSpacing">
               <number>0</number>
              </property>
-             <item row="0" column="0">
+             <item row="0" column="1">
               <widget class="QLabel" name="lx_A">
                <property name="text">
-                <string>Amplitude (A)</string>
+                <string>Amplitude (&amp;A)</string>
+               </property>
+               <property name="buddy">
+                <cstring>dsb_A</cstring>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
+             <item row="1" column="2">
               <widget class="QDoubleSpinBox" name="dsb_F">
                <property name="wrapping">
                 <bool>true</bool>
@@ -550,14 +607,43 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
+             <item row="1" column="1">
               <widget class="QLabel" name="lx_F">
                <property name="text">
-                <string>Phase (F)</string>
+                <string>Phase (&amp;F)</string>
+               </property>
+               <property name="buddy">
+                <cstring>dsb_F</cstring>
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
+             <item row="1" column="3">
+              <widget class="QLabel" name="lu_F">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>°</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QLabel" name="lu_A">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
               <widget class="QDoubleSpinBox" name="dsb_A">
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -579,29 +665,35 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="2">
-              <widget class="QLabel" name="lu_F">
+             <item row="0" column="0">
+              <widget class="QCheckBox" name="cb_A">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>°</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="2">
-              <widget class="QLabel" name="lu_A">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
                <property name="text">
                 <string/>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QCheckBox" name="cb_F">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -635,14 +727,75 @@
              <property name="verticalSpacing">
               <number>0</number>
              </property>
-             <item row="4" column="0">
+             <item row="4" column="1">
               <widget class="QLabel" name="lx_Q">
                <property name="text">
-                <string>Biexp exp (Q)</string>
+                <string>Biexp exp (&amp;Q)</string>
+               </property>
+               <property name="buddy">
+                <cstring>dsb_Q</cstring>
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
+             <item row="2" column="0">
+              <widget class="QCheckBox" name="cb_D">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QLabel" name="lu_S">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>rad/mm</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QCheckBox" name="cb_S">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QLabel" name="lu_D">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>mm&lt;sup&gt;-1&lt;/sup&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
               <widget class="QDoubleSpinBox" name="dsb_D">
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -651,10 +804,10 @@
                 <number>6</number>
                </property>
                <property name="minimum">
-                <double>-0.100000000000000</double>
+                <double>-5.000000000000000</double>
                </property>
                <property name="maximum">
-                <double>0.100000000000000</double>
+                <double>5.000000000000000</double>
                </property>
                <property name="singleStep">
                 <double>0.010000000000000</double>
@@ -664,7 +817,20 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
+             <item row="4" column="3">
+              <widget class="QLabel" name="lu_Q">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>mm&lt;sup&gt;-2&lt;/sup&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
               <widget class="QDoubleSpinBox" name="dsb_S">
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -679,7 +845,7 @@
                 <double>5.000000000000000</double>
                </property>
                <property name="singleStep">
-                <double>0.001000000000000</double>
+                <double>0.010000000000000</double>
                </property>
                <property name="stepType">
                 <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
@@ -687,13 +853,58 @@
               </widget>
              </item>
              <item row="3" column="0">
-              <widget class="QLabel" name="lx_P">
+              <widget class="QCheckBox" name="cb_P">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
-                <string>Biexp coef (P)</string>
+                <string/>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
-             <item row="4" column="1">
+             <item row="0" column="3">
+              <widget class="QLabel" name="lu_V">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>rad/mm</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="3">
+              <widget class="QLabel" name="lu_P">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>rad/mm</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="lx_P">
+               <property name="text">
+                <string>Biexp coef (&amp;P)</string>
+               </property>
+               <property name="buddy">
+                <cstring>dsb_P</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="2">
               <widget class="QDoubleSpinBox" name="dsb_Q">
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -702,10 +913,10 @@
                 <number>6</number>
                </property>
                <property name="minimum">
-                <double>-0.100000000000000</double>
+                <double>-5.000000000000000</double>
                </property>
                <property name="maximum">
-                <double>0.100000000000000</double>
+                <double>5.000000000000000</double>
                </property>
                <property name="singleStep">
                 <double>0.010000000000000</double>
@@ -715,7 +926,7 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="1">
+             <item row="3" column="2">
               <widget class="QDoubleSpinBox" name="dsb_P">
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -737,20 +948,23 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="0">
+             <item row="0" column="1">
               <widget class="QLabel" name="lx_V">
                <property name="text">
-                <string>Linear (V)</string>
+                <string>Linear (&amp;V)</string>
+               </property>
+               <property name="buddy">
+                <cstring>dsb_V</cstring>
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
+             <item row="0" column="2">
               <widget class="QDoubleSpinBox" name="dsb_V">
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
                <property name="decimals">
-                <number>9</number>
+                <number>6</number>
                </property>
                <property name="minimum">
                 <double>0.000001000000000</double>
@@ -766,82 +980,55 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
+             <item row="0" column="0">
+              <widget class="QCheckBox" name="cb_V">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
               <widget class="QLabel" name="lx_D">
                <property name="text">
-                <string>Exp exp (D)</string>
+                <string>Exp exp (&amp;D)</string>
+               </property>
+               <property name="buddy">
+                <cstring>dsb_D</cstring>
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
+             <item row="1" column="1">
               <widget class="QLabel" name="lx_S">
                <property name="text">
-                <string>Exp coef (S)</string>
+                <string>Exp coef (&amp;S)</string>
+               </property>
+               <property name="buddy">
+                <cstring>dsb_S</cstring>
                </property>
               </widget>
              </item>
-             <item row="0" column="2">
-              <widget class="QLabel" name="lu_V">
+             <item row="4" column="0">
+              <widget class="QCheckBox" name="cb_Q">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>rad/mm</string>
+                <string/>
                </property>
-              </widget>
-             </item>
-             <item row="1" column="2">
-              <widget class="QLabel" name="lu_S">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>rad/mm</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="2">
-              <widget class="QLabel" name="lu_D">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>mm&lt;sup&gt;-1&lt;/sup&gt;</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="2">
-              <widget class="QLabel" name="lu_P">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>rad/mm</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="2">
-              <widget class="QLabel" name="lu_Q">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>mm&lt;sup&gt;-2&lt;/sup&gt;</string>
+               <property name="checked">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -875,14 +1062,40 @@
              <property name="verticalSpacing">
               <number>0</number>
              </property>
-             <item row="0" column="0">
+             <item row="0" column="1">
               <widget class="QLabel" name="lb_eps">
                <property name="text">
                 <string>Zenith (epsilon)</string>
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
+             <item row="1" column="1">
+              <widget class="QLabel" name="lb_E">
+               <property name="text">
+                <string>Azimuth (E)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QDoubleSpinBox" name="dsb_E">
+               <property name="wrapping">
+                <bool>true</bool>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="suffix">
+                <string>°</string>
+               </property>
+               <property name="decimals">
+                <number>6</number>
+               </property>
+               <property name="maximum">
+                <double>359.999999000000003</double>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
               <widget class="QDoubleSpinBox" name="dsb_eps">
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -901,29 +1114,35 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="lb_E">
+             <item row="0" column="0">
+              <widget class="QCheckBox" name="cb_epsilon">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
-                <string>Azimuth (E)</string>
+                <string/>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
-              <widget class="QDoubleSpinBox" name="dsb_E">
-               <property name="wrapping">
+             <item row="1" column="0">
+              <widget class="QCheckBox" name="cb_E">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="checked">
                 <bool>true</bool>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="suffix">
-                <string>°</string>
-               </property>
-               <property name="decimals">
-                <number>6</number>
-               </property>
-               <property name="maximum">
-                <double>359.999999000000003</double>
                </property>
               </widget>
              </item>
@@ -959,7 +1178,7 @@
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>Optimize</string>
+                <string>&amp;Optimize</string>
                </property>
               </widget>
              </item>

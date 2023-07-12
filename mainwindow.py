@@ -17,6 +17,7 @@ import amos
 from matchers import Matchmaker, Counselor
 from projections import BorovickaProjection
 from plotting import MainWindowPlots
+from models import SensorData
 
 import colour as c
 from amos import AMOS, Station
@@ -27,7 +28,7 @@ mpl.use('Qt5Agg')
 VERSION = "0.6.2"
 DATE = "2023-04-25"
 
-log = setupLog(__name__)
+log = setupLog('root')
 
 
 class MainWindow(MainWindowPlots):
@@ -128,8 +129,7 @@ class MainWindow(MainWindowPlots):
                                       self.dsb_alt.value() * u.m)
 
     def setTime(self, time):
-        time = QDateTime(time.date(), time.time(), Qt.TimeSpec.UTC)
-        self.dt_time.setDateTime(time)
+        self.dt_time.setDateTime(QDateTime(time))
 
     def updateTime(self):
         self.time = self.dt_time.dateTime().toPyDateTime()
@@ -139,7 +139,7 @@ class MainWindow(MainWindowPlots):
         self.matcher.update_position_smoother(self.projection)
 
     def updateProjection(self):
-        self.projection = BorovickaProjection(*self.getConstantsTuple())
+        self.projection = BorovickaProjection(*self.getProjectionParameters())
 
     def onProjectionParametersChanged(self):
         log.info("Parameters changed")
@@ -162,7 +162,9 @@ class MainWindow(MainWindowPlots):
     def onLocationTimeChanged(self):
         self.updateMatcher()
         self.positionSkyPlot.invalidate_stars()
+        self.positionSkyPlot.invalidate_dots()
         self.magnitudeSkyPlot.invalidate_stars()
+        self.magnitudeSkyPlot.invalidate_dots()
         self.positionErrorPlot.invalidate()
         self.magnitudeErrorPlot.invalidate()
 
@@ -298,7 +300,7 @@ class MainWindow(MainWindowPlots):
 
         if self.paired:
             self.resetMatcher()
-        self.matcher.sensor_data.load(data)
+        self.matcher.sensor_data = SensorData.load(data)
 
     def importProjectionConstants(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Import constants from file", "calibrations",
@@ -326,8 +328,8 @@ class MainWindow(MainWindowPlots):
         for widget, param in self.param_widgets:
             widget.blockSignals(block)
 
-    def getConstantsTuple(self):
-        return (
+    def getProjectionParameters(self):
+        return np.array((
             self.dsb_x0.value(),
             self.dsb_y0.value(),
             np.radians(self.dsb_a0.value()),
@@ -340,7 +342,7 @@ class MainWindow(MainWindowPlots):
             self.dsb_Q.value(),
             np.radians(self.dsb_eps.value()),
             np.radians(self.dsb_E.value()),
-        )
+        ))
 
     def optimize(self):
         self.w_input.setEnabled(False)
@@ -349,11 +351,27 @@ class MainWindow(MainWindowPlots):
         result = self.matcher.minimize(
             #    location=self.location,
             #    time=self.time,
-            x0=self.getConstantsTuple(),
-            maxiter=self.sb_maxiter.value()
+            x0=self.getProjectionParameters(),
+            maxiter=self.sb_maxiter.value(),
+            mask=np.array(
+                (
+                    self.cb_x0.isChecked(),
+                    self.cb_y0.isChecked(),
+                    self.cb_a0.isChecked(),
+                    self.cb_A.isChecked(),
+                    self.cb_F.isChecked(),
+                    self.cb_V.isChecked(),
+                    self.cb_S.isChecked(),
+                    self.cb_D.isChecked(),
+                    self.cb_P.isChecked(),
+                    self.cb_Q.isChecked(),
+                    self.cb_epsilon.isChecked(),
+                    self.cb_E.isChecked(),
+                ), dtype=bool,
+            )
         )
 
-        x0, y0, a0, A, F, V, S, D, P, Q, e, E = tuple(result.x)
+        x0, y0, a0, A, F, V, S, D, P, Q, e, E = result
         self.blockParameterSignals(True)
         self.dsb_x0.setValue(x0)
         self.dsb_y0.setValue(y0)

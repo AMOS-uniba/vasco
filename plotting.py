@@ -1,9 +1,10 @@
+import logging
+
 import numpy as np
 
 from typing import Callable
 
 from PyQt6.QtWidgets import QStackedWidget
-
 
 from plots import SensorPlot
 from plots.sky import PositionSkyPlot, MagnitudeSkyPlot
@@ -12,9 +13,9 @@ from plots.correction import BaseCorrectionPlot, PositionCorrectionPlot, Magnitu
 from utilities import unit_grid
 
 from base import MainWindowBase
-from logger import setupLog
 
-log = setupLog(__name__)
+
+log = logging.getLogger('root')
 
 
 class MainWindowPlots(MainWindowBase):

@@ -1,20 +1,34 @@
 import copy
 import numpy as np
+import logging
 
 from projections import Projection
 from photometry import Calibration
+
+log = logging.getLogger('root')
 
 
 class DotCollection:
     def __init__(self, xy=None, i=None, mask=None, fnos=None):
         self._xy = np.empty(shape=(0, 2), dtype=float) if xy is None else xy
         self._i = np.empty(shape=(0,), dtype=float) if i is None else i
-        self._fnos = np.zeros_like(i, dtype=float) if fnos is None else fnos
+        self._fnos = np.zeros_like(self.i, dtype=float) if fnos is None else fnos
         self.mask = np.ones_like(self.x, dtype=bool) if mask is None else mask
         assert (xy is None) == (i is None), "Both or neither of xy and i must be set"
         assert self._xy.shape[0] == self._i.shape[0], "xy must be of shape (N, 2) and m of shape (N,)"
         assert self._xy.shape[0] == self._mask.shape[0], \
             f"xy must be of shape (N, 2) and is {self._xy.shape} and mask of shape (N,), is {self._mask.shape}"
+
+        nonzero = self._i > 0
+
+        if np.alltrue(nonzero):
+            log.debug(f"All dots seem to be correct")
+        else:
+            log.warning(f"Dots with zero intensity were found and removed (indices {np.where(~nonzero)})")
+            self._xy = self._xy[nonzero]
+            self._i = self._i[nonzero]
+            self._fnos = self._fnos[nonzero]
+            self.mask = self.mask[nonzero]
 
     @property
     def xy(self):
