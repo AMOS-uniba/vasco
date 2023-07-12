@@ -8,6 +8,21 @@ from .zenith import ZenithShifter
 
 
 class BorovickaProjection(Projection):
+    bounds = np.array((
+        (None, None), # x0
+        (None, None), # y0
+        (None, None), # a0
+        (None, None), # A
+        (None, None), # F
+        (0, None),    # V
+        (None, None), # S
+        (None, None), # D
+        (None, None), # P
+        (None, None), # Q
+        (0, None),    # epsilon
+        (None, None), # E
+    ))
+
     def __init__(self,
                  x0: float = 0, y0: float = 0, a0: float = 0,
                  A: float = 0, F: float = 0,

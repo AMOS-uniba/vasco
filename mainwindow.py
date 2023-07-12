@@ -6,14 +6,13 @@ import dotmap
 
 from PyQt6 import QtCore
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
-from PyQt6.QtCore import QDateTime, Qt
+from PyQt6.QtCore import QDateTime
 
 from astropy import units as u
 from astropy.coordinates import EarthLocation
 from pathlib import Path
 import matplotlib as mpl
 
-import amos
 from matchers import Matchmaker, Counselor
 from projections import BorovickaProjection
 from plotting import MainWindowPlots

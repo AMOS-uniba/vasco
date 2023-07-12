@@ -97,37 +97,19 @@ class Matcher(metaclass=ABCMeta):
         ifixed = np.where(~mask)
         ivariable = np.where(mask)
 
-        print(ifixed, ivariable)
-
         def func(x, *args):
             variable = np.array(x)
-            print(x, args)
 
             vec = np.zeros(shape=(12,))
             np.put(vec, ivariable, variable)
             np.put(vec, ifixed, np.array(args))
-
-            print(vec)
 
             return self.avg_error(self.position_errors(self.projection_cls(*vec), masked=True))
 
         return func
 
     def get_bounds(self, mask):
-        return np.array((
-            (None, None),
-            (None, None),
-            (None, None),
-            (None, None),
-            (None, None),
-            (0, None),  # V
-            (None, None),
-            (None, None),
-            (None, None),
-            (None, None),
-            (0, None),  # epsilon
-            (None, None),
-        ))[mask]
+        return self.projection_cls.bounds[mask]
 
     def minimize(self,
                  x0=np.array((0, 0, 0, 0, math.tau / 4, 0, 0, 0, 0, 0, 0, 0)),
@@ -136,6 +118,10 @@ class Matcher(metaclass=ABCMeta):
                  mask=np.ones(shape=(12,), dtype=bool)):
         func = self.get_function(np.array(x0), mask)
         args = self.get_params(np.array(x0), mask)
+
+        if np.count_nonzero(mask) == 0:
+            log.warning(f"At least one parameter must be allowed to vary")
+            return tuple(x0)
 
         result = sp.optimize.minimize(
             func,
