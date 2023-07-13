@@ -14,18 +14,18 @@ MultipleObjects: False
 ObjectOrientationAlignedWithMovement: True
 StableMovement: True
 Trail:  
-  - {fno: 027, xc: 1124.6474, yc: 502.3724, intensity: 4128.0000, GaussianHeight: 218.9601, GaussianWidth: 2.0171, GaussianBaseline: 50.8445, NumOversaturatedPixels: 0}
-  - {fno: 028, xc: 1126.2763, yc: 501.2374, intensity: 4388.0000, GaussianHeight: 209.4085, GaussianWidth: 2.3261, GaussianBaseline: 49.4483, NumOversaturatedPixels: 0}
-  - {fno: 029, xc: 1127.5007, yc: 500.5713, intensity: 4354.0000, GaussianHeight: 213.4758, GaussianWidth: 2.1608, GaussianBaseline: 58.3823, NumOversaturatedPixels: 0}
-  - {fno: 030, xc: 1129.1575, yc: 499.7932, intensity: 6815.0000, GaussianHeight: 228.2006, GaussianWidth: 2.6922, GaussianBaseline: 47.4657, NumOversaturatedPixels: 0}
-  - {fno: 031, xc: 1130.6870, yc: 498.7819, intensity: 7046.0000, GaussianHeight: 229.6487, GaussianWidth: 2.4748, GaussianBaseline: 54.8621, NumOversaturatedPixels: 0}
-  - {fno: 032, xc: 1132.0138, yc: 497.9210, intensity: 7010.0000, GaussianHeight: 221.8395, GaussianWidth: 2.3419, GaussianBaseline: 56.1681, NumOversaturatedPixels: 0}
-  - {fno: 033, xc: 1133.5406, yc: 496.9738, intensity: 7402.0000, GaussianHeight: 215.0838, GaussianWidth: 2.6922, GaussianBaseline: 54.9512, NumOversaturatedPixels: 0}
-  - {fno: 034, xc: 1135.1385, yc: 496.3004, intensity: 8035.0000, GaussianHeight: 224.9905, GaussianWidth: 2.4049, GaussianBaseline: 60.9022, NumOversaturatedPixels: 0}
-  - {fno: 035, xc: 1136.8066, yc: 495.2351, intensity: 8720.0000, GaussianHeight: 246.4159, GaussianWidth: 3.0752, GaussianBaseline: 57.8928, NumOversaturatedPixels: 0}
-  - {fno: 036, xc: 1138.1782, yc: 494.4419, intensity: 12455.0000, GaussianHeight: 241.9466, GaussianWidth: 3.1941, GaussianBaseline: 53.8077, NumOversaturatedPixels: 0}
-  - {fno: 037, xc: 1139.0314, yc: 494.0122, intensity: 8240.0000, GaussianHeight: 211.3882, GaussianWidth: 2.6679, GaussianBaseline: 62.2933, NumOversaturatedPixels: 0}
-  - {fno: 038, xc: 1139.8703, yc: 495.2159, intensity: 4098.0000, GaussianHeight: 212.8544, GaussianWidth: 3.0810, GaussianBaseline: 63.8274, NumOversaturatedPixels: 0}
+  - {fno: 27, xc: 1124.6474, yc: 502.3724, intensity: 4128.0000, GaussianHeight: 218.9601, GaussianWidth: 2.0171, GaussianBaseline: 50.8445, NumOversaturatedPixels: 0}
+  - {fno: 28, xc: 1126.2763, yc: 501.2374, intensity: 4388.0000, GaussianHeight: 209.4085, GaussianWidth: 2.3261, GaussianBaseline: 49.4483, NumOversaturatedPixels: 0}
+  - {fno: 29, xc: 1127.5007, yc: 500.5713, intensity: 4354.0000, GaussianHeight: 213.4758, GaussianWidth: 2.1608, GaussianBaseline: 58.3823, NumOversaturatedPixels: 0}
+  - {fno: 30, xc: 1129.1575, yc: 499.7932, intensity: 6815.0000, GaussianHeight: 228.2006, GaussianWidth: 2.6922, GaussianBaseline: 47.4657, NumOversaturatedPixels: 0}
+  - {fno: 31, xc: 1130.6870, yc: 498.7819, intensity: 7046.0000, GaussianHeight: 229.6487, GaussianWidth: 2.4748, GaussianBaseline: 54.8621, NumOversaturatedPixels: 0}
+  - {fno: 32, xc: 1132.0138, yc: 497.9210, intensity: 7010.0000, GaussianHeight: 221.8395, GaussianWidth: 2.3419, GaussianBaseline: 56.1681, NumOversaturatedPixels: 0}
+  - {fno: 33, xc: 1133.5406, yc: 496.9738, intensity: 7402.0000, GaussianHeight: 215.0838, GaussianWidth: 2.6922, GaussianBaseline: 54.9512, NumOversaturatedPixels: 0}
+  - {fno: 34, xc: 1135.1385, yc: 496.3004, intensity: 8035.0000, GaussianHeight: 224.9905, GaussianWidth: 2.4049, GaussianBaseline: 60.9022, NumOversaturatedPixels: 0}
+  - {fno: 35, xc: 1136.8066, yc: 495.2351, intensity: 8720.0000, GaussianHeight: 246.4159, GaussianWidth: 3.0752, GaussianBaseline: 57.8928, NumOversaturatedPixels: 0}
+  - {fno: 36, xc: 1138.1782, yc: 494.4419, intensity: 12455.0000, GaussianHeight: 241.9466, GaussianWidth: 3.1941, GaussianBaseline: 53.8077, NumOversaturatedPixels: 0}
+  - {fno: 37, xc: 1139.0314, yc: 494.0122, intensity: 8240.0000, GaussianHeight: 211.3882, GaussianWidth: 2.6679, GaussianBaseline: 62.2933, NumOversaturatedPixels: 0}
+  - {fno: 38, xc: 1139.8703, yc: 495.2159, intensity: 4098.0000, GaussianHeight: 212.8544, GaussianWidth: 3.0810, GaussianBaseline: 63.8274, NumOversaturatedPixels: 0}
 Refstars:  
   - {x: 1131.454076, y: 309.703362, intensity: 3221.0000}
   - {x: 434.478404, y: 679.204645, intensity: 3999.0000}

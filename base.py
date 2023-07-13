@@ -1,10 +1,12 @@
 import dotmap
 import numpy as np
 
+from matplotlib import pyplot as plt
+from collections import OrderedDict
+
 from PyQt6.QtWidgets import QMainWindow
 from main_ui import Ui_MainWindow
 
-from matplotlib import pyplot as plt
 
 from photometry import LogCalibration
 from matchers import Counselor
@@ -24,11 +26,20 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         self.matcher = None
 
         self.setupUi(self)
-        self.param_widgets = [
-            (self.dsb_x0, 'x0'), (self.dsb_y0, 'y0'), (self.dsb_a0, 'a0'), (self.dsb_A, 'A'), (self.dsb_F, 'F'),
-            (self.dsb_V, 'V'), (self.dsb_S, 'S'), (self.dsb_D, 'D'), (self.dsb_P, 'P'), (self.dsb_Q, 'Q'),
-            (self.dsb_eps, 'eps'), (self.dsb_E, 'E')
-        ]
+        self.param_widgets = OrderedDict(
+            x0=self.pw_x0,
+            y0=self.pw_y0,
+            a0=self.pw_a0,
+            A=self.pw_A,
+            F=self.pw_F,
+            V=self.pw_V,
+            S=self.pw_S,
+            D=self.pw_D,
+            P=self.pw_P,
+            Q=self.pw_Q,
+            epsilon=self.pw_epsilon,
+            E=self.pw_E,
+        )
 
         self.settings = dotmap.DotMap(dict(
             resolution=dict(left=-1, bottom=-1, right=1, top=1)

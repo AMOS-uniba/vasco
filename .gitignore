@@ -3,6 +3,7 @@
 build/*
 output/*
 dist*
-main_ui.py
+*_ui.py
+*/*_ui.py
 main.spec
 .idea*

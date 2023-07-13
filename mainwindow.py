@@ -6,7 +6,7 @@ import dotmap
 
 from PyQt6 import QtCore
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
-from PyQt6.QtCore import QDateTime
+from PyQt6.QtCore import QDateTime, Qt
 
 from astropy import units as u
 from astropy.coordinates import EarthLocation
@@ -21,6 +21,7 @@ from models import SensorData
 import colour as c
 from amos import AMOS, Station
 from logger import setupLog
+from widgets.qparameterwidget import QParameterWidget
 
 mpl.use('Qt5Agg')
 
@@ -57,8 +58,28 @@ class MainWindow(MainWindowPlots):
         self.ac_optimize.triggered.connect(self.optimize)
         self.ac_about.triggered.connect(self.displayAbout)
 
-        for widget, param in self.param_widgets:
-            widget.valueChanged.connect(self.onProjectionParametersChanged)
+        for widget in self.param_widgets.values():
+            widget.dsb_value.valueChanged.connect(self.onProjectionParametersChanged)
+
+        self.pw_x0.setup(title="H shift", symbol="x<sub>0</sub>", unit="mm", minimum=-5, maximum=5, step=0.001)
+        self.pw_y0.setup(title="V shift", symbol="y<sub>0</sub>", unit="mm", minimum=-5, maximum=5, step=0.001)
+        self.pw_a0.setup(title="Rotation", symbol="a<sub>0</sub>", unit="°", minimum=0, maximum=359.999999, step=0.2,
+                         inner_function=np.radians, input_function=np.degrees)
+
+        self.pw_A.setup(title="Amplitude", symbol="A", unit="", minimum=-1, maximum=1, step=0.001)
+        self.pw_F.setup(title="Phase", symbol="F", unit="°", minimum=0, maximum=359.999999, step=1,
+                        inner_function=np.radians, input_function=np.degrees)
+
+        self.pw_V.setup(title="Linear", symbol="&V", unit="rad/mm", minimum=0.001, maximum=1, step=0.001)
+        self.pw_S.setup(title="Exp coef", symbol="&S", unit="rad/mm", minimum=-5, maximum=5, step=0.001)
+        self.pw_D.setup(title="Exp exp", symbol="&D", unit="mm<sup>-1</sup>", minimum=-5, maximum=5, step=0.001)
+        self.pw_P.setup(title="Biexp coef", symbol="&P", unit="rad/mm", minimum=-5, maximum=5, step=0.001)
+        self.pw_Q.setup(title="Biexp exp", symbol="&Q", unit="mm<sup>-2</sup>", minimum=-5, maximum=5, step=0.001)
+
+        self.pw_epsilon.setup(title="Zenith dist", symbol="ε", unit="°", minimum=0, maximum=90, step=0.1,
+                        inner_function=np.radians, input_function=np.degrees)
+        self.pw_E.setup(title="Azimuth", symbol="E", unit="°", minimum=0, maximum=359.999999, step=1,
+                        inner_function=np.radians, input_function=np.degrees)
 
         self.dt_time.dateTimeChanged.connect(self.updateTime)
         self.dt_time.dateTimeChanged.connect(self.onTimeChanged)
@@ -128,7 +149,7 @@ class MainWindow(MainWindowPlots):
                                       self.dsb_alt.value() * u.m)
 
     def setTime(self, time):
-        self.dt_time.setDateTime(QDateTime(time))
+        self.dt_time.setDateTime(QDateTime(time.date(), time.time(), Qt.TimeSpec.UTC))
 
     def updateTime(self):
         self.time = self.dt_time.dateTime().toPyDateTime()
@@ -245,21 +266,8 @@ class MainWindow(MainWindowPlots):
         try:
             with open(filename, 'w+') as file:
                 yaml.dump(dict(
-                    proj='Borovicka',
-                    params=dict(
-                        x0=self.dsb_x0.value(),
-                        y0=self.dsb_y0.value(),
-                        a0=self.dsb_a0.value(),
-                        A=self.dsb_A.value(),
-                        F=self.dsb_F.value(),
-                        V=self.dsb_V.value(),
-                        S=self.dsb_S.value(),
-                        D=self.dsb_D.value(),
-                        P=self.dsb_P.value(),
-                        Q=self.dsb_Q.value(),
-                        eps=self.dsb_eps.value(),
-                        E=self.dsb_E.value(),
-                    )
+                    proj='Borovička',
+                    params={ param: widget.inner_value for param, widget in self.param_widgets.values() },
                 ), file)
         except FileNotFoundError as exc:
             log.error(f"Could not export constants: {exc}")
@@ -290,7 +298,7 @@ class MainWindow(MainWindowPlots):
         self.updatePlots()
 
     def _loadSighting(self, file):
-        data = dotmap.DotMap(yaml.safe_load(open(file, 'r')))
+        data = dotmap.DotMap(yaml.safe_load(open(file, 'r')), _dynamic=False)
         self.setLocation(data.Latitude, data.Longitude, data.Altitude)
         self.updateLocation()
         self.setTime(pytz.UTC.localize(datetime.datetime.strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f")))
@@ -311,10 +319,10 @@ class MainWindow(MainWindowPlots):
         try:
             with open(filename, 'r') as file:
                 try:
-                    data = dotmap.DotMap(yaml.safe_load(file))
+                    data = dotmap.DotMap(yaml.safe_load(file), _dynamic=False)
                     self.blockParameterSignals(True)
-                    for widget, param in self.param_widgets:
-                        widget.setValue(data.params[param])
+                    for param, widget in self.param_widgets.items():
+                        widget.set_value(data.params[param])
                     self.blockParameterSignals(False)
 
                     self.updateProjection()
@@ -324,24 +332,11 @@ class MainWindow(MainWindowPlots):
             log.error(f"Could not import constants: {exc}")
 
     def blockParameterSignals(self, block):
-        for widget, param in self.param_widgets:
-            widget.blockSignals(block)
+        for widget in self.param_widgets.values():
+            widget.dsb_value.blockSignals(block)
 
     def getProjectionParameters(self):
-        return np.array((
-            self.dsb_x0.value(),
-            self.dsb_y0.value(),
-            np.radians(self.dsb_a0.value()),
-            self.dsb_A.value(),
-            np.radians(self.dsb_F.value()),
-            self.dsb_V.value(),
-            self.dsb_S.value(),
-            self.dsb_D.value(),
-            self.dsb_P.value(),
-            self.dsb_Q.value(),
-            np.radians(self.dsb_eps.value()),
-            np.radians(self.dsb_E.value()),
-        ))
+        return np.array([widget.inner_value() for widget in self.param_widgets.values()], dtype=float)
 
     def optimize(self):
         self.w_input.setEnabled(False)
@@ -352,38 +347,13 @@ class MainWindow(MainWindowPlots):
             #    time=self.time,
             x0=self.getProjectionParameters(),
             maxiter=self.sb_maxiter.value(),
-            mask=np.array(
-                (
-                    self.cb_x0.isChecked(),
-                    self.cb_y0.isChecked(),
-                    self.cb_a0.isChecked(),
-                    self.cb_A.isChecked(),
-                    self.cb_F.isChecked(),
-                    self.cb_V.isChecked(),
-                    self.cb_S.isChecked(),
-                    self.cb_D.isChecked(),
-                    self.cb_P.isChecked(),
-                    self.cb_Q.isChecked(),
-                    self.cb_epsilon.isChecked(),
-                    self.cb_E.isChecked(),
-                ), dtype=bool,
-            )
+            mask=np.array([widget.is_checked() for widget in self.param_widgets.values()], dtype=bool)
         )
 
         x0, y0, a0, A, F, V, S, D, P, Q, e, E = result
         self.blockParameterSignals(True)
-        self.dsb_x0.setValue(x0)
-        self.dsb_y0.setValue(y0)
-        self.dsb_a0.setValue(np.degrees(a0))
-        self.dsb_A.setValue(A)
-        self.dsb_F.setValue(np.degrees(F))
-        self.dsb_V.setValue(V)
-        self.dsb_S.setValue(S)
-        self.dsb_D.setValue(D)
-        self.dsb_P.setValue(P)
-        self.dsb_Q.setValue(Q)
-        self.dsb_eps.setValue(np.degrees(e))
-        self.dsb_E.setValue(np.degrees(E))
+        for value, widget in zip(result, self.param_widgets.values()):
+            widget.set_from_gui(value)
         self.blockParameterSignals(False)
 
         self.w_input.setEnabled(True)
