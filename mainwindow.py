@@ -63,22 +63,22 @@ class MainWindow(MainWindowPlots):
 
         self.pw_x0.setup(title="H shift", symbol="x<sub>0</sub>", unit="mm", minimum=-5, maximum=5, step=0.001)
         self.pw_y0.setup(title="V shift", symbol="y<sub>0</sub>", unit="mm", minimum=-5, maximum=5, step=0.001)
-        self.pw_a0.setup(title="Rotation", symbol="a<sub>0</sub>", unit="°", minimum=0, maximum=359.999999, step=0.2,
+        self.pw_a0.setup(title="rotation", symbol="a<sub>0</sub>", unit="°", minimum=0, maximum=359.999999, step=0.2,
                          inner_function=np.radians, input_function=np.degrees)
 
-        self.pw_A.setup(title="Amplitude", symbol="A", unit="", minimum=-1, maximum=1, step=0.001)
-        self.pw_F.setup(title="Phase", symbol="F", unit="°", minimum=0, maximum=359.999999, step=1,
+        self.pw_A.setup(title="amplitude", symbol="A", unit="", minimum=-1, maximum=1, step=0.001)
+        self.pw_F.setup(title="phase", symbol="F", unit="°", minimum=0, maximum=359.999999, step=1,
                         inner_function=np.radians, input_function=np.degrees)
 
-        self.pw_V.setup(title="Linear", symbol="&V", unit="rad/mm", minimum=0.001, maximum=1, step=0.001)
-        self.pw_S.setup(title="Exp coef", symbol="&S", unit="rad/mm", minimum=-5, maximum=5, step=0.001)
-        self.pw_D.setup(title="Exp exp", symbol="&D", unit="mm<sup>-1</sup>", minimum=-5, maximum=5, step=0.001)
-        self.pw_P.setup(title="Biexp coef", symbol="&P", unit="rad/mm", minimum=-5, maximum=5, step=0.001)
-        self.pw_Q.setup(title="Biexp exp", symbol="&Q", unit="mm<sup>-2</sup>", minimum=-5, maximum=5, step=0.001)
+        self.pw_V.setup(title="linear", symbol="&V", unit="rad/mm", minimum=0.001, maximum=1, step=0.001)
+        self.pw_S.setup(title="exp coef", symbol="&S", unit="rad/mm", minimum=-5, maximum=5, step=0.001)
+        self.pw_D.setup(title="exp exp", symbol="&D", unit="mm<sup>-1</sup>", minimum=-5, maximum=5, step=0.001)
+        self.pw_P.setup(title="biexp coef", symbol="&P", unit="rad/mm", minimum=-5, maximum=5, step=0.001)
+        self.pw_Q.setup(title="biexp exp", symbol="&Q", unit="mm<sup>-2</sup>", minimum=-5, maximum=5, step=0.001)
 
-        self.pw_epsilon.setup(title="Zenith dist", symbol="ε", unit="°", minimum=0, maximum=90, step=0.1,
+        self.pw_epsilon.setup(title="zenith dist", symbol="ε", unit="°", minimum=0, maximum=90, step=0.1,
                         inner_function=np.radians, input_function=np.degrees)
-        self.pw_E.setup(title="Azimuth", symbol="E", unit="°", minimum=0, maximum=359.999999, step=1,
+        self.pw_E.setup(title="azimuth", symbol="E", unit="°", minimum=0, maximum=359.999999, step=1,
                         inner_function=np.radians, input_function=np.degrees)
 
         self.dt_time.dateTimeChanged.connect(self.updateTime)
