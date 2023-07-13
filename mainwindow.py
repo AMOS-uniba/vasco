@@ -1,3 +1,5 @@
+import logging
+
 import yaml
 import pytz
 import datetime
@@ -20,15 +22,13 @@ from models import SensorData
 
 import colour as c
 from amos import AMOS, Station
-from logger import setupLog
-from widgets.qparameterwidget import QParameterWidget
 
 mpl.use('Qt5Agg')
 
-VERSION = "0.6.2"
-DATE = "2023-04-25"
+log = logging.getLogger('root')
 
-log = setupLog('root')
+VERSION = "0.7.0"
+DATE = "2023-07-13"
 
 
 class MainWindow(MainWindowPlots):
@@ -162,7 +162,7 @@ class MainWindow(MainWindowPlots):
         self.projection = BorovickaProjection(*self.getProjectionParameters())
 
     def onProjectionParametersChanged(self):
-        log.info("Parameters changed")
+        log.info(f"Parameters changed: {self.getProjectionParameters()}")
         self.updateProjection()
 
         self.positionSkyPlot.invalidate_dots()
@@ -343,14 +343,11 @@ class MainWindow(MainWindowPlots):
         self.w_input.repaint()
 
         result = self.matcher.minimize(
-            #    location=self.location,
-            #    time=self.time,
             x0=self.getProjectionParameters(),
             maxiter=self.sb_maxiter.value(),
             mask=np.array([widget.is_checked() for widget in self.param_widgets.values()], dtype=bool)
         )
 
-        x0, y0, a0, A, F, V, S, D, P, Q, e, E = result
         self.blockParameterSignals(True)
         for value, widget in zip(result, self.param_widgets.values()):
             widget.set_from_gui(value)

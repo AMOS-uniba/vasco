@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>280</width>
-    <height>29</height>
+    <width>282</width>
+    <height>33</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -120,7 +120,7 @@
       <string>unit</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignCenter</set>
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
    </item>

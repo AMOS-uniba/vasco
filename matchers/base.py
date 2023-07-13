@@ -130,7 +130,7 @@ class Matcher(metaclass=ABCMeta):
             method='Nelder-Mead',
             bounds=self.get_bounds(mask),
             options=dict(maxiter=maxiter, disp=True),
-            callback=lambda x: log.info(x),
+            callback=lambda x: log.debug(x),
         )
 
         vec = np.zeros(shape=(12,))
