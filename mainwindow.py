@@ -282,7 +282,7 @@ class MainWindow(MainWindowPlots):
             with open(filename, 'w+') as file:
                 yaml.dump(dict(
                     proj='Borovička',
-                    params={ param: widget.inner_value for param, widget in self.param_widgets.values() },
+                    params={ param: widget.inner_value() for param, widget in self.param_widgets.items() },
                 ), file)
         except FileNotFoundError as exc:
             log.error(f"Could not export constants: {exc}")
