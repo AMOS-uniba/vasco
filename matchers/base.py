@@ -90,7 +90,6 @@ class Matcher(metaclass=ABCMeta):
         return self.avg_error(self.position_errors(self.projection_cls(*x), masked=True))
 
     def get_params(self, x0, mask):
-        print(mask, mask.dtype, mask.shape)
         return x0[~mask]
 
     def get_function(self, x0, mask):

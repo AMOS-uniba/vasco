@@ -7,7 +7,7 @@ import numpy as np
 import dotmap
 
 from PyQt6 import QtCore
-from PyQt6.QtWidgets import QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
 from PyQt6.QtCore import QDateTime, Qt
 
 from astropy import units as u
@@ -36,6 +36,8 @@ class MainWindow(MainWindowPlots):
         super().__init__(parent)
         self.populateStations()
         self.updateProjection()
+
+        self.tw_meteor.setColumnWidth(0, 30)
 
         self.connectSignalSlots()
         self.updateLocation()
@@ -76,7 +78,7 @@ class MainWindow(MainWindowPlots):
         self.pw_P.setup(title="biexp coef", symbol="&P", unit="rad/mm", minimum=-5, maximum=5, step=0.001)
         self.pw_Q.setup(title="biexp exp", symbol="&Q", unit="mm<sup>-2</sup>", minimum=-5, maximum=5, step=0.001)
 
-        self.pw_epsilon.setup(title="zenith dist", symbol="ε", unit="°", minimum=0, maximum=90, step=0.1,
+        self.pw_epsilon.setup(title="zenith angle", symbol="ε", unit="°", minimum=0, maximum=90, step=0.1,
                         inner_function=np.radians, input_function=np.degrees)
         self.pw_E.setup(title="azimuth", symbol="E", unit="°", minimum=0, maximum=359.999999, step=1,
                         inner_function=np.radians, input_function=np.degrees)
@@ -356,6 +358,33 @@ class MainWindow(MainWindowPlots):
         self.w_input.setEnabled(True)
         self.w_input.repaint()
         self.onProjectionParametersChanged()
+
+    def updateMeteorTable(self):
+        if isinstance(self.matcher, Counselor):
+            data = self.matcher.correct_meteor(self.projection, self.calibration)
+
+            self.tw_meteor.setRowCount(data.count)
+            for i in range(0, data.count):
+                item = QTableWidgetItem(0)
+                item.setData(0, f"{data.fnos[i]:d}")
+                item.setData(7, 130)
+                self.tw_meteor.setItem(i, 0, item)
+
+                item = QTableWidgetItem(0)
+                item.setData(0, f"{data.position_corrected.alt[i].value:.6f}°")
+                item.setData(7, 130)
+                self.tw_meteor.setItem(i, 1, item)
+
+                item = QTableWidgetItem(0)
+                item.setData(0, f"{data.position_corrected.az[i].value:.6f}°")
+                item.setData(7, 130)
+                self.tw_meteor.setItem(i, 2, item)
+
+                item = QTableWidgetItem(0)
+                item.setData(0, f"{data.magnitudes_corrected[i]:.6f}")
+                item.setData(7, 130)
+                self.tw_meteor.setItem(i, 3, item)
+            # self.tw_meteor.setItem(i, 1, QTableWidgetItem(data.position_corrected.az[i].value))
 
     def maskSensor(self):
         errors = self.matcher.position_errors(self.projection, masked=False)

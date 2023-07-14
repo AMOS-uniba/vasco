@@ -484,7 +484,7 @@
              </sizepolicy>
             </property>
             <property name="title">
-             <string>Radial distance</string>
+             <string>Radial distance scaling</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_3">
              <property name="leftMargin">
@@ -594,7 +594,7 @@
              </sizepolicy>
             </property>
             <property name="title">
-             <string>Offset</string>
+             <string>Optical axis offset</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_4">
              <property name="leftMargin">
@@ -1607,37 +1607,37 @@
         </widget>
        </item>
        <item>
-        <widget class="QParameterWidget" name="widget_3" native="true">
+        <widget class="QTableWidget" name="tw_meteor">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
+         </property>
+         <column>
+          <property name="text">
+           <string>fno</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>elevation</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>azimuth</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>magnitude</string>
+          </property>
+         </column>
         </widget>
-       </item>
-       <item>
-        <widget class="QTableView" name="tv_meteor">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_5">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>241</width>
-           <height>101</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </widget>
@@ -1780,13 +1780,12 @@
   <tabstop>dsb_lon</tabstop>
   <tabstop>dsb_alt</tabstop>
   <tabstop>dt_time</tabstop>
+  <tabstop>dsb_xs</tabstop>
+  <tabstop>dsb_ys</tabstop>
   <tabstop>pb_import</tabstop>
   <tabstop>pb_export</tabstop>
-  <tabstop>cb_show_errors</tabstop>
-  <tabstop>cb_show_grid</tabstop>
-  <tabstop>hs_bandwidth</tabstop>
-  <tabstop>sb_resolution</tabstop>
-  <tabstop>tw_charts</tabstop>
+  <tabstop>pb_optimize</tabstop>
+  <tabstop>sb_maxiter</tabstop>
   <tabstop>dsb_error_limit</tabstop>
   <tabstop>pb_mask_unidentified</tabstop>
   <tabstop>dsb_distance_limit</tabstop>
@@ -1795,8 +1794,13 @@
   <tabstop>pb_mask_faint</tabstop>
   <tabstop>pb_pair</tabstop>
   <tabstop>pb_reset</tabstop>
-  <tabstop>pb_optimize</tabstop>
-  <tabstop>sb_maxiter</tabstop>
+  <tabstop>cb_show_errors</tabstop>
+  <tabstop>cb_show_grid</tabstop>
+  <tabstop>hs_bandwidth</tabstop>
+  <tabstop>sb_arrow_scale</tabstop>
+  <tabstop>sb_resolution</tabstop>
+  <tabstop>cb_interpolation</tabstop>
+  <tabstop>tw_charts</tabstop>
  </tabstops>
  <resources/>
  <connections/>

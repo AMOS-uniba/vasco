@@ -1,4 +1,6 @@
 import math
+
+import dotmap
 import numpy as np
 import pandas as pd
 
@@ -143,25 +145,38 @@ class Counselor(Matcher):
     def magnitude_grid(self, resolution=21):
         return self._grid(self.magnitude_smoother, resolution, masked=False)
 
-    def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
-        position_raw = self.project_meteor(projection)
-        position_corrected = self.correct_meteor_position(projection)
+    def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
+        positions_raw = self.project_meteor(projection)
+        positions_corrected = self.correct_meteor_position(projection)
         intensities_raw = self.sensor_data.meteor.intensities(masked=False)
         intensities_corrected = self.correct_meteor_magnitude(projection, calibration)
         magnitudes_raw = calibration(intensities_raw)
         magnitudes_corrected = intensities_corrected
 
+        return dotmap.DotMap(
+            position_raw=positions_raw,
+            position_corrected=positions_corrected,
+            magnitudes_raw=magnitudes_raw,
+            magnitudes_corrected=magnitudes_corrected,
+            count=self.sensor_data.meteor.count,
+            fnos=self.sensor_data.meteor.fnos(masked=False),
+            _dynamic=False,
+        )
+
+    def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
+        data = self.correct_meteor(projection, calibration)
+
         df = pd.DataFrame()
-        df['ev_r'] = 90 - position_raw.alt.degree
-        df['ev'] = 90 - position_corrected.alt.degree
-        df['az_r'] = np.fmod(position_raw.az.degree + 180, 360)
-        df['az'] = np.fmod(position_corrected.az.degree + 180, 360)
+        df['ev_r'] = 90 - data.position_raw.alt.degree
+        df['ev'] = 90 - data.position_corrected.alt.degree
+        df['az_r'] = np.fmod(data.position_raw.az.degree + 180, 360)
+        df['az'] = np.fmod(data.position_corrected.az.degree + 180, 360)
         df['fno'] = self.sensor_data.meteor.fnos(masked=False)
         df['b'] = 0
         df['bm'] = 0
         df['Lsum'] = 0
-        df['mag_r'] = magnitudes_raw
-        df['mag'] = magnitudes_corrected
+        df['mag_r'] = data.magnitudes_raw
+        df['mag'] = data.magnitudes_corrected
         df['ra'] = 0
         df['dec'] = 0
         return df.to_xml(index=False, root_name='ua2_objpath', row_name='ua2_fdata2',

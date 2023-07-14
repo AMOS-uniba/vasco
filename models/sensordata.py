@@ -77,6 +77,7 @@ class SensorData:
         self.meteor_shifted = DotCollection(
             np.stack(self.shifter(self._meteor.xs(masked=False), self._meteor.ys(masked=False)), axis=1),
             self._meteor.intensities(masked=False),
+            fnos=self._meteor.fnos(False),
             mask=self._meteor.mask,
         )
 

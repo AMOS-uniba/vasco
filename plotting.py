@@ -67,6 +67,8 @@ class MainWindowPlots(MainWindowBase):
             if not valid:
                 function()
 
+        self.updateMeteorTable()
+
     """ Methods for plotting sensor data """
 
     def plotSensorData(self):
