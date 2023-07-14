@@ -96,8 +96,8 @@ class Counselor(Matcher):
         return self
 
     def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
-        obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=False))
-        cat = altaz_to_disk(self.catalogue.altaz(self.location, self.time, masked=False))
+        obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=True))
+        cat = altaz_to_disk(self.catalogue.altaz(self.location, self.time, masked=True))
         self.position_smoother = KernelSmoother(
             obs, obs - cat,
             kernel=kernels.nexp,
@@ -105,9 +105,9 @@ class Counselor(Matcher):
         )
 
     def update_magnitude_smoother(self, projection: Projection, calibration: Calibration, *, bandwidth: float = 0.1):
-        obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=False))
-        mcat = self.catalogue.vmag(masked=False)
-        mobs = calibration(self.sensor_data.stars.intensities(masked=False))
+        obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=True))
+        mcat = self.catalogue.vmag(masked=True)
+        mobs = calibration(self.sensor_data.stars.intensities(masked=True))
         self.magnitude_smoother = KernelSmoother(
             obs, np.expand_dims(mobs - mcat, 1),
             kernel=kernels.nexp,

@@ -76,8 +76,9 @@ class DotCollection:
 
     @mask.setter
     def mask(self, m=None):
-        self._mask = np.ones_like(self.i, dtype=bool) if m is None else ~m
-        assert self.mask.shape == self.x.shape
+        self._mask = np.ones_like(self.x, dtype=bool) if m is None else m
+        assert self.mask.shape == self.x.shape,\
+            f"Mask shape does not match data shape: expected {self.x.shape}, got {self.mask.shape}"
 
     def culled_copy(self):
         out = copy.deepcopy(self)

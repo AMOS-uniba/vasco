@@ -29,13 +29,13 @@ class Matchmaker(Matcher):
         super().update(location, time)
 
     def update_position_smoother(self, projection, **kwargs):
-        """ There is no position smoother in Matchmaker """
+        """ There is no position smoother in Matchmaker, can be implemented by child classes """
 
     def mask_catalogue(self, mask):
         self.catalogue.set_mask(mask)
 
     def mask_sensor_data(self, mask):
-        self.sensor_data.stars.mask = mask
+        self.sensor_data.stars_pixels.mask = mask
 
     def _cartesian(self, func: Callable, projection: Projection, masked: bool, axis: int) -> np.ndarray:
         """
@@ -99,10 +99,6 @@ class Matchmaker(Matcher):
         Returns
         np.ndarray(M, N, 2)
         """
-        observed = np.expand_dims(observed, 1)
-        catalogue = np.expand_dims(catalogue, 0)
-        catalogue = np.radians(catalogue)
-        observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed altitude to zenith distance
         raise NotImplementedError
 
     def find_nearest_value(self, observed, catalogue, *, axis):

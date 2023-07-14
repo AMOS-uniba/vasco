@@ -47,7 +47,9 @@ class MainWindow(MainWindowPlots):
         self.matcher.load_catalogue('catalogues/HYG30.tsv')
         self._loadSighting('data/20220531_055655.yaml')
         self._importProjectionConstants('calibrations/DRGRmod2.yaml')
+        self.showCounts()
         self.onProjectionParametersChanged()
+        self.onScalingChanged()
 
     def connectSignalSlots(self):
         self.ac_load_sighting.triggered.connect(self.loadSighting)
@@ -88,6 +90,8 @@ class MainWindow(MainWindowPlots):
 
         self.dsb_lat.valueChanged.connect(self.onLocationChanged)
         self.dsb_lon.valueChanged.connect(self.onLocationChanged)
+        self.dsb_xs.valueChanged.connect(self.onScalingChanged)
+        self.dsb_ys.valueChanged.connect(self.onScalingChanged)
 
         self.pb_optimize.clicked.connect(self.optimize)
         self.pb_pair.clicked.connect(self.pair)
@@ -146,15 +150,24 @@ class MainWindow(MainWindowPlots):
         self.dsb_alt.setValue(alt)
 
     def updateLocation(self):
-        self.location = EarthLocation(self.dsb_lon.value() * u.deg,
-                                      self.dsb_lat.value() * u.deg,
-                                      self.dsb_alt.value() * u.m)
+        self.location = EarthLocation(
+            self.dsb_lon.value() * u.deg,
+            self.dsb_lat.value() * u.deg,
+            self.dsb_alt.value() * u.m,
+        )
 
     def setTime(self, time):
         self.dt_time.setDateTime(QDateTime(time.date(), time.time(), Qt.TimeSpec.UTC))
 
     def updateTime(self):
         self.time = self.dt_time.dateTime().toPyDateTime()
+
+    def onScalingChanged(self):
+        self.matcher.sensor_data.set_shifter_scales(
+            self.dsb_xs.value(),
+            self.dsb_ys.value()
+        )
+        self.onProjectionParametersChanged()
 
     def updateMatcher(self):
         self.matcher.update(self.location, self.time)
@@ -388,15 +401,15 @@ class MainWindow(MainWindowPlots):
 
     def maskSensor(self):
         errors = self.matcher.position_errors(self.projection, masked=False)
-        self.matcher.mask_sensor_data(errors > np.radians(self.dsb_error_limit.value()))
+        self.matcher.mask_sensor_data(errors < np.radians(self.dsb_error_limit.value()))
         log.info(f"Culled the dots to {c.param(f'{self.dsb_error_limit.value():.3f}')}°: "
-              f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
+              f"{c.num(self.matcher.sensor_data.stars_pixels.count_valid)} are valid")
         self.onProjectionParametersChanged()
         self.showCounts()
 
     def maskCatalogueDistant(self):
         errors = self.matcher.position_errors_inverse(self.projection, masked=False)
-        self.matcher.mask_catalogue(errors > np.radians(self.dsb_distance_limit.value()))
+        self.matcher.mask_catalogue(errors < np.radians(self.dsb_distance_limit.value()))
         log.info(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: "
               f"{self.matcher.catalogue.count_valid} stars used")
         self.positionSkyPlot.invalidate_stars()

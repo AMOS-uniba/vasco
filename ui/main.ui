@@ -265,10 +265,10 @@
              <double>1.000000000000000</double>
             </property>
             <property name="singleStep">
-             <double>0.000100000000000</double>
+             <double>0.000001000000000</double>
             </property>
             <property name="value">
-             <double>0.004400000000000</double>
+             <double>0.004436000000000</double>
             </property>
            </widget>
           </item>
@@ -287,10 +287,10 @@
              <double>1.000000000000000</double>
             </property>
             <property name="singleStep">
-             <double>0.000100000000000</double>
+             <double>0.000001000000000</double>
             </property>
             <property name="value">
-             <double>0.004400000000000</double>
+             <double>0.004426000000000</double>
             </property>
            </widget>
           </item>
