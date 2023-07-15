@@ -128,10 +128,10 @@ class Counselor(Matcher):
         return np.ravel(self.magnitude_smoother(self._meteor_xy(projection)))
 
     def correct_meteor_position(self, projection: Projection) -> AltAz:
-        return disk_to_altaz(self._meteor_xy(projection) + self.correction_meteor_xy(projection))
+        return disk_to_altaz(self._meteor_xy(projection) - self.correction_meteor_xy(projection))
 
     def correct_meteor_magnitude(self, projection: Projection, calibration: Calibration) -> np.ndarray[float]:
-        return calibration(self.sensor_data.meteor.intensities(masked=False)) + self.correction_meteor_mag(projection)
+        return calibration(self.sensor_data.meteor.intensities(masked=False)) - self.correction_meteor_mag(projection)
 
     @staticmethod
     def _grid(smoother, resolution=21, *, masked: bool):

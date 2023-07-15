@@ -46,7 +46,7 @@ class MainWindow(MainWindowPlots):
         self.resetMatcher()
         self.matcher.load_catalogue('catalogues/HYG30.tsv')
         self._loadSighting('data/20220531_055655.yaml')
-        self._importProjectionConstants('calibrations/DRGRmod2.yaml')
+        self._importProjectionConstants('calibrations/DRGR.yaml')
         self.showCounts()
         self.onProjectionParametersChanged()
         self.onScalingChanged()
@@ -76,9 +76,9 @@ class MainWindow(MainWindowPlots):
 
         self.pw_V.setup(title="linear", symbol="&V", unit="rad/mm", minimum=0.001, maximum=1, step=0.001)
         self.pw_S.setup(title="exp coef", symbol="&S", unit="rad/mm", minimum=-5, maximum=5, step=0.001)
-        self.pw_D.setup(title="exp exp", symbol="&D", unit="mm<sup>-1</sup>", minimum=-5, maximum=5, step=0.001)
+        self.pw_D.setup(title="exp exp", symbol="&D", unit="mm<sup>-1</sup>", minimum=-5, maximum=5, step=0.0001)
         self.pw_P.setup(title="biexp coef", symbol="&P", unit="rad/mm", minimum=-5, maximum=5, step=0.001)
-        self.pw_Q.setup(title="biexp exp", symbol="&Q", unit="mm<sup>-2</sup>", minimum=-5, maximum=5, step=0.001)
+        self.pw_Q.setup(title="biexp exp", symbol="&Q", unit="mm<sup>-2</sup>", minimum=-5, maximum=5, step=0.0001)
 
         self.pw_epsilon.setup(title="zenith angle", symbol="ε", unit="°", minimum=0, maximum=90, step=0.1,
                         inner_function=np.radians, input_function=np.degrees)
@@ -337,13 +337,15 @@ class MainWindow(MainWindowPlots):
                     data = dotmap.DotMap(yaml.safe_load(file), _dynamic=False)
                     self.blockParameterSignals(True)
                     for param, widget in self.param_widgets.items():
-                        widget.set_value(data.params[param])
+                        widget.set_value(widget.input_function(data.params[param]))
                     self.blockParameterSignals(False)
 
                     self.updateProjection()
                 except yaml.YAMLError as exc:
                     log.error(f"Could not parse file {filename} as YAML: {exc}")
-        except FileNotFoundError as exc:
+        except FileNotFoundError:
+            log.error(f"File not found: {filename}")
+        except Exception as exc:
             log.error(f"Could not import constants: {exc}")
 
     def blockParameterSignals(self, block):

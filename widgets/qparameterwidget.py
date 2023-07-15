@@ -46,7 +46,7 @@ class QParameterWidget(QWidget, Ui_Form):
         self.dsb_value.setValue(new_value)
 
     def inner_value(self) -> float:
-        return self.inner_function(self.value)
+        return float(self.inner_function(self.value))
 
     def set_from_gui(self, new_value: float):
         self.set_value(self.input_function(new_value))
