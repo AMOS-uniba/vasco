@@ -48,20 +48,24 @@ class Catalogue:
         return self
 
     def set_mask(self, condition):
-        self.stars.loc[condition, 'use'] = False
+        self.reset_mask()
+        self.stars.loc[~condition, 'use'] = False
 
     def reset_mask(self):
         if 'use' in self.stars.columns:
             self.stars.loc[:]['use'] = True
         else:
             self.stars['use'] = True
-        log.info(f"Catalogue mask reset: {c.num(self.count_valid)} / {c.num(self.count)} stars used")
+            self._report_mask()
 
     def cull(self):
         """ Retain only currently unmasked data """
-        log.info("Culling the catalogue")
         self.stars = self.stars[self.stars.use]
+        self._report_mask()
         self.update_coord()
+
+    def _report_mask(self):
+        log.info(f"Catalogue mask reset: {c.num(self.count_valid)} / {c.num(self.count)} stars used")
 
     @property
     def count(self):
