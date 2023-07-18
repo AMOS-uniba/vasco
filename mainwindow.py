@@ -37,7 +37,7 @@ class MainWindow(MainWindowPlots):
         self.populateStations()
         self.updateProjection()
 
-        self.tw_meteor.setColumnWidth(0, 30)
+        self.tw_meteor.setColumnWidth(0, 40)
 
         self.connectSignalSlots()
         self.updateLocation()
@@ -411,9 +411,19 @@ class MainWindow(MainWindowPlots):
                 self.tw_meteor.setItem(i, 4, item)
 
                 item = QTableWidgetItem(0)
-                item.setData(0, f"{data.magnitudes_corrected[i]:.6f}")
+                item.setData(0, f"{data.positions_correction[i, 0]:.6f} {data.positions_correction[i, 1]:.6f}")
                 item.setData(7, 130)
                 self.tw_meteor.setItem(i, 5, item)
+
+                item = QTableWidgetItem(0)
+                item.setData(0, f"{data.magnitudes_corrected[i]:.6f}")
+                item.setData(7, 130)
+                self.tw_meteor.setItem(i, 6, item)
+
+                item = QTableWidgetItem(0)
+                item.setData(0, f"{data.magnitudes_correction[i]:.6f}")
+                item.setData(7, 130)
+                self.tw_meteor.setItem(i, 7, item)
             # self.tw_meteor.setItem(i, 1, QTableWidgetItem(data.position_corrected.az[i].value))
 
     def maskSensor(self):

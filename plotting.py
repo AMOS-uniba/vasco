@@ -61,6 +61,7 @@ class MainWindowPlots(MainWindowBase):
                 (self.magnitudeCorrectionPlot.valid_meteor, self.plotMagnitudeCorrectionMeteor),
                 (self.magnitudeCorrectionPlot.valid_grid, self.plotMagnitudeCorrectionGrid),
             ],
+            [],
         ][self.tw_charts.currentIndex()]
 
         for valid, function in links:
@@ -89,10 +90,12 @@ class MainWindowPlots(MainWindowBase):
         )
 
     def plotObservedStarsPositions(self):
+        log.debug(f"Plotting dot positions")
         self._plotObservedStars(self.positionSkyPlot, self.position_errors,
                                 limit=np.radians(self.dsb_error_limit.value()))
 
     def plotObservedStarsMagnitudes(self):
+        log.debug(f"Plotting dot magnitudes")
         self._plotObservedStars(self.magnitudeSkyPlot, self.magnitude_errors,
                                 limit=np.radians(self.dsb_error_limit.value()))
 
@@ -103,9 +106,11 @@ class MainWindowPlots(MainWindowBase):
         )
 
     def plotCatalogueStarsPositions(self):
+        log.debug(f"Plotting star positions")
         self._plotCatalogueStars(self.positionSkyPlot)
 
     def plotCatalogueStarsMagnitudes(self):
+        log.debug(f"Plotting star magnitudes")
         self._plotCatalogueStars(self.magnitudeSkyPlot)
 
     """ Methods for plotting error charts """
@@ -116,9 +121,11 @@ class MainWindowPlots(MainWindowBase):
         plot.update_dots(positions, magnitudes, errors, limit=self.dsb_error_limit.value())
 
     def plotPositionErrorsDots(self):
+        log.debug(f"Plotting position errors")
         self._plotErrorsDots(self.positionErrorPlot, self.position_errors)
 
     def plotMagnitudeErrorsDots(self):
+        log.debug(f"Plotting magnitude errors")
         self._plotErrorsDots(self.magnitudeErrorPlot, self.magnitude_errors)
 
     def _plotErrorsMeteor(self, plot, errors):

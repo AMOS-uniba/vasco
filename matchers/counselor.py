@@ -153,12 +153,16 @@ class Counselor(Matcher):
         intensities_corrected = self.correct_meteor_magnitude(projection, calibration)
         magnitudes_raw = calibration(intensities_raw)
         magnitudes_corrected = intensities_corrected
+        positions_correction = self.correction_meteor_xy(projection)
+        magnitudes_correction = self.correction_meteor_mag(projection)
 
         return dotmap.DotMap(
             position_raw=positions_raw,
             position_corrected=positions_corrected,
             magnitudes_raw=magnitudes_raw,
             magnitudes_corrected=magnitudes_corrected,
+            positions_correction=positions_correction,
+            magnitudes_correction=magnitudes_correction,
             count=self.sensor_data.meteor.count,
             fnos=self.sensor_data.meteor.fnos(masked=False),
             _dynamic=False,
