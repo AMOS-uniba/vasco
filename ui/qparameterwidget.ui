@@ -7,24 +7,27 @@
     <x>0</x>
     <y>0</y>
     <width>282</width>
-    <height>33</height>
+    <height>23</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
+   <property name="spacing">
+    <number>3</number>
+   </property>
    <property name="leftMargin">
     <number>3</number>
    </property>
    <property name="topMargin">
-    <number>3</number>
+    <number>0</number>
    </property>
    <property name="rightMargin">
     <number>3</number>
    </property>
    <property name="bottomMargin">
-    <number>3</number>
+    <number>0</number>
    </property>
    <item>
     <widget class="QCheckBox" name="cb_enabled">
@@ -33,6 +36,9 @@
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string notr="true">Allow optimization</string>
      </property>
      <property name="text">
       <string/>

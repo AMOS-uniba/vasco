@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1686</width>
+    <width>1790</width>
     <height>1226</height>
    </rect>
   </property>
@@ -36,6 +36,21 @@
           <string>Time and position</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
+          <property name="leftMargin">
+           <number>5</number>
+          </property>
+          <property name="topMargin">
+           <number>5</number>
+          </property>
+          <property name="rightMargin">
+           <number>5</number>
+          </property>
+          <property name="bottomMargin">
+           <number>5</number>
+          </property>
+          <property name="spacing">
+           <number>3</number>
+          </property>
           <item row="2" column="0">
            <widget class="QLabel" name="lb_latitude">
             <property name="text">
@@ -222,11 +237,26 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="gb_scaling">
+        <widget class="QGroupBox" name="gb_sensor">
          <property name="title">
-          <string>Scaling</string>
+          <string>Sensor</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_12">
+          <property name="leftMargin">
+           <number>5</number>
+          </property>
+          <property name="topMargin">
+           <number>5</number>
+          </property>
+          <property name="rightMargin">
+           <number>5</number>
+          </property>
+          <property name="bottomMargin">
+           <number>5</number>
+          </property>
+          <property name="spacing">
+           <number>3</number>
+          </property>
           <item row="0" column="3">
            <widget class="QLabel" name="lb_xs">
             <property name="sizePolicy">
@@ -335,6 +365,21 @@
           <string>Projection</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
+          <property name="spacing">
+           <number>3</number>
+          </property>
+          <property name="leftMargin">
+           <number>5</number>
+          </property>
+          <property name="topMargin">
+           <number>5</number>
+          </property>
+          <property name="rightMargin">
+           <number>5</number>
+          </property>
+          <property name="bottomMargin">
+           <number>5</number>
+          </property>
           <item>
            <widget class="QGroupBox" name="gb_sensor_alignment">
             <property name="sizePolicy">
@@ -348,19 +393,19 @@
             </property>
             <layout class="QGridLayout" name="gridLayout">
              <property name="leftMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
              <property name="topMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
              <property name="rightMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
              <property name="bottomMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
-             <property name="verticalSpacing">
-              <number>0</number>
+             <property name="spacing">
+              <number>3</number>
              </property>
              <item row="2" column="0">
               <widget class="QParameterWidget" name="pw_y0" native="true">
@@ -426,19 +471,19 @@
             </property>
             <layout class="QGridLayout" name="gridLayout_2">
              <property name="leftMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
              <property name="topMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
              <property name="rightMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
              <property name="bottomMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
-             <property name="verticalSpacing">
-              <number>0</number>
+             <property name="spacing">
+              <number>3</number>
              </property>
              <item row="0" column="2">
               <widget class="QParameterWidget" name="pw_A" native="true">
@@ -488,19 +533,19 @@
             </property>
             <layout class="QGridLayout" name="gridLayout_3">
              <property name="leftMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
              <property name="topMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
              <property name="rightMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
              <property name="bottomMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
-             <property name="verticalSpacing">
-              <number>0</number>
+             <property name="spacing">
+              <number>3</number>
              </property>
              <item row="3" column="1">
               <widget class="QParameterWidget" name="pw_S" native="true">
@@ -598,19 +643,19 @@
             </property>
             <layout class="QGridLayout" name="gridLayout_4">
              <property name="leftMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
              <property name="topMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
              <property name="rightMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
              <property name="bottomMargin">
-              <number>3</number>
+              <number>5</number>
              </property>
-             <property name="verticalSpacing">
-              <number>0</number>
+             <property name="spacing">
+              <number>3</number>
              </property>
              <item row="1" column="0">
               <widget class="QParameterWidget" name="pw_epsilon" native="true">
@@ -667,6 +712,21 @@
              <string>Identify stars</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_6">
+             <property name="leftMargin">
+              <number>5</number>
+             </property>
+             <property name="topMargin">
+              <number>5</number>
+             </property>
+             <property name="rightMargin">
+              <number>5</number>
+             </property>
+             <property name="bottomMargin">
+              <number>5</number>
+             </property>
+             <property name="spacing">
+              <number>3</number>
+             </property>
              <item row="2" column="0">
               <widget class="QPushButton" name="pb_optimize">
                <property name="sizePolicy">
@@ -736,7 +796,7 @@
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_sensor">
        <attribute name="title">
@@ -916,6 +976,24 @@
           <string>Catalogue</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_9">
+          <property name="leftMargin">
+           <number>5</number>
+          </property>
+          <property name="topMargin">
+           <number>5</number>
+          </property>
+          <property name="rightMargin">
+           <number>5</number>
+          </property>
+          <property name="bottomMargin">
+           <number>5</number>
+          </property>
+          <property name="horizontalSpacing">
+           <number>9</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>3</number>
+          </property>
           <item row="2" column="3">
            <widget class="QLabel" name="lb_objects_near">
             <property name="sizePolicy">
@@ -1086,6 +1164,21 @@
           <string>Errors</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_10">
+          <property name="leftMargin">
+           <number>5</number>
+          </property>
+          <property name="topMargin">
+           <number>5</number>
+          </property>
+          <property name="rightMargin">
+           <number>5</number>
+          </property>
+          <property name="bottomMargin">
+           <number>5</number>
+          </property>
+          <property name="spacing">
+           <number>3</number>
+          </property>
           <item row="0" column="0">
            <widget class="QLabel" name="lx_avg_error">
             <property name="sizePolicy">
@@ -1185,6 +1278,21 @@
           <string>Masking</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_8">
+          <property name="leftMargin">
+           <number>5</number>
+          </property>
+          <property name="topMargin">
+           <number>5</number>
+          </property>
+          <property name="rightMargin">
+           <number>5</number>
+          </property>
+          <property name="bottomMargin">
+           <number>5</number>
+          </property>
+          <property name="spacing">
+           <number>3</number>
+          </property>
           <item row="10" column="1">
            <widget class="QDoubleSpinBox" name="dsb_distance_limit">
             <property name="alignment">
@@ -1457,6 +1565,21 @@
           <string>Grid plots</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_7">
+          <property name="leftMargin">
+           <number>5</number>
+          </property>
+          <property name="topMargin">
+           <number>5</number>
+          </property>
+          <property name="rightMargin">
+           <number>5</number>
+          </property>
+          <property name="bottomMargin">
+           <number>5</number>
+          </property>
+          <property name="spacing">
+           <number>3</number>
+          </property>
           <item row="1" column="4" colspan="2">
            <widget class="QCheckBox" name="cb_show_grid">
             <property name="text">
@@ -1624,12 +1747,22 @@
          </column>
          <column>
           <property name="text">
-           <string>elevation</string>
+           <string>zenith (raw)</string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string>azimuth</string>
+           <string>azimuth (raw)</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>zenith (corrected)</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>azimuth (corrected)</string>
           </property>
          </column>
          <column>
@@ -1649,7 +1782,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1686</width>
+     <width>1790</width>
      <height>19</height>
     </rect>
    </property>
@@ -1672,8 +1805,8 @@
     <property name="title">
      <string>Projection</string>
     </property>
-    <addaction name="ac_load_constants"/>
-    <addaction name="ac_save_constants"/>
+    <addaction name="ac_load_parameters"/>
+    <addaction name="ac_save_parameters"/>
     <addaction name="ac_optimize"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -1717,17 +1850,17 @@
     <string>Save meteor XML</string>
    </property>
   </action>
-  <action name="ac_load_constants">
+  <action name="ac_load_parameters">
    <property name="text">
-    <string>Import constants</string>
+    <string>Import parameters</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+I</string>
    </property>
   </action>
-  <action name="ac_save_constants">
+  <action name="ac_save_parameters">
    <property name="text">
-    <string>Export constants</string>
+    <string>Export parameters</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+E</string>

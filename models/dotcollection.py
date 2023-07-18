@@ -4,6 +4,7 @@ import logging
 
 from projections import Projection
 from photometry import Calibration
+import colour as c
 
 log = logging.getLogger('root')
 
@@ -21,9 +22,7 @@ class DotCollection:
 
         nonzero = self._i > 0
 
-        if np.alltrue(nonzero):
-            log.debug(f"All dots seem to be correct")
-        else:
+        if not np.alltrue(nonzero):
             log.warning(f"Dots with zero intensity were found and removed (indices {np.where(~nonzero)})")
             self._xy = self._xy[nonzero]
             self._i = self._i[nonzero]
@@ -88,6 +87,7 @@ class DotCollection:
         self._xy = self._xy[self.mask]
         self._i = self.i[self.mask]
         self.mask = None
+        log.info(f"DotCollection mask reset: {c.num(self.count_valid)} / {c.num(self.count)} dots are valid")
         return self
 
     def project(self, projection: Projection, *, masked: bool) -> np.ndarray[float]:

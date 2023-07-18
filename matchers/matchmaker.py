@@ -1,3 +1,4 @@
+import logging
 import math
 import numpy as np
 
@@ -10,6 +11,8 @@ from projections import Projection, BorovickaProjection
 from photometry import Calibration
 from models import SensorData, Catalogue
 from utilities import spherical_distance
+
+log = logging.getLogger('root')
 
 
 class Matchmaker(Matcher):
@@ -35,7 +38,7 @@ class Matchmaker(Matcher):
         self.catalogue.set_mask(mask)
 
     def mask_sensor_data(self, mask):
-        self.sensor_data.stars_pixels.mask = mask
+        self.sensor_data.set_mask(mask)
 
     def _cartesian(self, func: Callable, projection: Projection, masked: bool, axis: int) -> np.ndarray:
         """

@@ -27,8 +27,8 @@ mpl.use('Qt5Agg')
 
 log = logging.getLogger('root')
 
-VERSION = "0.7.0"
-DATE = "2023-07-13"
+VERSION = "0.8.0"
+DATE = "2023-07-18"
 
 
 class MainWindow(MainWindowPlots):
@@ -46,7 +46,7 @@ class MainWindow(MainWindowPlots):
         self.resetMatcher()
         self.matcher.load_catalogue('catalogues/HYG30.tsv')
         self._loadSighting('data/20220531_055655.yaml')
-        self._importProjectionConstants('calibrations/DRGR.yaml')
+        self._importProjectionParameters('calibrations/DRGR.yaml')
         self.showCounts()
         self.onProjectionParametersChanged()
         self.onScalingChanged()
@@ -57,8 +57,8 @@ class MainWindow(MainWindowPlots):
         self.ac_export_meteor.triggered.connect(self.exportCorrectedMeteor)
         self.ac_mask_unmatched.triggered.connect(self.maskSensor)
         self.ac_create_pairing.triggered.connect(self.pair)
-        self.ac_load_constants.triggered.connect(self.importProjectionConstants)
-        self.ac_save_constants.triggered.connect(self.exportProjectionConstants)
+        self.ac_load_parameters.triggered.connect(self.importProjectionParameters)
+        self.ac_save_parameters.triggered.connect(self.exportProjectionParameters)
         self.ac_optimize.triggered.connect(self.optimize)
         self.ac_about.triggered.connect(self.displayAbout)
 
@@ -95,8 +95,8 @@ class MainWindow(MainWindowPlots):
 
         self.pb_optimize.clicked.connect(self.optimize)
         self.pb_pair.clicked.connect(self.pair)
-        self.pb_export.clicked.connect(self.exportProjectionConstants)
-        self.pb_import.clicked.connect(self.importProjectionConstants)
+        self.pb_export.clicked.connect(self.exportProjectionParameters)
+        self.pb_import.clicked.connect(self.importProjectionParameters)
 
         self.pb_mask_unidentified.clicked.connect(self.maskSensor)
         self.pb_mask_distant.clicked.connect(self.maskCatalogueDistant)
@@ -271,21 +271,24 @@ class MainWindow(MainWindowPlots):
             self.magnitudeSkyPlot.invalidate_stars()
             self.onProjectionParametersChanged()
 
-    def exportProjectionConstants(self):
-        filename, _ = QFileDialog.getSaveFileName(self, "Export constants to file", "calibrations",
+    def exportProjectionParameters(self):
+        filename, _ = QFileDialog.getSaveFileName(self, "Export projection parameters to file", "calibrations",
                                                   "YAML files (*.yaml)")
         if filename is not None and filename != '':
-            self._exportProjectionConstants(filename)
+            self._exportProjectionParameters(filename)
 
-    def _exportProjectionConstants(self, filename):
+    def _exportProjectionParameters(self, filename):
         try:
             with open(filename, 'w+') as file:
                 yaml.dump(dict(
-                    proj='Borovička',
-                    params={ param: widget.inner_value() for param, widget in self.param_widgets.items() },
+                    projection=dict(
+                        name='Borovička',
+                        parameters={ param: widget.inner_value() for param, widget in self.param_widgets.items() },
+                    ),
+                    pixels=dict(xs=self.dsb_xs.value(), ys=self.dsb_ys.value()),
                 ), file)
         except FileNotFoundError as exc:
-            log.error(f"Could not export constants: {exc}")
+            log.error(f"Could not export projection parameters: {exc}")
 
     def loadSighting(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data",
@@ -299,8 +302,8 @@ class MainWindow(MainWindowPlots):
             log.debug(f"Station {station.code} found, loading properties from AMOS database")
             self.cb_stations.setCurrentIndex(station.id)
             if (path := Path(f'./calibrations/{station.code}.yaml')).exists():
-                self._importProjectionConstants(path)
-                log.debug(f"Calibration file {path} found, loading projection constants")
+                self._importProjectionParameters(path)
+                log.debug(f"Calibration file {path} found, loading projection parameters")
             else:
                 log.debug(f"Calibration file {path} not found, skipping")
         else:
@@ -324,20 +327,22 @@ class MainWindow(MainWindowPlots):
             self.resetMatcher()
         self.matcher.sensor_data = SensorData.load(data)
 
-    def importProjectionConstants(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Import constants from file", "calibrations",
+    def importProjectionParameters(self):
+        filename, _ = QFileDialog.getOpenFileName(self, "Import projection parameters from file", "calibrations",
                                                   "YAML files (*.yml *.yaml)")
-        self._importProjectionConstants(filename)
+        self._importProjectionParameters(filename)
         self.onProjectionParametersChanged()
 
-    def _importProjectionConstants(self, filename):
+    def _importProjectionParameters(self, filename):
         try:
             with open(filename, 'r') as file:
                 try:
                     data = dotmap.DotMap(yaml.safe_load(file), _dynamic=False)
                     self.blockParameterSignals(True)
                     for param, widget in self.param_widgets.items():
-                        widget.set_value(widget.input_function(data.params[param]))
+                        widget.set_value(widget.input_function(data.projection.params[param]))
+                        self.dsb_xs.setValue(data.pixels.xs)
+                        self.dsb_ys.setValue(data.pixels.ys)
                     self.blockParameterSignals(False)
 
                     self.updateProjection()
@@ -346,7 +351,7 @@ class MainWindow(MainWindowPlots):
         except FileNotFoundError:
             log.error(f"File not found: {filename}")
         except Exception as exc:
-            log.error(f"Could not import constants: {exc}")
+            log.error(f"Could not import projection parameters: {exc}")
 
     def blockParameterSignals(self, block):
         for widget in self.param_widgets.values():
@@ -386,26 +391,36 @@ class MainWindow(MainWindowPlots):
                 self.tw_meteor.setItem(i, 0, item)
 
                 item = QTableWidgetItem(0)
-                item.setData(0, f"{data.position_corrected.alt[i].value:.6f}°")
+                item.setData(0, f"{data.position_raw.alt[i].value:.6f}°")
                 item.setData(7, 130)
                 self.tw_meteor.setItem(i, 1, item)
 
                 item = QTableWidgetItem(0)
-                item.setData(0, f"{data.position_corrected.az[i].value:.6f}°")
+                item.setData(0, f"{data.position_raw.az[i].value:.6f}°")
                 item.setData(7, 130)
                 self.tw_meteor.setItem(i, 2, item)
 
                 item = QTableWidgetItem(0)
-                item.setData(0, f"{data.magnitudes_corrected[i]:.6f}")
+                item.setData(0, f"{data.position_corrected.alt[i].value:.6f}°")
                 item.setData(7, 130)
                 self.tw_meteor.setItem(i, 3, item)
+
+                item = QTableWidgetItem(0)
+                item.setData(0, f"{data.position_corrected.az[i].value:.6f}°")
+                item.setData(7, 130)
+                self.tw_meteor.setItem(i, 4, item)
+
+                item = QTableWidgetItem(0)
+                item.setData(0, f"{data.magnitudes_corrected[i]:.6f}")
+                item.setData(7, 130)
+                self.tw_meteor.setItem(i, 5, item)
             # self.tw_meteor.setItem(i, 1, QTableWidgetItem(data.position_corrected.az[i].value))
 
     def maskSensor(self):
         errors = self.matcher.position_errors(self.projection, masked=False)
         self.matcher.mask_sensor_data(errors < np.radians(self.dsb_error_limit.value()))
         log.info(f"Culled the dots to {c.param(f'{self.dsb_error_limit.value():.3f}')}°: "
-              f"{c.num(self.matcher.sensor_data.stars_pixels.count_valid)} are valid")
+              f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
         self.onProjectionParametersChanged()
         self.showCounts()
 

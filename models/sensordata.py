@@ -74,8 +74,11 @@ class SensorData:
     def meteor_to_disk(self, masked):
         return self._collection_to_disk(self.meteor, masked)
 
+    def set_mask(self, mask):
+        self._stars.mask = mask
+
     def reset_mask(self):
-        self.stars.mask = None
+        self._stars.mask = None
 
     def culled_copy(self):
         out = copy.deepcopy(self)
