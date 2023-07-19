@@ -967,104 +967,67 @@
       </widget>
       <widget class="QWidget" name="tab">
        <attribute name="title">
-        <string>[8] Correction table</string>
+        <string>[&amp;8] Correction table</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_11">
-        <item row="1" column="0">
-         <widget class="QPushButton" name="pb_export_xml">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Export as XML</string>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QTableView" name="tv_meteor">
+          <property name="font">
+           <font>
+            <family>Noto Mono</family>
+           </font>
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QPushButton" name="pb_export_csv">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Export as CSV</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0" colspan="2">
-         <widget class="QTableWidget" name="tw_meteor">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="sizeAdjustPolicy">
-           <enum>QAbstractScrollArea::AdjustToContents</enum>
-          </property>
-          <property name="editTriggers">
-           <set>QAbstractItemView::NoEditTriggers</set>
-          </property>
-          <property name="alternatingRowColors">
-           <bool>true</bool>
-          </property>
-          <attribute name="horizontalHeaderMinimumSectionSize">
-           <number>100</number>
-          </attribute>
-          <attribute name="verticalHeaderDefaultSectionSize">
-           <number>25</number>
-          </attribute>
-          <column>
-           <property name="text">
-            <string>fno</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>zenith (raw)</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>azimuth (raw)</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>zenith (corrected)</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>azimuth (corrected)</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>xy correction</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>m correction</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>magnitude</string>
-           </property>
-          </column>
+        <item>
+         <widget class="QWidget" name="widget" native="true">
+          <layout class="QHBoxLayout" name="horizontalLayout_13">
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pb_export_xml">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Export as XML</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pb_export_csv">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Export as CSV</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
        </layout>
@@ -1263,7 +1226,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox">
+        <widget class="QGroupBox" name="gb_errors">
          <property name="title">
           <string>Errors</string>
          </property>

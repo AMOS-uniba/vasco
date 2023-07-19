@@ -47,7 +47,7 @@ class Matchmaker(Matcher):
         """
         return func(
             self.sensor_data.stars.project(projection, masked=masked),
-            self.catalogue.to_altaz_deg(self.location, self.time, masked=masked),
+            self.catalogue.to_altaz(self.location, self.time, masked=masked),
             axis=axis,
         )
 
@@ -91,7 +91,6 @@ class Matchmaker(Matcher):
         """
         observed = np.expand_dims(observed, 1)
         catalogue = np.expand_dims(catalogue, 0)
-        catalogue = np.radians(catalogue)
         observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed altitude to zenith distance
         return spherical_distance(observed, catalogue)
 

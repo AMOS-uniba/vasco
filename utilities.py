@@ -53,7 +53,7 @@ def spherical_distance(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     -------
     np.ndarray(A, B)
     """
-    return 2 * np.sin(
+    return 2 * np.arcsin(
         np.sqrt(
             np.sin(0.5 * (b[..., 0] - a[..., 0]))**2 +
             np.cos(a[..., 0]) * np.cos(b[..., 0]) * np.sin(0.5 * (b[..., 1] - a[..., 1]))**2
@@ -88,10 +88,17 @@ def altaz_to_disk(altaz: Union[None, AltAz]) -> np.ndarray:
         )
 
 
+def disk_to_numpy(xy: np.ndarray) -> np.ndarray:
+    return np.stack((
+        (QuarterTau + np.arctan2(xy[..., 1], xy[..., 0])),
+        (1 - np.sqrt(xy[..., 0] ** 2 + xy[..., 1] ** 2)) * QuarterTau
+    ), axis=1)
+
+
 def disk_to_altaz(xy: np.ndarray) -> AltAz:
     return AltAz(
-        (QuarterTau + np.arctan2(xy[:, 1], xy[:, 0])) * u.rad,          # Add pi/2 since our 0° is at the bottom
-        np.sqrt(xy[:, 0] ** 2 + xy[:, 1] ** 2) * QuarterTau * u.rad,
+        (QuarterTau + np.arctan2(xy[..., 1], xy[..., 0])) * u.rad,          # Add pi/2 since our 0° is at the bottom
+        (1 - np.sqrt(xy[..., 0] ** 2 + xy[..., 1] ** 2)) * QuarterTau * u.rad,
     )
 
 

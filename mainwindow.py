@@ -18,7 +18,8 @@ import matplotlib as mpl
 from matchers import Matchmaker, Counselor
 from projections import BorovickaProjection
 from plotting import MainWindowPlots
-from models import SensorData
+from models import SensorData, QMeteorModel
+from export import XMLExporter
 
 import colour as c
 from amos import AMOS, Station
@@ -37,7 +38,7 @@ class MainWindow(MainWindowPlots):
         self.populateStations()
         self.updateProjection()
 
-        self.tw_meteor.setColumnWidth(0, 40)
+        self.tv_meteor.setColumnWidth(0, 40)
 
         self.connectSignalSlots()
         self.updateLocation()
@@ -382,49 +383,8 @@ class MainWindow(MainWindowPlots):
     def updateMeteorTable(self):
         if isinstance(self.matcher, Counselor):
             data = self.matcher.correct_meteor(self.projection, self.calibration)
-
-            self.tw_meteor.setRowCount(data.count)
-            for i in range(0, data.count):
-                item = QTableWidgetItem(0)
-                item.setData(0, f"{data.fnos[i]:d}")
-                item.setData(7, 130)
-                self.tw_meteor.setItem(i, 0, item)
-
-                item = QTableWidgetItem(0)
-                item.setData(0, f"{data.position_raw.alt[i].value:.6f}°")
-                item.setData(7, 130)
-                self.tw_meteor.setItem(i, 1, item)
-
-                item = QTableWidgetItem(0)
-                item.setData(0, f"{data.position_raw.az[i].value:.6f}°")
-                item.setData(7, 130)
-                self.tw_meteor.setItem(i, 2, item)
-
-                item = QTableWidgetItem(0)
-                item.setData(0, f"{data.position_corrected.alt[i].value:.6f}°")
-                item.setData(7, 130)
-                self.tw_meteor.setItem(i, 3, item)
-
-                item = QTableWidgetItem(0)
-                item.setData(0, f"{data.position_corrected.az[i].value:.6f}°")
-                item.setData(7, 130)
-                self.tw_meteor.setItem(i, 4, item)
-
-                item = QTableWidgetItem(0)
-                item.setData(0, f"{data.positions_correction[i, 0]:.6f} {data.positions_correction[i, 1]:.6f}")
-                item.setData(7, 130)
-                self.tw_meteor.setItem(i, 5, item)
-
-                item = QTableWidgetItem(0)
-                item.setData(0, f"{data.magnitudes_corrected[i]:.6f}")
-                item.setData(7, 130)
-                self.tw_meteor.setItem(i, 6, item)
-
-                item = QTableWidgetItem(0)
-                item.setData(0, f"{data.magnitudes_correction[i]:.6f}")
-                item.setData(7, 130)
-                self.tw_meteor.setItem(i, 7, item)
-            # self.tw_meteor.setItem(i, 1, QTableWidgetItem(data.position_corrected.az[i].value))
+            model = QMeteorModel(data)
+            self.tv_meteor.setModel(model)
 
     def maskSensor(self):
         errors = self.matcher.position_errors(self.projection, masked=False)
@@ -478,90 +438,14 @@ class MainWindow(MainWindowPlots):
 
     def exportCorrectedMeteor(self):
         if not self.paired:
-            log.warn("Cannot export a meteor before pairing dots to the catalogue")
+            log.warning("Cannot export a meteor before pairing dots to the catalogue")
             return None
 
         filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", "output/",
                                                   "XML files (*.xml)")
         if filename is not None and filename != '':
-            with open(filename, 'w') as file:
-                file.write(f"""<?xml version="1.0" encoding="UTF-8" ?>
-<ufoanalyzer_record version ="200"
-    clip_name="{self.matcher.sensor_data.id}"
-    o="1"
-    y="{self.time.strftime("%Y")}"
-    mo="{self.time.strftime("%m")}"
-    d="{self.time.strftime("%d")}"
-    h="{self.time.strftime("%H")}"
-    m="{self.time.strftime("%M")}"
-    s="{self.time.strftime('%S.%f')}"
-    tz="0" tme="0" lid="{self.matcher.sensor_data.station}" sid="kvant"
-    lng="{self.dsb_lon.value()}" lat="{self.dsb_lat.value()}" alt="{self.dsb_alt.value()}"
-    cx="{self.matcher.sensor_data.rect.xmax}" cy="{self.matcher.sensor_data.rect.ymax}"
-    fps="{self.matcher.sensor_data.fps}" interlaced="0" bbf="0"
-    frames="{self.matcher.sensor_data.meteor.count}"
-    head="{self.matcher.sensor_data.meteor.fnos(False)[0] - 1}"
-    tail="0" drop="-1"
-    dlev="0" dsize="0" sipos="0" sisize="0"
-    trig="0" observer="{self.matcher.sensor_data.station}" cam="" lens=""
-    cap="" u2="0" ua="0" memo=""
-    az="0" ev="0" rot="0" vx="0"
-    yx="0" dx="0" dy="0" k4="0"
-    k3="0" k2="0" atc="0" BVF="0"
-    maxLev="0" maxMag="0" minLev="0" mimMag="0"
-    dl="0" leap="0" pixs="0" rstar="0"
-    ddega="0" ddegm="0" errm="0" Lmrgn="0"
-    Rmrgn="0" Dmrgn="0" Umrgn="0">
-    <ua2_objects>
-        <ua2_object
-            fs="20" fe="64" fN="45" sN="45"
-            sec="3" av="0" pix="0" bmax="0"
-            bN="0" Lmax="0" mag="0" cdeg="0"
-            cdegmax="0" io="0" raP="0" dcP="0"
-            av1="0" x1="0" y1="0" x2="0"
-            y2="0" az1="0" ev1="0" az2="0"
-            ev2="0" azm="0" evm="0" ra1="0"
-            dc1="0" ra2="0" dc2="0" ram="0"
-            dcm="0" class="spo" m="0" dr="0"
-            dv="0" Vo="0" lng1="0" lat1="0"
-            h1="0" dist1="0" gd1="0" azL1="0"
-            evL1="0" lng2="0" lat2="0" h2="0"
-            dist2="0" gd2="0" len="0" GV="0"
-            rao="0" dco="0" Voo="0" rat="0"
-            dct="0" memo=""
-            CodeRed="G"
-            ACOM="324"
-            sigma="0"
-            sigma.azi="0"
-            sigma.zen="0"
-            A0="{self.projection.axis_shifter.a0}"
-            X0="{self.projection.axis_shifter.x0}"
-            Y0="{self.projection.axis_shifter.y0}"
-            V="{self.projection.radial_transform.linear}"
-            S="{self.projection.radial_transform.lin_coef}"
-            D="{self.projection.radial_transform.lin_exp}"
-            EPS="{self.projection.zenith_shifter.epsilon}"
-            E="{self.projection.zenith_shifter.E}"
-            A="{self.projection.axis_shifter.A}"
-            F0="{self.projection.axis_shifter.F}"
-            P="{self.projection.radial_transform.quad_coef}"
-            Q="{self.projection.radial_transform.quad_exp}"
-            C="1"
-            CH1="0"
-            CH2="0"
-            CH3="0"
-            CH4="0"
-            magA="0"
-            magB="0"
-            magR2="0"
-            magS="0"
-            usingPrecession="False">
-""")
-                file.write(self.matcher.print_meteor(self.projection, self.calibration))
-                file.write("""
-        </ua2_object>
-    </ua2_objects>
-</ufoanalyzer_record>""")
+            exporter = XMLExporter(filename)
+            exporter.export()
 
     @property
     def grid_resolution(self):

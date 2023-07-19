@@ -12,7 +12,8 @@ from projections import Projection
 from photometry import Calibration
 from correctors import KernelSmoother
 from correctors import kernels
-from utilities import spherical_distance, spherical_difference, disk_to_altaz, altaz_to_disk, proj_to_disk, unit_grid
+from utilities import spherical_distance, spherical_difference, \
+                      disk_to_altaz, disk_to_numpy, altaz_to_disk, proj_to_disk, unit_grid
 from logger import setupLog
 
 log = setupLog(__name__)
@@ -52,7 +53,7 @@ class Counselor(Matcher):
         self.mask_catalogue(mask)
 
     @staticmethod
-    def compute_distances(observed, catalogue):
+    def compute_distances(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
         """
         Compute distance matrix for observed points projected to the sky and catalogue stars
         observed:   np.ndarray(N, 2)
@@ -62,7 +63,6 @@ class Counselor(Matcher):
         -------
         np.ndarray(N): spherical distance between the dot and the associated star
         """
-        catalogue = np.radians(catalogue)
         observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed altitude to co-altitude
         return spherical_distance(observed, catalogue)
 
@@ -80,7 +80,7 @@ class Counselor(Matcher):
     def position_errors(self, projection: Projection, *, masked: bool):
         return self.compute_distances(
             self.sensor_data.stars.project(projection, masked=masked),
-            self.catalogue.to_altaz_deg(self.location, self.time, masked=masked),
+            self.catalogue.to_altaz(self.location, self.time, masked=masked),
         )
 
     def magnitude_errors(self, projection: Projection, calibration: Calibration, *, masked: bool):
@@ -149,11 +149,13 @@ class Counselor(Matcher):
     def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
         positions_raw = self.project_meteor(projection)
         positions_corrected = self.correct_meteor_position(projection)
+        positions_correction_angle = positions_raw.separation(positions_corrected)
+        positions_correction_xy = self.correction_meteor_xy(projection)
+
         intensities_raw = self.sensor_data.meteor.intensities(masked=False)
         intensities_corrected = self.correct_meteor_magnitude(projection, calibration)
         magnitudes_raw = calibration(intensities_raw)
         magnitudes_corrected = intensities_corrected
-        positions_correction = self.correction_meteor_xy(projection)
         magnitudes_correction = self.correction_meteor_mag(projection)
 
         return dotmap.DotMap(
@@ -161,7 +163,8 @@ class Counselor(Matcher):
             position_corrected=positions_corrected,
             magnitudes_raw=magnitudes_raw,
             magnitudes_corrected=magnitudes_corrected,
-            positions_correction=positions_correction,
+            positions_correction_xy=positions_correction_xy,
+            positions_correction_angle=positions_correction_angle,
             magnitudes_correction=magnitudes_correction,
             count=self.sensor_data.meteor.count,
             fnos=self.sensor_data.meteor.fnos(masked=False),
