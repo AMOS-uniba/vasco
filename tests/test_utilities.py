@@ -44,3 +44,11 @@ class TestSpherical:
                 np.array([np.radians(-36), np.radians(14)])
             ),
             1.71305632)
+
+    def test_distance_5(self):
+        assert np.allclose(
+            spherical_distance(
+                np.array([np.radians(22), np.radians(98)]),
+                np.array([np.radians(-22), np.radians(-82)])
+            ),
+            np.pi)

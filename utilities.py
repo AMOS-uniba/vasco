@@ -36,11 +36,12 @@ def unit_grid(res, *, masked: bool):
 
 
 def spherical(x: AltAz, y: AltAz) -> u.Quantity:
-    return 2 * np.sin(
-        np.sqrt(
-            np.sin(0.5 * (y.alt - x.alt))**2 + np.cos(x.alt) * np.cos(y.alt) * np.sin(0.5 * (y.az - x.az))**2
-        ) * u.rad
-    )
+    return x.separation(y)
+    #2 * np.arcsin(
+    #    np.sqrt(
+    #        np.sin(0.5 * (y.alt - x.alt))**2 + np.cos(x.alt) * np.cos(y.alt) * np.sin(0.5 * (y.az - x.az))**2
+    #    )
+    #)
 
 
 def spherical_distance(a: np.ndarray, b: np.ndarray) -> np.ndarray:

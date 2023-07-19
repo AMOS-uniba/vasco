@@ -38,8 +38,6 @@ class MainWindow(MainWindowPlots):
         self.populateStations()
         self.updateProjection()
 
-        self.tv_meteor.setColumnWidth(0, 40)
-
         self.connectSignalSlots()
         self.updateLocation()
         self.updateTime()
@@ -385,6 +383,9 @@ class MainWindow(MainWindowPlots):
             data = self.matcher.correct_meteor(self.projection, self.calibration)
             model = QMeteorModel(data)
             self.tv_meteor.setModel(model)
+            for i, width in enumerate([40, 160, 160, 160, 160, 160, 160, 160, 160, 160]):
+                self.tv_meteor.setColumnWidth(i, width)
+
 
     def maskSensor(self):
         errors = self.matcher.position_errors(self.projection, masked=False)
