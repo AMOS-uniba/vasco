@@ -14,9 +14,9 @@ from photometry import Calibration
 from correctors import KernelSmoother
 from correctors import kernels
 from utilities import spherical_distance, spherical_difference, \
-                      disk_to_altaz, disk_to_numpy, altaz_to_disk, proj_to_disk, unit_grid
+                      disk_to_altaz, altaz_to_disk, proj_to_disk, unit_grid
 
-log = logging.getLogger("root")
+log = logging.getLogger('vasco')
 
 
 class Counselor(Matcher):
@@ -173,7 +173,7 @@ class Counselor(Matcher):
         )
 
     def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
-        data = self.correct_meteor(projection, calibration)
+
 
         df = pd.DataFrame()
         df['ev_r'] = 90 - data.position_raw.alt.degree

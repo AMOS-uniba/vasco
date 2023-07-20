@@ -10,7 +10,7 @@ from projections import Projection, BorovickaProjection
 from photometry import Calibration
 from models import Catalogue, SensorData
 
-log = logging.getLogger('root')
+log = logging.getLogger('vasco')
 
 
 class Matcher(metaclass=ABCMeta):

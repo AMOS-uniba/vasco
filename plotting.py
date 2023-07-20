@@ -15,7 +15,7 @@ from utilities import unit_grid
 from base import MainWindowBase
 
 
-log = logging.getLogger('root')
+log = logging.getLogger('vasco')
 
 
 class MainWindowPlots(MainWindowBase):

@@ -12,7 +12,7 @@ class SensorPlot(BasePlot):
         self.scatter_stars = None
         self.valid = False
         super().__init__(widget, **kwargs)
-        self.figure.tight_layout(rect=(0.04, 0, 1, 1))
+        self.figure.tight_layout(rect=(0.05, 0, 1, 1))
 
     def add_axes(self):
         self.axis = self.figure.add_subplot()

@@ -9,13 +9,13 @@ from astropy.time import Time
 
 import colour as c
 
-log = logging.getLogger('root')
+log = logging.getLogger('vasco')
 
 
 class Catalogue:
     def __init__(self, stars=None, *, name=None):
         self.stars: pd.DataFrame = pd.DataFrame()
-        self.skycoord: SkyCoord = None
+        self.skycoord: Optional[SkyCoord] = None
         self.name: str = name
 
         self._cache = None
@@ -34,6 +34,7 @@ class Catalogue:
         self.reset_mask()
 
     def load(self, filename):
+        log.debug("Catalogue loaded from file {filename}")
         self.name = filename
         self.stars = pd.read_csv(filename, sep='\t', header=1)
         self.update_coord()
@@ -44,6 +45,7 @@ class Catalogue:
         self._args = None
 
     def update_coord(self):
+        log.debug(f"Catalogue sky-coord updated")
         self.skycoord = SkyCoord(
             self.stars.ra.to_numpy() * u.deg,
             self.stars.dec.to_numpy() * u.deg,
@@ -93,12 +95,12 @@ class Catalogue:
 
     def altaz(self, location, time, *, masked: bool):
         if self._cache is None or (location, time) != self._args:
-            log.debug(f"Catalogue cache empty, recomputing altaz for {location}, {time}")
+            log.debug(f"Catalogue cache miss, recomputing altaz for {location}, {time}")
             altaz = AltAz(location=location, obstime=time, pressure=100000 * u.pascal, obswl=550 * u.nm)
             self._cache = self.skycoord.transform_to(altaz)
             self._args = (location, time)
         else:
-            log.debug(f"Catalogue cache hit, returning cached altaz for {location}, {time}")
+            log.debug(f"Catalogue cache hit, returning altaz for {location}, {time}")
 
         return self._cache[self.mask] if masked else self._cache
 

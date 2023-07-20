@@ -1,13 +1,13 @@
 from .base import Exporter
 
 
-class XMLExporter(Exporter):
+class CSVExporter(Exporter):
     """ XML based meteor exporter. Currently a semi-hardcoded mess but works for typical use cases. """
 
     def export(self, filename):
         with open(filename, 'w') as file:
             file.write(
-f"""<?xml version="1.0" encoding="UTF-8" ?>
+                f"""<?xml version="1.0" encoding="UTF-8" ?>
 <ufoanalyzer_record version ="200"
     clip_name="{self._matcher.sensor_data.id}"
     o="1"
@@ -79,14 +79,12 @@ f"""<?xml version="1.0" encoding="UTF-8" ?>
             magS="0"
             usingPrecession="False">
 """)
-            file.write(self._matcher.print_meteor())
+            file.write(self._matcher.print_meteor(self._projection, self._calibration))
             file.write("""
         </ua2_object>
     </ua2_objects>
 </ufoanalyzer_record>""")
 
-    def print_meteor(self):
+    def print_meteor(self, data):
         df = super()._get_meteor()
-        return df.to_xml(index=False, root_name='ua2_objpath', row_name='ua2_fdata2',
-                         xml_declaration=False, pretty_print=True,
-                         attr_cols=['fno', 'b', 'bm', 'Lsum', 'mag', 'mag_r', 'az', 'ev', 'az_r', 'ev_r', 'ra', 'dec'])
+        return None # mockup, finish

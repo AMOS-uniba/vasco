@@ -7,7 +7,7 @@ import numpy as np
 import dotmap
 
 from PyQt6 import QtCore
-from PyQt6.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
+from PyQt6.QtWidgets import QFileDialog, QMessageBox
 from PyQt6.QtCore import QDateTime, Qt
 
 from astropy import units as u
@@ -26,7 +26,7 @@ from amos import AMOS, Station
 
 mpl.use('Qt5Agg')
 
-log = logging.getLogger('root')
+log = logging.getLogger('vasco')
 
 VERSION = "0.8.0"
 DATE = "2023-07-18"
@@ -39,6 +39,7 @@ class MainWindow(MainWindowPlots):
         self.updateProjection()
 
         self.connectSignalSlots()
+
         self.updateLocation()
         self.updateTime()
 
@@ -49,6 +50,8 @@ class MainWindow(MainWindowPlots):
         self.showCounts()
         self.onProjectionParametersChanged()
         self.onScalingChanged()
+
+        self.tw_charts.setCurrentIndex(2)
 
     def connectSignalSlots(self):
         self.ac_load_sighting.triggered.connect(self.loadSighting)
@@ -80,7 +83,7 @@ class MainWindow(MainWindowPlots):
         self.pw_Q.setup(title="biexp exp", symbol="&Q", unit="mm<sup>-2</sup>", minimum=-5, maximum=5, step=0.0001)
 
         self.pw_epsilon.setup(title="zenith angle", symbol="ε", unit="°", minimum=0, maximum=90, step=0.1,
-                        inner_function=np.radians, input_function=np.degrees)
+                              inner_function=np.radians, input_function=np.degrees)
         self.pw_E.setup(title="azimuth", symbol="E", unit="°", minimum=0, maximum=359.999999, step=1,
                         inner_function=np.radians, input_function=np.degrees)
 
@@ -113,6 +116,8 @@ class MainWindow(MainWindowPlots):
         self.cb_show_errors.clicked.connect(self.plotPositionCorrectionErrors)
         self.cb_show_grid.clicked.connect(self.plotPositionCorrectionGrid)
         self.cb_interpolation.currentIndexChanged.connect(self.plotMagnitudeCorrectionGrid)
+
+        self.pb_export_xml.clicked.connect(self.ac_export_meteor.trigger)
 
         self.tw_charts.currentChanged.connect(self.updatePlots)
 
@@ -223,7 +228,7 @@ class MainWindow(MainWindowPlots):
         self.lb_bandwidth.setText(f"{bandwidth:.03f}")
 
     def onBandwidthChanged(self, action=0):
-        if action == 7: # do not do anything if the user did not drop the slider yet
+        if action == 7:  # do not do anything if the user did not drop the slider yet
             return
 
         bandwidth = self.bandwidth()
@@ -261,7 +266,7 @@ class MainWindow(MainWindowPlots):
         filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "catalogues",
                                                   "Tab-separated values (*.tsv)")
         if filename == '':
-            log.warn("No file provided, loading aborted")
+            log.warning("No file provided, loading aborted")
         else:
             if self.paired:
                 self.resetMatcher()
@@ -282,7 +287,7 @@ class MainWindow(MainWindowPlots):
                 yaml.dump(dict(
                     projection=dict(
                         name='Borovička',
-                        parameters={ param: widget.inner_value() for param, widget in self.param_widgets.items() },
+                        parameters={param: widget.inner_value() for param, widget in self.param_widgets.items()},
                     ),
                     pixels=dict(xs=self.dsb_xs.value(), ys=self.dsb_ys.value()),
                 ), file)
@@ -293,20 +298,20 @@ class MainWindow(MainWindowPlots):
         filename, _ = QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data",
                                                   "YAML files (*.yml *.yaml)")
         if filename == '':
-            log.warn("No file provided, loading aborted")
+            log.warning("No file provided, loading aborted")
         else:
             self._loadSighting(filename)
 
         if (station := AMOS.stations.get(self.matcher.sensor_data.station, None)) is not None:
-            log.debug(f"Station {station.code} found, loading properties from AMOS database")
+            log.info(f"Position for station {station.code} found, loading properties from AMOS database")
             self.cb_stations.setCurrentIndex(station.id)
             if (path := Path(f'./calibrations/{station.code}.yaml')).exists():
                 self._importProjectionParameters(path)
-                log.debug(f"Calibration file {path} found, loading projection parameters")
+                log.info(f"Calibration file {path} found, loading projection parameters")
             else:
-                log.debug(f"Calibration file {path} not found, skipping")
+                log.info(f"Calibration file {path} not found, skipping")
         else:
-            log.debug(f"Station not found, marking as custom coordinates")
+            log.warning(f"Station not found in the database, marking as custom coordinates")
             self.cb_stations.setCurrentIndex(0)
 
         self.onLocationTimeChanged()
@@ -334,32 +339,32 @@ class MainWindow(MainWindowPlots):
 
     def _importProjectionParameters(self, filename):
         try:
+            self._blockParameterSignals(True)
             with open(filename, 'r') as file:
                 try:
                     data = dotmap.DotMap(yaml.safe_load(file), _dynamic=False)
-                    self.blockParameterSignals(True)
                     for param, widget in self.param_widgets.items():
                         widget.set_value(widget.input_function(data.projection.params[param]))
                         self.dsb_xs.setValue(data.pixels.xs)
                         self.dsb_ys.setValue(data.pixels.ys)
-                    self.blockParameterSignals(False)
-
-                    self.updateProjection()
                 except yaml.YAMLError as exc:
                     log.error(f"Could not parse file {filename} as YAML: {exc}")
         except FileNotFoundError:
             log.error(f"File not found: {filename}")
         except Exception as exc:
             log.error(f"Could not import projection parameters: {exc}")
+        finally:
+            self._blockParameterSignals(False)
+            self.updateProjection()
 
-    def blockParameterSignals(self, block):
+    def _blockParameterSignals(self, block: bool) -> None:
         for widget in self.param_widgets.values():
             widget.dsb_value.blockSignals(block)
 
     def getProjectionParameters(self):
         return np.array([widget.inner_value() for widget in self.param_widgets.values()], dtype=float)
 
-    def optimize(self):
+    def optimize(self) -> None:
         self.w_input.setEnabled(False)
         self.w_input.repaint()
 
@@ -369,10 +374,10 @@ class MainWindow(MainWindowPlots):
             mask=np.array([widget.is_checked() for widget in self.param_widgets.values()], dtype=bool)
         )
 
-        self.blockParameterSignals(True)
+        self._blockParameterSignals(True)
         for value, widget in zip(result, self.param_widgets.values()):
             widget.set_from_gui(value)
-        self.blockParameterSignals(False)
+        self._blockParameterSignals(False)
 
         self.w_input.setEnabled(True)
         self.w_input.repaint()

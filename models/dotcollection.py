@@ -6,7 +6,7 @@ from projections import Projection
 from photometry import Calibration
 import colour as c
 
-log = logging.getLogger('root')
+log = logging.getLogger('vasco')
 
 
 class DotCollection:
@@ -22,7 +22,7 @@ class DotCollection:
 
         nonzero = self._i > 0
 
-        if not np.alltrue(nonzero):
+        if not np.all(nonzero):
             log.warning(f"Dots with zero intensity were found and removed (indices {np.where(~nonzero)})")
             self._xy = self._xy[nonzero]
             self._i = self._i[nonzero]

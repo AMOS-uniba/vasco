@@ -13,7 +13,7 @@ from photometry import Calibration
 from models import SensorData, Catalogue
 from utilities import spherical_distance
 
-log = logging.getLogger('root')
+log = logging.getLogger('vasco')
 
 
 class Matchmaker(Matcher):
