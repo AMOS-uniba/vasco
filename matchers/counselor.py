@@ -1,3 +1,4 @@
+import logging
 import math
 
 import dotmap
@@ -14,9 +15,8 @@ from correctors import KernelSmoother
 from correctors import kernels
 from utilities import spherical_distance, spherical_difference, \
                       disk_to_altaz, disk_to_numpy, altaz_to_disk, proj_to_disk, unit_grid
-from logger import setupLog
 
-log = setupLog(__name__)
+log = logging.getLogger("root")
 
 
 class Counselor(Matcher):
@@ -63,7 +63,7 @@ class Counselor(Matcher):
         -------
         np.ndarray(N): spherical distance between the dot and the associated star
         """
-        observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed altitude to co-altitude
+        observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed co-altitude to altitude
         return spherical_distance(observed, catalogue)
 
     @staticmethod
@@ -73,7 +73,7 @@ class Counselor(Matcher):
         np.ndarray(N, 2): vector errors
         """
         catalogue = np.radians(catalogue)
-        observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed altitude to co-altitude
+        observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed co-altitude to altitude
         return spherical_difference(observed, catalogue)
         # BROKEN
 
@@ -147,6 +147,7 @@ class Counselor(Matcher):
         return self._grid(self.magnitude_smoother, resolution, masked=False)
 
     def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
+        log.debug(f"Correcting a meteor")
         positions_raw = self.project_meteor(projection)
         positions_corrected = self.correct_meteor_position(projection)
         positions_correction_angle = positions_raw.separation(positions_corrected)

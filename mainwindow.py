@@ -379,12 +379,15 @@ class MainWindow(MainWindowPlots):
         self.onProjectionParametersChanged()
 
     def updateMeteorTable(self):
-        if isinstance(self.matcher, Counselor):
+        if self.paired:
+            self.tabs_table.setCurrentIndex(1)
             data = self.matcher.correct_meteor(self.projection, self.calibration)
             model = QMeteorModel(data)
             self.tv_meteor.setModel(model)
-            for i, width in enumerate([40, 160, 160, 160, 160, 160, 160, 160, 160, 160]):
+            for i, width in enumerate([40, 200, 200, 200, 200, 200, 200, 200, 200, 200]):
                 self.tv_meteor.setColumnWidth(i, width)
+        else:
+            self.tabs_table.setCurrentIndex(0)
 
 
     def maskSensor(self):
@@ -445,8 +448,8 @@ class MainWindow(MainWindowPlots):
         filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", "output/",
                                                   "XML files (*.xml)")
         if filename is not None and filename != '':
-            exporter = XMLExporter(filename)
-            exporter.export()
+            exporter = XMLExporter(self.matcher, self.location, self.time, self.projection, self.calibration)
+            exporter.export(filename)
 
     @property
     def grid_resolution(self):

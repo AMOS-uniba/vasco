@@ -9,11 +9,11 @@ from astropy.coordinates import EarthLocation
 class XMLExporter:
     def __init__(self, matcher: Counselor, location: EarthLocation, time: datetime.datetime,
                  projection: BorovickaProjection, calibration: Calibration):
-        self._matcher = matcher
-        self._location = location
-        self._time = time
-        self._projection = projection
-        self._calibration = calibration
+        self._matcher: Counselor = matcher
+        self._location: EarthLocation = location
+        self._time: datetime.datetime = time
+        self._projection: BorovickaProjection = projection
+        self._calibration: Calibration = calibration
 
     def export(self, filename):
         with open(filename, 'w') as file:
@@ -29,7 +29,7 @@ f"""<?xml version="1.0" encoding="UTF-8" ?>
     m="{self._time.strftime("%M")}"
     s="{self._time.strftime('%S.%f')}"
     tz="0" tme="0" lid="{self._matcher.sensor_data.station}" sid="kvant"
-    lng="{self._location.lat}" lat="{self._location.lon}" alt="{self._location.alt}"
+    lng="{self._location.lat}" lat="{self._location.lon}" alt="{self._location.height}"
     cx="{self._matcher.sensor_data.rect.xmax}" cy="{self._matcher.sensor_data.rect.ymax}"
     fps="{self._matcher.sensor_data.fps}" interlaced="0" bbf="0"
     frames="{self._matcher.sensor_data.meteor.count}"

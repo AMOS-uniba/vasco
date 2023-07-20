@@ -1,4 +1,5 @@
 import copy
+import logging
 import numpy as np
 import pandas as pd
 
@@ -7,16 +8,18 @@ from astropy.coordinates import SkyCoord, AltAz, FK5
 from astropy.time import Time
 
 import colour as c
-from logger import setupLog
 
-log = setupLog(__name__)
+log = logging.getLogger('root')
 
 
 class Catalogue:
     def __init__(self, stars=None, *, name=None):
-        self.stars = pd.DataFrame()
-        self.skycoord = None
-        self.name = name
+        self.stars: pd.DataFrame = pd.DataFrame()
+        self.skycoord: SkyCoord = None
+        self.name: str = name
+
+        self._cache = None
+        self._args = ()
 
         if stars is None:
             self.stars = pd.DataFrame(dict(
@@ -36,12 +39,17 @@ class Catalogue:
         self.update_coord()
         self.reset_mask()
 
+    def _invalidate_cache(self):
+        self._cache = None
+        self._args = None
+
     def update_coord(self):
         self.skycoord = SkyCoord(
             self.stars.ra.to_numpy() * u.deg,
             self.stars.dec.to_numpy() * u.deg,
             frame=FK5(equinox=Time('J2000')),
         )
+        self._invalidate_cache()
 
     def filter_by_vmag(self, vmag):
         self.stars[self.stars.vmag <= vmag]['use'] = False
@@ -84,9 +92,15 @@ class Catalogue:
         return self.stars[self.mask]
 
     def altaz(self, location, time, *, masked: bool):
-        altaz = AltAz(location=location, obstime=time, pressure=95000 * u.pascal, obswl=550 * u.nm)
-        source = self.skycoord[self.mask] if masked else self.skycoord
-        return source.transform_to(altaz)
+        if self._cache is None or (location, time) != self._args:
+            log.debug(f"Catalogue cache empty, recomputing altaz for {location}, {time}")
+            altaz = AltAz(location=location, obstime=time, pressure=100000 * u.pascal, obswl=550 * u.nm)
+            self._cache = self.skycoord.transform_to(altaz)
+            self._args = (location, time)
+        else:
+            log.debug(f"Catalogue cache hit, returning cached altaz for {location}, {time}")
+
+        return self._cache[self.mask] if masked else self._cache
 
     def to_altaz(self, location, time, *, masked: bool = True):
         """ Returns a packed (N, 2) np.ndarray with altitude and azimuth in radians """

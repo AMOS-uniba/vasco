@@ -1,5 +1,6 @@
 import logging
 import math
+import dotmap
 import numpy as np
 
 from typing import Callable
@@ -71,6 +72,9 @@ class Matchmaker(Matcher):
         if obs.size == 0:
             obs = np.tile(np.nan, cat.shape)
         return obs - cat
+
+    def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
+        raise NotImplementedError("Matchmaker cannot correct a meteor, use a Counselor instead")
 
     def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
         raise NotImplementedError("Matchmaker cannot print corrected meteors, use a Counselor instead")

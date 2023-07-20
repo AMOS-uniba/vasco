@@ -8,20 +8,21 @@ argparse = "*"
 argparsedirs = "*"
 astropy = "*"
 dotmap = "*"
-flake8 = "*"
 lxml = "*"
 matplotlib = "*"
 numpy = "*"
 pandas = "*"
 physics-fields = "*"
 pyqt6 = "*"
-pytest = "*"
 pyyaml = "*"
 scipy = "*"
 pyqt6-tools = "*"
 colorama = "*"
 
 [dev-packages]
+pytest = "*"
+ipython = "*"
+flake8 = "*"
 
 [requires]
 python_version = "3.11"

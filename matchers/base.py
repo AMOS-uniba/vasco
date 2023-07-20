@@ -1,5 +1,6 @@
 import logging
 import math
+import dotmap
 import numpy as np
 import scipy as sp
 
@@ -81,6 +82,10 @@ class Matcher(metaclass=ABCMeta):
     @staticmethod
     def max_error(errors) -> float:
         return np.max(errors, initial=0)
+
+    @abstractmethod
+    def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
+        pass
 
     @abstractmethod
     def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
