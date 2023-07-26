@@ -9,8 +9,8 @@ class QParameterWidget(QWidget, Ui_Form):
         super().__init__(parent=parent)
         self.setupUi(self)
 
-        self.inner_function = lambda x: x
-        self.input_function = lambda x: x
+        self.display_to_true = lambda x: x
+        self.true_to_display = lambda x: x
 
     def setup(self,
               *,
@@ -21,8 +21,8 @@ class QParameterWidget(QWidget, Ui_Form):
               maximum: float = 1,
               step: float = 0.001,
               decimals: int = 6,
-              inner_function: Callable[[float], float] = lambda x: x,
-              input_function: Callable[[float], float] = lambda x: x):
+              display_to_true: Callable[[float], float] = lambda x: x,
+              true_to_display: Callable[[float], float] = lambda x: x):
         self.lb_title.setText(title)
         self.lb_symbol.setText(symbol)
         self.lb_symbol.setBuddy(self.dsb_value)
@@ -32,21 +32,22 @@ class QParameterWidget(QWidget, Ui_Form):
         self.dsb_value.setSingleStep(step)
         self.dsb_value.setDecimals(decimals)
 
-        self.inner_function = inner_function
-        self.input_function = input_function
+        self.display_to_true = display_to_true
+        self.true_to_display = true_to_display
 
     def is_checked(self) -> bool:
         return self.cb_enabled.isChecked()
 
     @property
-    def value(self) -> float:
+    def display_value(self) -> float:
         return self.dsb_value.value()
 
-    def set_value(self, new_value: float):
+    def set_display_value(self, new_value: float):
         self.dsb_value.setValue(new_value)
 
-    def inner_value(self) -> float:
-        return float(self.inner_function(self.value))
+    @property
+    def true_value(self) -> float:
+        return float(self.display_to_true(self.display_value))
 
-    def set_from_gui(self, new_value: float):
-        self.set_value(self.input_function(new_value))
+    def set_true_value(self, new_value: float):
+        self.set_display_value(self.true_to_display(new_value))

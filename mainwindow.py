@@ -70,11 +70,11 @@ class MainWindow(MainWindowPlots):
         self.pw_x0.setup(title="H shift", symbol="x<sub>0</sub>", unit="mm", minimum=-5, maximum=5, step=0.001)
         self.pw_y0.setup(title="V shift", symbol="y<sub>0</sub>", unit="mm", minimum=-5, maximum=5, step=0.001)
         self.pw_a0.setup(title="rotation", symbol="a<sub>0</sub>", unit="°", minimum=0, maximum=359.999999, step=0.2,
-                         inner_function=np.radians, input_function=np.degrees)
+                         display_to_true=np.radians, true_to_display=np.degrees)
 
         self.pw_A.setup(title="amplitude", symbol="A", unit="", minimum=-1, maximum=1, step=0.001)
         self.pw_F.setup(title="phase", symbol="F", unit="°", minimum=0, maximum=359.999999, step=1,
-                        inner_function=np.radians, input_function=np.degrees)
+                        display_to_true=np.radians, true_to_display=np.degrees)
 
         self.pw_V.setup(title="linear", symbol="&V", unit="rad/mm", minimum=0.001, maximum=1, step=0.001)
         self.pw_S.setup(title="exp coef", symbol="&S", unit="rad/mm", minimum=-5, maximum=5, step=0.001)
@@ -83,9 +83,9 @@ class MainWindow(MainWindowPlots):
         self.pw_Q.setup(title="biexp exp", symbol="&Q", unit="mm<sup>-2</sup>", minimum=-5, maximum=5, step=0.0001)
 
         self.pw_epsilon.setup(title="zenith angle", symbol="ε", unit="°", minimum=0, maximum=90, step=0.1,
-                              inner_function=np.radians, input_function=np.degrees)
+                              display_to_true=np.radians, true_to_display=np.degrees)
         self.pw_E.setup(title="azimuth", symbol="E", unit="°", minimum=0, maximum=359.999999, step=1,
-                        inner_function=np.radians, input_function=np.degrees)
+                        display_to_true=np.radians, true_to_display=np.degrees)
 
         self.dt_time.dateTimeChanged.connect(self.updateTime)
         self.dt_time.dateTimeChanged.connect(self.onTimeChanged)
@@ -287,7 +287,7 @@ class MainWindow(MainWindowPlots):
                 yaml.dump(dict(
                     projection=dict(
                         name='Borovička',
-                        parameters={param: widget.inner_value() for param, widget in self.param_widgets.items()},
+                        parameters={param: widget.true_value() for param, widget in self.param_widgets.items()},
                     ),
                     pixels=dict(xs=self.dsb_xs.value(), ys=self.dsb_ys.value()),
                 ), file)
@@ -344,7 +344,7 @@ class MainWindow(MainWindowPlots):
                 try:
                     data = dotmap.DotMap(yaml.safe_load(file), _dynamic=False)
                     for param, widget in self.param_widgets.items():
-                        widget.set_value(widget.input_function(data.projection.params[param]))
+                        widget.set_display_value(widget.true_to_display(data.projection.params[param]))
                         self.dsb_xs.setValue(data.pixels.xs)
                         self.dsb_ys.setValue(data.pixels.ys)
                 except yaml.YAMLError as exc:
@@ -362,7 +362,7 @@ class MainWindow(MainWindowPlots):
             widget.dsb_value.blockSignals(block)
 
     def getProjectionParameters(self):
-        return np.array([widget.inner_value() for widget in self.param_widgets.values()], dtype=float)
+        return np.array([widget.true_value for widget in self.param_widgets.values()], dtype=float)
 
     def optimize(self) -> None:
         self.w_input.setEnabled(False)
@@ -376,7 +376,7 @@ class MainWindow(MainWindowPlots):
 
         self._blockParameterSignals(True)
         for value, widget in zip(result, self.param_widgets.values()):
-            widget.set_from_gui(value)
+            widget.set_true_value(value)
         self._blockParameterSignals(False)
 
         self.w_input.setEnabled(True)
@@ -406,9 +406,10 @@ class MainWindow(MainWindowPlots):
     def maskCatalogueDistant(self):
         errors = self.matcher.position_errors_inverse(self.projection, masked=False)
         self.matcher.mask_catalogue(errors < np.radians(self.dsb_distance_limit.value()))
-        log.info(f"Culled the catalogue to {self.dsb_distance_limit.value()}°: "
-              f"{self.matcher.catalogue.count_valid} stars used")
+        log.info(f"Culled the catalogue to {c.num(self.dsb_distance_limit.value())}°: "
+              f"{c.num(self.matcher.catalogue.count_valid)} stars used")
         self.positionSkyPlot.invalidate_stars()
+        self.magnitudeSkyPlot.invalidate_stars()
 
         self.computePositionErrors()
         self.computeMagnitudeErrors()
@@ -420,6 +421,7 @@ class MainWindow(MainWindowPlots):
         log.info(f"Culled the catalogue to magnitude {self.dsb_magnitude_limit.value()}m: "
               f"{self.matcher.catalogue.count_valid} stars used")
         self.positionSkyPlot.invalidate_stars()
+        self.magnitudeSkyPlot.invalidate_stars()
 
         self.computePositionErrors()
         self.computeMagnitudeErrors()

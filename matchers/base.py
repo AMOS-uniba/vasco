@@ -15,6 +15,7 @@ log = logging.getLogger('vasco')
 
 class Matcher(metaclass=ABCMeta):
     def __init__(self, location, time, projection_cls=BorovickaProjection):
+        self._altaz = None
         self.projection_cls = projection_cls
         self.location = None
         self.time = None
@@ -24,8 +25,7 @@ class Matcher(metaclass=ABCMeta):
 
     def load_catalogue(self, filename: str):
         del self.catalogue
-        self.catalogue = Catalogue()
-        self.catalogue.load(filename)
+        self.catalogue = Catalogue.load(filename)
 
     @property
     def valid(self) -> bool:
@@ -120,6 +120,8 @@ class Matcher(metaclass=ABCMeta):
                  maxiter=30,
                  *,
                  mask=np.ones(shape=(12,), dtype=bool)):
+
+        self._altaz = self.catalogue.to_altaz(self.location, self.time, masked=True),
         func = self.get_function(np.array(x0), mask)
         args = self.get_params(np.array(x0), mask)
 

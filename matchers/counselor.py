@@ -80,7 +80,7 @@ class Counselor(Matcher):
     def position_errors(self, projection: Projection, *, masked: bool):
         return self.compute_distances(
             self.sensor_data.stars.project(projection, masked=masked),
-            self.catalogue.to_altaz(self.location, self.time, masked=masked),
+            self._altaz if self._altaz is not None else self.catalogue.to_altaz(self.location, self.time, masked=masked),
         )
 
     def magnitude_errors(self, projection: Projection, calibration: Calibration, *, masked: bool):
@@ -173,8 +173,6 @@ class Counselor(Matcher):
         )
 
     def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
-
-
         df = pd.DataFrame()
         df['ev_r'] = 90 - data.position_raw.alt.degree
         df['ev'] = 90 - data.position_corrected.alt.degree

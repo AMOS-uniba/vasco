@@ -48,7 +48,7 @@ class Matchmaker(Matcher):
         """
         return func(
             self.sensor_data.stars.project(projection, masked=masked),
-            self.catalogue.to_altaz(self.location, self.time, masked=masked),
+            self._altaz if self._altaz is not None else self.catalogue.to_altaz(self.location, self.time, masked=masked),
             axis=axis,
         )
 
@@ -65,6 +65,7 @@ class Matchmaker(Matcher):
         # Find which star is the nearest for every dot
         nearest = self._cartesian(self.find_nearest_index, projection, masked, 1)
         # Filter the catalogue by that index
+        print(nearest.shape)
         obs = calibration(self.sensor_data.stars.intensities(masked=masked))
         cat = self.catalogue.valid.iloc[nearest].vmag.values
         if cat.size == 0:
@@ -130,7 +131,7 @@ class Matchmaker(Matcher):
         if dist.size > 0:
             return np.argmin(dist, axis=axis)
         else:
-            return np.empty(shape=((observed.size, catalogue.size)[axis],), dtype=float)
+            return np.empty(shape=((observed.shape[0], catalogue.shape[0])[axis],), dtype=float)
 
     def pair(self, projection: Projection) -> Counselor:
         # Find which star is the nearest for every dot
