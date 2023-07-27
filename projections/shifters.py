@@ -44,10 +44,10 @@ class OpticalAxisShifter:
 
     def as_dict(self):
         return dict(
-            x0=self.x0,
-            y0=self.y0,
-            a0=self.a0,
-            E=self.E,
+            x0=float(self.x0),
+            y0=float(self.y0),
+            a0=float(self.a0),
+            E=float(self.E),
         )
 
 
@@ -102,6 +102,6 @@ class TiltShifter(OpticalAxisShifter):
 
     def as_dict(self):
         return super().as_dict() | dict(
-            A=self.A,
-            F=self.F,
+            A=float(self.A),
+            F=float(self.F),
         )

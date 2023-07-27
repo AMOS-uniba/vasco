@@ -57,6 +57,6 @@ class ZenithShifter(Projection):
 
     def as_dict(self):
         return dict(
-            epsilon=self.epsilon,
-            E=self.E,
+            epsilon=float(self.epsilon),
+            E=float(self.E),
         )

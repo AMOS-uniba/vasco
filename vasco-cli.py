@@ -4,6 +4,7 @@ import argparsedirs
 import logger
 import logging
 import numpy as np
+import yaml
 from pathlib import Path
 
 from models import Catalogue, SensorData
@@ -70,7 +71,7 @@ class VascoCLI:
         for file in files:
             self.process_file(file)
 
-    def process_file(self, file):
+    def process_file(self, file: Path):
         log.info(f"Processing {c.path(file.name)}")
         sensor_data = SensorData.load_YAML(file.name)
         log.info(f"Sensor data loaded: {sensor_data}")
@@ -84,7 +85,21 @@ class VascoCLI:
         # Once the best match is found, pair the dots to the catalogue stars
         counselor = matcher.pair(self.projection)
         # ...and optimize the projection again (this should be very fast now)
-        counselor.minimize(x0=np.array(self.projection.as_tuple()), maxiter=10000)
+        result = counselor.minimize(x0=np.array(self.projection.as_tuple()), maxiter=10000)
+        projection = BorovickaProjection(*result)
+        log.debug(projection)
+
+        self.save_output_file((Path(self.args.outdir) / Path(file.name).stem).with_suffix('.yaml'), projection)
+
+    def save_output_file(self, filename, projection):
+        log.info(f"Saving output to {c.path(filename)}")
+        with open(filename, 'w') as file:
+            yaml.dump(dict(
+                projection=dict(
+                    name='Borovička',
+                    parameters=projection.as_dict(),
+                ),
+            ), file)
 
 
 vasco = VascoCLI()

@@ -32,7 +32,7 @@ class LinearTransformer(RadialTransformer):
 
     def as_dict(self):
         return dict(
-            V=self.linear,
+            V=float(self.linear),
         )
 
 
@@ -53,8 +53,8 @@ class ExponentialTransformer(LinearTransformer):
 
     def as_dict(self):
         return super().as_dict() | dict(
-            S=self.lin_coef,
-            D=self.lin_exp,
+            S=float(self.lin_coef),
+            D=float(self.lin_exp),
         )
 
 
@@ -81,6 +81,6 @@ class BiexponentialTransformer(ExponentialTransformer):
 
     def as_dict(self):
         return super().as_dict() | dict(
-            P=self.quad_coef,
-            Q=self.quad_exp,
+            P=float(self.quad_coef),
+            Q=float(self.quad_exp),
         )
