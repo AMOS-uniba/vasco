@@ -1,6 +1,6 @@
 projection:
   name: "Borovi\u010Dka"
-  params:
+  parameters:
     A: 0.00376
     D: -0.001469
     E: 2.2106157220721645

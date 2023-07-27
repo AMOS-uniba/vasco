@@ -19,3 +19,8 @@ class Projection(metaclass=ABCMeta):
     @abstractmethod
     def invert(self, z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """ Apply an inverse projection to an array of points """
+
+    @abstractmethod
+    def as_dict(self):
+        """ Return a dict representation of the Projection's parameters """
+        pass

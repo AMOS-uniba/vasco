@@ -304,7 +304,7 @@ class MainWindow(MainWindowPlots):
 
         if (station := AMOS.stations.get(self.matcher.sensor_data.station, None)) is not None:
             log.info(f"Position for station {station.code} found, loading properties from AMOS database")
-            self.cb_stations.setCurrentIndex(station.id)
+            self.cb_stations.setCurrentIndex(station.name)
             if (path := Path(f'./calibrations/{station.code}.yaml')).exists():
                 self._importProjectionParameters(path)
                 log.info(f"Calibration file {path} found, loading projection parameters")
@@ -329,7 +329,7 @@ class MainWindow(MainWindowPlots):
 
         if self.paired:
             self.resetMatcher()
-        self.matcher.sensor_data = SensorData.load(data)
+        self.matcher.sensor_data = SensorData.load_YAML(file)
 
     def importProjectionParameters(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Import projection parameters from file", "calibrations",
@@ -344,7 +344,7 @@ class MainWindow(MainWindowPlots):
                 try:
                     data = dotmap.DotMap(yaml.safe_load(file), _dynamic=False)
                     for param, widget in self.param_widgets.items():
-                        widget.set_display_value(widget.true_to_display(data.projection.params[param]))
+                        widget.set_display_value(widget.true_to_display(data.projection.parameters[param]))
                         self.dsb_xs.setValue(data.pixels.xs)
                         self.dsb_ys.setValue(data.pixels.ys)
                 except yaml.YAMLError as exc:

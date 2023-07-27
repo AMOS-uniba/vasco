@@ -1,4 +1,6 @@
 import numpy as np
+import dotmap
+import yaml
 from typing import Tuple, Union
 
 from .base import Projection
@@ -55,3 +57,26 @@ class BorovickaProjection(Projection):
                f"   {self.axis_shifter} \n" \
                f"   {self.radial_transform} \n" \
                f"   {self.zenith_shifter}"
+
+    def as_dict(self):
+        return self.axis_shifter.as_dict() | self.radial_transform.as_dict() | self.zenith_shifter.as_dict()
+
+    def as_tuple(self):
+        return (
+            self.axis_shifter.x0, self.axis_shifter.y0, self.axis_shifter.a0,
+            self.axis_shifter.A, self.axis_shifter.F,
+            self.radial_transform.linear, self.radial_transform.lin_coef, self.radial_transform.lin_exp,
+            self.radial_transform.quad_coef, self.radial_transform.quad_exp,
+            self.zenith_shifter.epsilon, self.zenith_shifter.E,
+        )
+
+    @staticmethod
+    def load(file):
+        data = dotmap.DotMap(yaml.safe_load(file), _dynamic=False)
+        data = data.projection.parameters
+        return BorovickaProjection(
+            data.x0, data.y0, data.a0,
+            data.A, data.F,
+            data.V, data.S, data.D, data.P, data.Q,
+            data.epsilon, data.E,
+        )

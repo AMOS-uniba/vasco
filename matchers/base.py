@@ -5,6 +5,7 @@ import numpy as np
 import scipy as sp
 
 from abc import ABCMeta, abstractmethod
+from typing import Callable, Optional
 
 from projections import Projection, BorovickaProjection
 from photometry import Calibration
@@ -14,13 +15,19 @@ log = logging.getLogger('vasco')
 
 
 class Matcher(metaclass=ABCMeta):
-    def __init__(self, location, time, projection_cls=BorovickaProjection):
+    """
+    The base class for matching sensor data to the catalogue.
+    """
+
+    def __init__(self, location, time, projection_cls=BorovickaProjection, *,
+                 catalogue: Optional[Catalogue] = None,
+                 sensor_data: Optional[SensorData] = None):
         self._altaz = None
-        self.projection_cls = projection_cls
+        self.projection_cls: BorovickaProjection = projection_cls
         self.location = None
         self.time = None
-        self.catalogue = Catalogue()
-        self.sensor_data = SensorData()
+        self.catalogue = Catalogue() if catalogue is None else catalogue
+        self.sensor_data = SensorData() if sensor_data is None else sensor_data
         self.update(location, time)
 
     def load_catalogue(self, filename: str):
@@ -97,7 +104,12 @@ class Matcher(metaclass=ABCMeta):
     def get_params(self, x0, mask):
         return x0[~mask]
 
-    def get_function(self, x0, mask):
+    def get_function(self, mask) -> Callable[[np.ndarray[float], ...], np.ndarray[float]]:
+        """
+        Split the parameter vector into immutable and variable part depending on mask
+        and return a loss function in which only variable parameters are to be optimized
+        and immutable ones are treated as constants
+        """
         ifixed = np.where(~mask)
         ivariable = np.where(mask)
 
@@ -116,13 +128,13 @@ class Matcher(metaclass=ABCMeta):
         return self.projection_cls.bounds[mask]
 
     def minimize(self,
-                 x0=np.array((0, 0, 0, 0, math.tau / 4, 0, 0, 0, 0, 0, 0, 0)),
+                 x0=np.array((0, 0, 0, 0, math.tau / 4, 1, 0, 0, 0, 0, 0, 0)),
                  maxiter=30,
                  *,
                  mask=np.ones(shape=(12,), dtype=bool)):
 
-        self._altaz = self.catalogue.to_altaz(self.location, self.time, masked=True),
-        func = self.get_function(np.array(x0), mask)
+        self._altaz = self.catalogue.to_altaz(self.location, self.time, masked=True)
+        func = self.get_function(mask)
         args = self.get_params(np.array(x0), mask)
 
         if np.count_nonzero(mask) == 0:
@@ -139,6 +151,7 @@ class Matcher(metaclass=ABCMeta):
             callback=lambda x: log.debug(x),
         )
 
+        # Restore the full parameter vector from immutable original args and variable optimized args
         vec = np.zeros(shape=(12,))
         np.put(vec, np.where(mask), result.x)
         np.put(vec, np.where(~mask), args)

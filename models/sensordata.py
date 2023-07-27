@@ -1,10 +1,14 @@
 import copy
 import datetime
 import numpy as np
+import dotmap
+import yaml
 
 import colour as c
 
 from typing import Optional
+from astropy.coordinates import EarthLocation
+import astropy.units as u
 
 from .dotcollection import DotCollection
 from projections.shifters import ScalingShifter
@@ -18,26 +22,26 @@ class SensorData:
                  stars: Optional[DotCollection] = None,
                  meteor: Optional[DotCollection] = None,
                  *,
-                 id: str = "(unknown)",
-                 station: Optional[str] = None,
+                 location: Optional[EarthLocation] = None,
                  timestamp: Optional[datetime.datetime] = None,
+                 name: str = "(unknown)",
+                 station: Optional[str] = None,
                  bounds: Optional[Rect] = None,
                  fps: int = 1):
         self.rect = Rect(-1, 1, -1, 1) if bounds is None else bounds
         self._stars = DotCollection() if stars is None else stars
         self._meteor = DotCollection() if meteor is None else meteor
-        self.id = "(unknown)" if id is None else id,
+        self.name = "(unknown)" if name is None else name,
         self.fps = fps
-        self.timestamp = datetime.datetime.now() if timestamp is None else timestamp
         self.station = "(unknown station)" if station is None else station
+
+        self.location = location
+        self.timestamp = datetime.datetime.now() if timestamp is None else timestamp
         self.shifter = ScalingShifter(x0=800, y0=600, xs=0.0044, ys=0.0044)
 
     @staticmethod
-    def load(data):
-#        assert np.min(np.asarray([star.intensity for star in data.Refstars])) > 0,\
-#            "All reference stars must have positive intensity!"
-#        assert np.min(np.asarray([snapshot.intensity for snapshot in data.Trail])) > 0,\
-#            "All meteor snapshots must have positive intensity!"
+    def load_YAML(file):
+        data = dotmap.DotMap(yaml.safe_load(open(file, 'r')), _dynamic=False)
 
         w, h = tuple(map(int, data.Resolution.split('x')))
         stars = DotCollection(
@@ -50,12 +54,14 @@ class SensorData:
             fnos=np.asarray([snapshot.fno for snapshot in data.Trail], dtype=int)
         )
         timestamp = datetime.datetime.strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f")
+        location = EarthLocation(data.Longitude * u.deg, data.Latitude * u.deg, data.Altitude * u.m)
         station = data.Name
 
         return SensorData(
             stars, meteor,
-            id=f"M{timestamp.strftime('%Y%m%d_%H%M%S')}_{station}_",
+            name=f"M{timestamp.strftime('%Y%m%d_%H%M%S')}_{station}_",
             bounds=Rect(0, w, 0, h),
+            location=location,
             timestamp=timestamp,
             station=station,
             fps=data.FPS

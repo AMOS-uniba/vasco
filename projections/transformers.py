@@ -30,6 +30,11 @@ class LinearTransformer(RadialTransformer):
         """ du / dr = V """
         return self.linear * np.ones_like(r)
 
+    def as_dict(self):
+        return dict(
+            V=self.linear,
+        )
+
 
 class ExponentialTransformer(LinearTransformer):
     """ Linear + exponential radial correction, u = Vr + S(e^(Dr) - 1) """
@@ -45,6 +50,12 @@ class ExponentialTransformer(LinearTransformer):
     def fprime(self, r):
         """ du/dr = V + SDe^(Dr) """
         return super().fprime(r) + self.lin_coef * self.lin_exp * np.exp(self.lin_exp * r)
+
+    def as_dict(self):
+        return super().as_dict() | dict(
+            S=self.lin_coef,
+            D=self.lin_exp,
+        )
 
 
 class BiexponentialTransformer(ExponentialTransformer):
@@ -67,3 +78,9 @@ class BiexponentialTransformer(ExponentialTransformer):
     def __str__(self):
         return f"<{self.__class__.__name__} V={self.linear} S={self.lin_coef} " \
                f"D={self.lin_exp} P={self.quad_coef} Q={self.quad_exp}>"
+
+    def as_dict(self):
+        return super().as_dict() | dict(
+            P=self.quad_coef,
+            Q=self.quad_exp,
+        )

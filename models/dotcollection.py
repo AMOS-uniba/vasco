@@ -87,7 +87,7 @@ class DotCollection:
         self._xy = self._xy[self.mask]
         self._i = self.i[self.mask]
         self.mask = None
-        log.info(f"DotCollection mask reset: {c.num(self.count_valid)} / {c.num(self.count)} dots are valid")
+        log.debug(f"DotCollection mask reset: {c.num(self.count_valid)} / {c.num(self.count)} dots are valid")
         return self
 
     def project(self, projection: Projection, *, masked: bool) -> np.ndarray[float]:

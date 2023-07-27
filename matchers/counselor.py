@@ -9,6 +9,7 @@ from .base import Matcher
 
 from astropy.coordinates import AltAz
 
+from models import Catalogue, SensorData
 from projections import Projection
 from photometry import Calibration
 from correctors import KernelSmoother
@@ -22,10 +23,12 @@ log = logging.getLogger('vasco')
 class Counselor(Matcher):
     """
     The Counselor is a Matcher that attempts to reconcile the sensor
-    with the catalogue *after* the stars were paired to dots.
+    with the catalogue *after* the stars were paired to sensor dots.
     """
 
-    def __init__(self, location, time, projection_cls, catalogue, sensor_data):
+    def __init__(self, location, time, projection_cls, *,
+                 catalogue: Catalogue,
+                 sensor_data: SensorData):
         super().__init__(location, time, projection_cls)
         # a Counselor has fixed pairs: they have to be set on creation
         assert sensor_data.stars.count == catalogue.count,\

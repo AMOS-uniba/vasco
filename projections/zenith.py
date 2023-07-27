@@ -54,3 +54,9 @@ class ZenithShifter(Projection):
 
     def __str__(self):
         return f"<{self.__class__.__name__} epsilon={self.epsilon} E={self.E}>"
+
+    def as_dict(self):
+        return dict(
+            epsilon=self.epsilon,
+            E=self.E,
+        )

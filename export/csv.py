@@ -9,7 +9,7 @@ class CSVExporter(Exporter):
             file.write(
                 f"""<?xml version="1.0" encoding="UTF-8" ?>
 <ufoanalyzer_record version ="200"
-    clip_name="{self._matcher.sensor_data.id}"
+    clip_name="{self._matcher.sensor_data.name}"
     o="1"
     y="{self._time.strftime("%Y")}"
     mo="{self._time.strftime("%m")}"

@@ -15,8 +15,7 @@ def hyg30():
 
 @pytest.fixture
 def sd():
-    contents = dotmap.DotMap(yaml.safe_load(open('data/20220531_055655.yaml', 'r')))
-    return SensorData.load(contents)
+    return SensorData.load_YAML('data/20220531_055655.yaml')
 
 
 class TestCatalogue():

@@ -18,16 +18,16 @@ log = logging.getLogger('vasco')
 
 class Matchmaker(Matcher):
     """
-    Initial star matchmaker: loads a catalogue (dec/ra) and a set of points (x/y)
+    Initial star matcher: loads a catalogue (dec/ra) and a set of points (x/y)
     and tries to find the best possible global match at location (lat/lon) and time (t)
     using a pre-defined projection class `projection_cls`
     """
 
-    def __init__(self, location, time, projection_cls=BorovickaProjection):
-        super().__init__(location, time, projection_cls)
+    def __init__(self, location, time, projection_cls=BorovickaProjection, **kwargs):
+        super().__init__(location, time, projection_cls, **kwargs)
 
     def load_sensor(self, filename: str):
-        self.sensor_data = SensorData(filename)
+        self.sensor_data = SensorData.load_YAML(filename)
 
     def update(self, location, time):
         super().update(location, time)
@@ -48,7 +48,9 @@ class Matchmaker(Matcher):
         """
         return func(
             self.sensor_data.stars.project(projection, masked=masked),
-            self._altaz if self._altaz is not None else self.catalogue.to_altaz(self.location, self.time, masked=masked),
+            self._altaz if self._altaz is not None else self.catalogue.to_altaz(self.location,
+                                                                                self.time,
+                                                                                masked=masked),
             axis=axis,
         )
 
@@ -65,7 +67,6 @@ class Matchmaker(Matcher):
         # Find which star is the nearest for every dot
         nearest = self._cartesian(self.find_nearest_index, projection, masked, 1)
         # Filter the catalogue by that index
-        print(nearest.shape)
         obs = calibration(self.sensor_data.stars.intensities(masked=masked))
         cat = self.catalogue.valid.iloc[nearest].vmag.values
         if cat.size == 0:
@@ -141,4 +142,4 @@ class Matchmaker(Matcher):
 
         catalogue = Catalogue(cat[['dec', 'ra', 'vmag']], name=self.catalogue.name)
         sensor_data = self.sensor_data.culled_copy()
-        return Counselor(self.location, self.time, self.projection_cls, catalogue, sensor_data)
+        return Counselor(self.location, self.time, self.projection_cls, catalogue=catalogue, sensor_data=sensor_data)

@@ -42,6 +42,14 @@ class OpticalAxisShifter:
     def __str__(self):
         return f"<{self.__class__} x0={self.x0} y0={self.y0} a0={self.a0} E={self.E}>"
 
+    def as_dict(self):
+        return dict(
+            x0=self.x0,
+            y0=self.y0,
+            a0=self.a0,
+            E=self.E,
+        )
+
 
 class TiltShifter(OpticalAxisShifter):
     """ Extends OpticalAxisShifter with imaging plane tilt """
@@ -90,4 +98,10 @@ class TiltShifter(OpticalAxisShifter):
         return x, y
 
     def __str__(self) -> str:
-        return f"<{self.__class__} x0={self.x0} y0={self.y0} a0={self.a0} A={self.A} F={self.F} E={self.E}>"
+        return f"<{self.__class__.__name__} x0={self.x0} y0={self.y0} a0={self.a0} A={self.A} F={self.F} E={self.E}>"
+
+    def as_dict(self):
+        return super().as_dict() | dict(
+            A=self.A,
+            F=self.F,
+        )
