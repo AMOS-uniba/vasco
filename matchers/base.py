@@ -96,15 +96,16 @@ class Matcher(metaclass=ABCMeta):
 
     @abstractmethod
     def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
-        """ Correct a meteor and return a XML fragment """
+        """ Correct a meteor and return an XML fragment """
 
     def func(self, x):
         return self.avg_error(self.position_errors(self.projection_cls(*x), masked=True))
 
-    def get_params(self, x0, mask):
+    @staticmethod
+    def _get_optimization_parameters(x0, mask):
         return x0[~mask]
 
-    def get_function(self, mask) -> Callable[[np.ndarray[float], ...], np.ndarray[float]]:
+    def _build_optimization_function(self, mask) -> Callable[[np.ndarray[float], ...], np.ndarray[float]]:
         """
         Split the parameter vector into immutable and variable part depending on mask
         and return a loss function in which only variable parameters are to be optimized
@@ -124,7 +125,7 @@ class Matcher(metaclass=ABCMeta):
 
         return func
 
-    def get_bounds(self, mask):
+    def get_optimization_bounds(self, mask):
         return self.projection_cls.bounds[mask]
 
     def minimize(self,
@@ -134,8 +135,8 @@ class Matcher(metaclass=ABCMeta):
                  mask=np.ones(shape=(12,), dtype=bool)):
 
         self._altaz = self.catalogue.to_altaz(self.location, self.time, masked=True)
-        func = self.get_function(mask)
-        args = self.get_params(np.array(x0), mask)
+        func = self._build_optimization_function(mask)
+        args = self._get_optimization_parameters(np.array(x0), mask)
 
         if np.count_nonzero(mask) == 0:
             log.warning(f"At least one parameter must be allowed to vary")
@@ -146,7 +147,7 @@ class Matcher(metaclass=ABCMeta):
             x0[mask],
             args,
             method='Nelder-Mead',
-            bounds=self.get_bounds(mask),
+            bounds=self.get_optimization_bounds(mask),
             options=dict(maxiter=maxiter, disp=True),
             callback=lambda x: log.debug(x),
         )

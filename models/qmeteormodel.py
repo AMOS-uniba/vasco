@@ -12,11 +12,11 @@ class QMeteorModel(QAbstractTableModel):
             case Qt.ItemDataRole.DisplayRole:
                 if orientation == Qt.Orientation.Horizontal:
                     return ["fno",
-                            "zenith raw", "azimuth raw",
-                            "zenith corrected", "azimuth corrected",
-                            "correction in x / mm", "correction in y / mm",
-                            "correction on sky",
-                            "magnitude raw", "magnitude corrected",
+                            "z raw", "a raw",
+                            "z corrected", "a corrected",
+                            "corr x / mm", "corr y / mm",
+                            "corr total",
+                            "mag raw", "mag corr",
                     ][section]
             case _:
                 return QVariant()

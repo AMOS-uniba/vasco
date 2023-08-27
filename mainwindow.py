@@ -51,7 +51,7 @@ class MainWindow(MainWindowPlots):
         self.onProjectionParametersChanged()
         self.onScalingChanged()
 
-        self.tw_charts.setCurrentIndex(2)
+        self.tw_charts.setCurrentIndex(1)
 
     def connectSignalSlots(self):
         self.ac_load_sighting.triggered.connect(self.loadSighting)
@@ -389,25 +389,28 @@ class MainWindow(MainWindowPlots):
             data = self.matcher.correct_meteor(self.projection, self.calibration)
             model = QMeteorModel(data)
             self.tv_meteor.setModel(model)
-            for i, width in enumerate([40, 200, 200, 200, 200, 200, 200, 200, 200, 200]):
+            for i, width in enumerate([40, 160, 160, 160, 160, 160, 160, 160, 160, 160]):
                 self.tv_meteor.setColumnWidth(i, width)
         else:
             self.tabs_table.setCurrentIndex(0)
-
 
     def maskSensor(self):
         errors = self.matcher.position_errors(self.projection, masked=False)
         self.matcher.mask_sensor_data(errors < np.radians(self.dsb_error_limit.value()))
         log.info(f"Culled the dots to {c.param(f'{self.dsb_error_limit.value():.3f}')}°: "
-              f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
+                 f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
         self.onProjectionParametersChanged()
         self.showCounts()
 
     def maskCatalogueDistant(self):
         errors = self.matcher.position_errors_inverse(self.projection, masked=False)
         self.matcher.mask_catalogue(errors < np.radians(self.dsb_distance_limit.value()))
-        log.info(f"Culled the catalogue to {c.num(self.dsb_distance_limit.value())}°: "
-              f"{c.num(self.matcher.catalogue.count_valid)} stars used")
+        log.info(f"Culled the catalogue to {c.num(f'{self.dsb_distance_limit.value():.3f}')}°: "
+                 f"{c.num(self.matcher.catalogue.count_valid)} stars used")
+
+        if self.paired:
+            self.pair()
+
         self.positionSkyPlot.invalidate_stars()
         self.magnitudeSkyPlot.invalidate_stars()
 
@@ -419,7 +422,11 @@ class MainWindow(MainWindowPlots):
     def maskCatalogueFaint(self):
         self.matcher.mask_catalogue(self.matcher.catalogue.vmag(masked=False) > self.dsb_magnitude_limit.value())
         log.info(f"Culled the catalogue to magnitude {self.dsb_magnitude_limit.value()}m: "
-              f"{self.matcher.catalogue.count_valid} stars used")
+                 f"{self.matcher.catalogue.count_valid} stars used")
+
+        if self.paired:
+            self.pair()
+
         self.positionSkyPlot.invalidate_stars()
         self.magnitudeSkyPlot.invalidate_stars()
 
