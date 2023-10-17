@@ -38,7 +38,7 @@ class SensorPlot(BasePlot):
         norm = mpl.colors.Normalize(vmin=0, vmax=None)
         normalized = norm(data._meteor.i) if data._meteor.i.size > 0 else []
         self.scatter_meteor.set_facecolors(self.cmap_meteors(normalized))
-        self.scatter_meteor.set_sizes(data._meteor.i / 100)
+        self.scatter_meteor.set_sizes(data._meteor.i / 2000)
         self.valid = True
         self.draw()
 

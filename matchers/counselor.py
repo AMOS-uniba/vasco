@@ -81,14 +81,20 @@ class Counselor(Matcher):
         # BROKEN
 
     def position_errors(self, projection: Projection, *, masked: bool):
-        return self.compute_distances(
-            self.sensor_data.stars.project(projection, masked=masked),
-            self._altaz if self._altaz is not None else self.catalogue.to_altaz(self.location, self.time, masked=masked),
-        )
+        sensor = self.sensor_data.stars.project(projection, masked=masked)
+        altaz = self._altaz \
+            if self._altaz is not None and self._altaz.shape == sensor.shape \
+            else self.catalogue.to_altaz(self.location, self.time, masked=masked)
+        assert sensor.shape == altaz.shape, \
+            f"The shape of the dot collection and the catalogue must be the same, got {sensor.shape} and {altaz.shape}"
+
+        return self.compute_distances(sensor, altaz)
 
     def magnitude_errors(self, projection: Projection, calibration: Calibration, *, masked: bool):
         obs = calibration(self.sensor_data.stars.intensities(masked=masked))
         cat = self.catalogue.vmag(masked=masked)
+        assert obs.shape == cat.shape, \
+            f"The shape of the dot collection and the catalogue must be the same, got {obs.shape} and {cat.shape}"
         return obs - cat
 
     def position_errors_inverse(self, projection: Projection, *, masked: bool):

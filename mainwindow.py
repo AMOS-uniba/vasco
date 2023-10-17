@@ -33,7 +33,7 @@ DATE = "2023-07-18"
 
 
 class MainWindow(MainWindowPlots):
-    def __init__(self, parent=None):
+    def __init__(self, args, parent=None):
         super().__init__(parent)
         self.populateStations()
         self.updateProjection()
@@ -44,9 +44,13 @@ class MainWindow(MainWindowPlots):
         self.updateTime()
 
         self.resetMatcher()
-        self.matcher.load_catalogue('catalogues/HYG30.tsv')
-        self._loadSighting('data/20220531_055655.yaml')
-        self._importProjectionParameters('calibrations/DRGR.yaml')
+        if args.catalogue:
+            self.matcher.load_catalogue(args.catalogue.name)
+        if args.sighting:
+            self._loadSighting(args.sighting.name)
+        if args.projection:
+            self._importProjectionParameters(args.projection.name)
+
         self.showCounts()
         self.onProjectionParametersChanged()
         self.onScalingChanged()
@@ -67,6 +71,7 @@ class MainWindow(MainWindowPlots):
         for widget in self.param_widgets.values():
             widget.dsb_value.valueChanged.connect(self.onProjectionParametersChanged)
 
+        "The shape of the dot collection and the catalogue must be the same, got {obs.shape} and {cat.shape}"
         self.pw_x0.setup(title="H shift", symbol="x<sub>0</sub>", unit="mm", minimum=-5, maximum=5, step=0.001)
         self.pw_y0.setup(title="V shift", symbol="y<sub>0</sub>", unit="mm", minimum=-5, maximum=5, step=0.001)
         self.pw_a0.setup(title="rotation", symbol="a<sub>0</sub>", unit="°", minimum=0, maximum=359.999999, step=0.2,
@@ -77,10 +82,10 @@ class MainWindow(MainWindowPlots):
                         display_to_true=np.radians, true_to_display=np.degrees)
 
         self.pw_V.setup(title="linear", symbol="&V", unit="rad/mm", minimum=0.001, maximum=1, step=0.001)
-        self.pw_S.setup(title="exp coef", symbol="&S", unit="rad/mm", minimum=-5, maximum=5, step=0.001)
-        self.pw_D.setup(title="exp exp", symbol="&D", unit="mm<sup>-1</sup>", minimum=-5, maximum=5, step=0.0001)
-        self.pw_P.setup(title="biexp coef", symbol="&P", unit="rad/mm", minimum=-5, maximum=5, step=0.001)
-        self.pw_Q.setup(title="biexp exp", symbol="&Q", unit="mm<sup>-2</sup>", minimum=-5, maximum=5, step=0.0001)
+        self.pw_S.setup(title="exp coef", symbol="&S", unit="rad/mm", minimum=-100, maximum=100, step=0.001)
+        self.pw_D.setup(title="exp exp", symbol="&D", unit="mm<sup>-1</sup>", minimum=-100, maximum=100, step=0.0001)
+        self.pw_P.setup(title="biexp coef", symbol="&P", unit="rad/mm", minimum=-100, maximum=100, step=0.001)
+        self.pw_Q.setup(title="biexp exp", symbol="&Q", unit="mm<sup>-2</sup>", minimum=-100, maximum=100, step=0.0001)
 
         self.pw_epsilon.setup(title="zenith angle", symbol="ε", unit="°", minimum=0, maximum=90, step=0.1,
                               display_to_true=np.radians, true_to_display=np.degrees)
@@ -287,7 +292,7 @@ class MainWindow(MainWindowPlots):
                 yaml.dump(dict(
                     projection=dict(
                         name='Borovička',
-                        parameters={param: widget.true_value() for param, widget in self.param_widgets.items()},
+                        parameters={param: widget.true_value for param, widget in self.param_widgets.items()},
                     ),
                     pixels=dict(xs=self.dsb_xs.value(), ys=self.dsb_ys.value()),
                 ), file)
@@ -304,7 +309,7 @@ class MainWindow(MainWindowPlots):
 
         if (station := AMOS.stations.get(self.matcher.sensor_data.station, None)) is not None:
             log.info(f"Position for station {station.code} found, loading properties from AMOS database")
-            self.cb_stations.setCurrentIndex(station.name)
+            self.cb_stations.setCurrentIndex(station.id)
             if (path := Path(f'./calibrations/{station.code}.yaml')).exists():
                 self._importProjectionParameters(path)
                 log.info(f"Calibration file {path} found, loading projection parameters")
@@ -395,6 +400,9 @@ class MainWindow(MainWindowPlots):
             self.tabs_table.setCurrentIndex(0)
 
     def maskSensor(self):
+        if self.paired:
+            self.pair()
+
         errors = self.matcher.position_errors(self.projection, masked=False)
         self.matcher.mask_sensor_data(errors < np.radians(self.dsb_error_limit.value()))
         log.info(f"Culled the dots to {c.param(f'{self.dsb_error_limit.value():.3f}')}°: "
@@ -403,13 +411,13 @@ class MainWindow(MainWindowPlots):
         self.showCounts()
 
     def maskCatalogueDistant(self):
+        if self.paired:
+            self.pair()
+
         errors = self.matcher.position_errors_inverse(self.projection, masked=False)
         self.matcher.mask_catalogue(errors < np.radians(self.dsb_distance_limit.value()))
         log.info(f"Culled the catalogue to {c.num(f'{self.dsb_distance_limit.value():.3f}')}°: "
                  f"{c.num(self.matcher.catalogue.count_valid)} stars used")
-
-        if self.paired:
-            self.pair()
 
         self.positionSkyPlot.invalidate_stars()
         self.magnitudeSkyPlot.invalidate_stars()
@@ -470,9 +478,9 @@ class MainWindow(MainWindowPlots):
         return self.sb_resolution.value()
 
     def pair(self):
-        if (avg_error := np.degrees(self.matcher.avg_error(self.position_errors))) > 0.3:
+        if (rms_error := np.degrees(self.matcher.rms_error(self.position_errors))) > 0.3:
             reply = QMessageBox.warning(self, "Mean position error limit exceeded!",
-                                        f"Mean position error is currently {avg_error:.6f}°.\n"
+                                        f"Mean position error is currently {rms_error:.6f}°.\n"
                                         f"Are you sure your approximate solution is correct?",
                                         QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
             if reply != QMessageBox.StandardButton.Ok:

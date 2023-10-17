@@ -52,9 +52,9 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         return isinstance(self.matcher, Counselor)
 
     def showErrors(self) -> None:
-        avg_error = self.matcher.avg_error(self.position_errors)
+        rms_error = self.matcher.rms_error(self.position_errors)
         max_error = self.matcher.max_error(self.position_errors)
-        self.lb_avg_error.setText(f'{np.degrees(avg_error):.6f}°')
+        self.lb_rms_error.setText(f'{np.degrees(rms_error):.6f}°')
         self.lb_max_error.setText(f'{np.degrees(max_error):.6f}°')
         self.lb_total_stars.setText(f'{self.matcher.catalogue.count}')
         outside_limit = self.position_errors[self.position_errors > np.radians(self.dsb_error_limit.value())].size

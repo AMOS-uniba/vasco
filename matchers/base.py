@@ -80,7 +80,7 @@ class Matcher(metaclass=ABCMeta):
         """ Find magnitude error for each dot """
 
     @staticmethod
-    def avg_error(errors) -> float:
+    def rms_error(errors) -> float:
         if errors.size == 0:
             return np.nan
         else:
@@ -99,7 +99,7 @@ class Matcher(metaclass=ABCMeta):
         """ Correct a meteor and return an XML fragment """
 
     def func(self, x):
-        return self.avg_error(self.position_errors(self.projection_cls(*x), masked=True))
+        return self.rms_error(self.position_errors(self.projection_cls(*x), masked=True))
 
     @staticmethod
     def _get_optimization_parameters(x0, mask):
@@ -121,7 +121,7 @@ class Matcher(metaclass=ABCMeta):
             np.put(vec, ivariable, variable)
             np.put(vec, ifixed, np.array(args))
 
-            return self.avg_error(self.position_errors(self.projection_cls(*vec), masked=True))
+            return self.rms_error(self.position_errors(self.projection_cls(*vec), masked=True))
 
         return func
 
