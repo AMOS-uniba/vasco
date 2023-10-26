@@ -1,4 +1,4 @@
-Welcome to the GitHUb page of `vasco`, the Virtual All-Sky CorrectOr plate.
+Welcome to the GitHub page of `vasco`, the Virtual All-Sky CorrectOr plate.
 
 It is a GUI tool that hopes to be useful in reducing all-sky images of meteors and
 other celestial phenomena.
