@@ -1,8 +1,6 @@
-import pytest
-import math
 import numpy as np
 
-from utilities import disk_to_numpy, disk_to_altaz, altaz_to_disk, spherical_distance
+from utilities import disk_to_altaz, altaz_to_disk, spherical_distance
 from base import pytest_generate_tests
 
 

@@ -3,7 +3,6 @@ import math
 
 import dotmap
 import numpy as np
-import pandas as pd
 
 from .base import Matcher
 
@@ -31,7 +30,7 @@ class Counselor(Matcher):
                  sensor_data: SensorData):
         super().__init__(location, time, projection_cls)
         # a Counselor has fixed pairs: they have to be set on creation
-        assert sensor_data.stars.count == catalogue.count,\
+        assert sensor_data.stars.count == catalogue.count, \
             f"Sensor data count ({sensor_data.stars.count}) does not match the catalogue data count ({catalogue.count})"
         self.catalogue = catalogue
         self.sensor_data = sensor_data
@@ -156,7 +155,7 @@ class Counselor(Matcher):
         return self._grid(self.magnitude_smoother, resolution, masked=False)
 
     def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
-        log.debug(f"Correcting a meteor")
+        log.debug("Correcting a meteor")
         positions_raw = self.project_meteor(projection)
         positions_corrected = self.correct_meteor_position(projection)
         positions_correction_angle = positions_raw.separation(positions_corrected)
@@ -180,21 +179,3 @@ class Counselor(Matcher):
             fnos=self.sensor_data.meteor.fnos(masked=False),
             _dynamic=False,
         )
-
-    def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
-        df = pd.DataFrame()
-        df['ev_r'] = 90 - data.position_raw.alt.degree
-        df['ev'] = 90 - data.position_corrected.alt.degree
-        df['az_r'] = np.fmod(data.position_raw.az.degree + 180, 360)
-        df['az'] = np.fmod(data.position_corrected.az.degree + 180, 360)
-        df['fno'] = self.sensor_data.meteor.fnos(masked=False)
-        df['b'] = 0
-        df['bm'] = 0
-        df['Lsum'] = 0
-        df['mag_r'] = data.magnitudes_raw
-        df['mag'] = data.magnitudes_corrected
-        df['ra'] = 0
-        df['dec'] = 0
-        return df.to_xml(index=False, root_name='ua2_objpath', row_name='ua2_fdata2',
-                         xml_declaration=False, pretty_print=True,
-                         attr_cols=['fno', 'b', 'bm', 'Lsum', 'mag', 'mag_r', 'az', 'ev', 'az_r', 'ev_r', 'ra', 'dec'])

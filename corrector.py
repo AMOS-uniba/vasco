@@ -12,7 +12,7 @@ import argparsedirs
 from utilities import by_azimuth, polar_to_cart
 
 
-from correctors import Interpolator, ZernikeExpander, ZernikeDiscreteExpander, KernelSmoother, kernels
+from correctors import Interpolator, ZernikeExpander, KernelSmoother, kernels
 
 mpl.use('Agg')
 mpl.rc('font', family='Minion Pro')

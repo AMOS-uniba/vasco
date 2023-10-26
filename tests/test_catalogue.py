@@ -1,6 +1,4 @@
 import pytest
-import yaml
-import dotmap
 
 from models.sensordata import SensorData
 from models.catalogue import Catalogue
@@ -17,11 +15,11 @@ def sd():
     return SensorData.load_YAML('data/20220531_055655.yaml')
 
 
-class TestCatalogue():
+class TestCatalogue:
     def test_dimensions(self, hyg30):
         assert hyg30.skycoord.size == 5068
 
 
-class TestSensorData():
+class TestSensorData:
     def test_dimensions(self, sd):
         assert sd.stars.count == 702

@@ -1,4 +1,3 @@
-import numpy as np
 from PyQt6.QtCore import Qt, QVariant, QModelIndex, QAbstractTableModel
 
 
@@ -11,13 +10,14 @@ class QMeteorModel(QAbstractTableModel):
         match role:
             case Qt.ItemDataRole.DisplayRole:
                 if orientation == Qt.Orientation.Horizontal:
-                    return ["fno",
-                            "z raw", "a raw",
-                            "z corrected", "a corrected",
-                            "corr x / mm", "corr y / mm",
-                            "corr total",
-                            "mag raw", "mag corr",
-                    ][section]
+                    return\
+                        ["fno",
+                         "z raw", "a raw",
+                         "z corrected", "a corrected",
+                         "corr x / mm", "corr y / mm",
+                         "corr total",
+                         "mag raw", "mag corr",
+                         ][section]
             case _:
                 return QVariant()
 
@@ -32,16 +32,27 @@ class QMeteorModel(QAbstractTableModel):
             case Qt.ItemDataRole.DisplayRole:
                 row = index.row()
                 match index.column():
-                    case 0: return f"{self._data.fnos[row]:d}"
-                    case 1: return f"{self._data.position_raw.alt[row].value:.6f}°"
-                    case 2: return f"{self._data.position_raw.az[row].value:.6f}°"
-                    case 3: return f"{self._data.position_corrected.alt[row].value:.6f}°"
-                    case 4: return f"{self._data.position_corrected.az[row].value:.6f}°"
-                    case 5: return f"{self._data.positions_correction_xy[row, 0]:.6f}"
-                    case 6: return f"{self._data.positions_correction_xy[row, 1]:.6f}"
-                    case 7: return f"{self._data.positions_correction_angle[row].degree:.6f}°"
-                    case 8: return f"{self._data.magnitudes_corrected[row]:.6f}"
-                    case 9: return f"{self._data.magnitudes_correction[row]:.6f}"
-                    case _: return QVariant()
+                    case 0:
+                        return f"{self._data.fnos[row]:d}"
+                    case 1:
+                        return f"{self._data.position_raw.alt[row].value:.6f}°"
+                    case 2:
+                        return f"{self._data.position_raw.az[row].value:.6f}°"
+                    case 3:
+                        return f"{self._data.position_corrected.alt[row].value:.6f}°"
+                    case 4:
+                        return f"{self._data.position_corrected.az[row].value:.6f}°"
+                    case 5:
+                        return f"{self._data.positions_correction_xy[row, 0]:.6f}"
+                    case 6:
+                        return f"{self._data.positions_correction_xy[row, 1]:.6f}"
+                    case 7:
+                        return f"{self._data.positions_correction_angle[row].degree:.6f}°"
+                    case 8:
+                        return f"{self._data.magnitudes_corrected[row]:.6f}"
+                    case 9:
+                        return f"{self._data.magnitudes_correction[row]:.6f}"
+                    case _:
+                        return QVariant()
             case Qt.ItemDataRole.TextAlignmentRole:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter

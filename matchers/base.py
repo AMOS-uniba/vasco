@@ -94,9 +94,9 @@ class Matcher(metaclass=ABCMeta):
     def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
         pass
 
-    @abstractmethod
-    def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
-        """ Correct a meteor and return an XML fragment """
+#    @abstractmethod
+#    def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
+#        """ Correct a meteor and return an XML fragment """
 
     def func(self, x):
         return self.rms_error(self.position_errors(self.projection_cls(*x), masked=True))
@@ -105,7 +105,8 @@ class Matcher(metaclass=ABCMeta):
     def _get_optimization_parameters(x0, mask):
         return x0[~mask]
 
-    def _build_optimization_function(self, mask) -> Callable[[np.ndarray[float], ...], np.ndarray[float]]:
+    def _build_optimization_function(self,
+                                     mask: np.ndarray[float]) -> Callable[[np.ndarray[float], ...], float]:
         """
         Split the parameter vector into immutable and variable part depending on mask
         and return a loss function in which only variable parameters are to be optimized
@@ -114,7 +115,7 @@ class Matcher(metaclass=ABCMeta):
         ifixed = np.where(~mask)
         ivariable = np.where(mask)
 
-        def func(x, *args):
+        def func(x: np.ndarray[float], *args) -> float:
             variable = np.array(x)
 
             vec = np.zeros(shape=(12,))
@@ -139,7 +140,7 @@ class Matcher(metaclass=ABCMeta):
         args = self._get_optimization_parameters(np.array(x0), mask)
 
         if np.count_nonzero(mask) == 0:
-            log.warning(f"At least one parameter must be allowed to vary")
+            log.warning("At least one parameter must be allowed to vary")
             return tuple(x0)
 
         result = sp.optimize.minimize(
