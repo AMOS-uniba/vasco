@@ -79,7 +79,7 @@ f"""<?xml version="1.0" encoding="UTF-8" ?>
             magS="0"
             usingPrecession="False">
 """)
-            file.write(self._matcher.print_meteor())
+            file.write(self.print_meteor())
             file.write("""
         </ua2_object>
     </ua2_objects>
