@@ -18,7 +18,7 @@ f"""<?xml version="1.0" encoding="UTF-8" ?>
     m="{self._time.strftime("%M")}"
     s="{self._time.strftime('%S.%f')}"
     tz="0" tme="0" lid="{self._matcher.sensor_data.station}" sid="kvant"
-    lng="{self._location.lat}" lat="{self._location.lon}" alt="{self._location.height}"
+    lng="{self._location.lon.value}" lat="{self._location.lat.value}" alt="{self._location.height.value}"
     cx="{self._matcher.sensor_data.rect.xmax}" cy="{self._matcher.sensor_data.rect.ymax}"
     fps="{self._matcher.sensor_data.fps}" interlaced="0" bbf="0"
     frames="{self._matcher.sensor_data.meteor.count}"

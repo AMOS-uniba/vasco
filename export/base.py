@@ -27,8 +27,8 @@ class Exporter(metaclass=ABCMeta):
         data = self._matcher.correct_meteor(self._projection, self._calibration)
 
         df = pd.DataFrame()
-        df['ev_r'] = 90 - data.position_raw.alt.degree
-        df['ev'] = 90 - data.position_corrected.alt.degree
+        df['ev_r'] = data.position_raw.alt.degree
+        df['ev'] = data.position_corrected.alt.degree
         df['az_r'] = np.fmod(data.position_raw.az.degree + 180, 360)
         df['az'] = np.fmod(data.position_corrected.az.degree + 180, 360)
         df['fno'] = data.fnos
