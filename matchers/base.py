@@ -7,6 +7,8 @@ import scipy as sp
 from abc import ABCMeta, abstractmethod
 from typing import Callable, Optional
 
+from astropy.coordinates import AltAz
+
 from projections import Projection, BorovickaProjection
 from photometry import Calibration
 from models import Catalogue, SensorData
@@ -38,6 +40,11 @@ class Matcher(metaclass=ABCMeta):
     def valid(self) -> bool:
         return self.catalogue is not None and self.sensor_data is not None
 
+    @property
+    def altaz(self) -> AltAz:
+        if self._altaz is None:
+            self._altaz = self.catalogue.to_altaz(self.location, self.time, masked=True),
+
     @abstractmethod
     def mask_catalogue(self, mask):
         """ Apply a mask to the catalogue data """
@@ -51,6 +58,7 @@ class Matcher(metaclass=ABCMeta):
         """ Assign the nearest catalogue star to every dot """
 
     def reset_mask(self):
+        log.debug("Resetting the masks")
         self.catalogue.reset_mask()
         self.sensor_data.reset_mask()
 
@@ -59,11 +67,11 @@ class Matcher(metaclass=ABCMeta):
         self.time = time
 
     @abstractmethod
-    def position_errors(self, projection: Projection, *, masked: bool) -> np.ndarray:
+    def position_errors(self, projection: Projection) -> np.ndarray:
         """ Find position error for each dot """
 
     @abstractmethod
-    def position_errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray:
+    def position_errors_inverse(self, projection: Projection) -> np.ndarray:
         """ Find position error for each star """
 
     def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
@@ -94,13 +102,6 @@ class Matcher(metaclass=ABCMeta):
     def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
         pass
 
-#    @abstractmethod
-#    def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
-#        """ Correct a meteor and return an XML fragment """
-
-    def func(self, x):
-        return self.rms_error(self.position_errors(self.projection_cls(*x), masked=True))
-
     @staticmethod
     def _get_optimization_parameters(x0, mask):
         return x0[~mask]
@@ -122,7 +123,7 @@ class Matcher(metaclass=ABCMeta):
             np.put(vec, ivariable, variable)
             np.put(vec, ifixed, np.array(args))
 
-            return self.rms_error(self.position_errors(self.projection_cls(*vec), masked=True))
+            return self.rms_error(self.position_errors(self.projection_cls(*vec)))
 
         return func
 
@@ -130,12 +131,12 @@ class Matcher(metaclass=ABCMeta):
         return self.projection_cls.bounds[mask]
 
     def minimize(self,
-                 x0=np.array((0, 0, 0, 0, math.tau / 4, 1, 0, 0, 0, 0, 0, 0)),
-                 maxiter=30,
+                 x0: np.ndarray[float] = np.array((0, 0, 0, 0, math.tau / 4, 1, 0, 0, 0, 0, 0, 0)),
+                 maxiter: int = 30,
                  *,
-                 mask=np.ones(shape=(12,), dtype=bool)):
+                 mask: np.ndarray[float] = np.ones(shape=(12,), dtype=bool)):
 
-        self._altaz = self.catalogue.to_altaz(self.location, self.time, masked=True)
+        self._altaz = self.catalogue.to_altaz(self.location, self.time)
         func = self._build_optimization_function(mask)
         args = self._get_optimization_parameters(np.array(x0), mask)
 

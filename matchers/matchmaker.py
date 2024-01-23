@@ -54,20 +54,21 @@ class Matchmaker(Matcher):
             axis=axis,
         )
 
-    def position_errors(self, projection: Projection, *, masked: bool) -> np.ndarray:
-        return self._cartesian(self.find_nearest_value, projection, masked, 1)
+    def position_errors(self, projection: Projection) -> np.ndarray:
+        return self._cartesian(self.find_nearest_value, projection, True, 1)
 
-    def position_errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray:
-        return self._cartesian(self.find_nearest_value, projection, masked, 0)
+    def position_errors_inverse(self, projection: Projection) -> np.ndarray:
+        return self._cartesian(self.find_nearest_value, projection, True, 0)
 
     def magnitude_errors(self,
                          projection: Projection,
-                         calibration: Calibration,
-                         *, masked: bool) -> np.ndarray:
+                         calibration: Calibration) -> np.ndarray:
         # Find which star is the nearest for every dot
-        nearest = self._cartesian(self.find_nearest_index, projection, masked, 1)
+        nearest = self._cartesian(self.find_nearest_index, projection, True, 1)
+
+        print(nearest, self.catalogue.valid)
         # Filter the catalogue by that index
-        obs = calibration(self.sensor_data.stars.intensities(masked=masked))
+        obs = calibration(self.sensor_data.stars.intensities(masked=True))
         cat = self.catalogue.valid.iloc[nearest].vmag.values
         if cat.size == 0:
             cat = np.tile(np.nan, obs.shape)

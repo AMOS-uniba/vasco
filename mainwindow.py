@@ -262,10 +262,10 @@ class MainWindow(MainWindowPlots):
         self.matcher = Matchmaker(self.location, self.time)
 
     def computePositionErrors(self):
-        self.position_errors = self.matcher.position_errors(self.projection, masked=True)
+        self.position_errors = self.matcher.position_errors(self.projection)
 
     def computeMagnitudeErrors(self):
-        self.magnitude_errors = self.matcher.magnitude_errors(self.projection, self.calibration, masked=True)
+        self.magnitude_errors = self.matcher.magnitude_errors(self.projection, self.calibration)
 
     def loadCatalogue(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "catalogues",
@@ -300,6 +300,9 @@ class MainWindow(MainWindowPlots):
             log.error(f"Could not export projection parameters: {exc}")
 
     def loadSighting(self):
+        """
+            Open the file dialog and load the sighting if applicable
+        """
         filename, _ = QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data",
                                                   "YAML files (*.yml *.yaml)")
         if filename == '':
@@ -325,6 +328,9 @@ class MainWindow(MainWindowPlots):
         self.updatePlots()
 
     def _loadSighting(self, file):
+        """
+            Actually load the sighting from <file>.
+        """
         data = dotmap.DotMap(yaml.safe_load(open(file, 'r')), _dynamic=False)
         self.setLocation(data.Latitude, data.Longitude, data.Altitude)
         self.updateLocation()
@@ -406,7 +412,8 @@ class MainWindow(MainWindowPlots):
         errors = self.matcher.position_errors(self.projection, masked=False)
         self.matcher.mask_sensor_data(errors < np.radians(self.dsb_error_limit.value()))
         log.info(f"Culled the dots to {c.param(f'{self.dsb_error_limit.value():.3f}')}°: "
-                 f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
+                 f"{c.num(self.matcher.sensor_data.stars.count_valid)} / {c.num(self.matcher.sensor_data.stars.count)} "
+                 f"are used")
         self.onProjectionParametersChanged()
         self.showCounts()
 
@@ -417,7 +424,7 @@ class MainWindow(MainWindowPlots):
         errors = self.matcher.position_errors_inverse(self.projection, masked=False)
         self.matcher.mask_catalogue(errors < np.radians(self.dsb_distance_limit.value()))
         log.info(f"Culled the catalogue to {c.num(f'{self.dsb_distance_limit.value():.3f}')}°: "
-                 f"{c.num(self.matcher.catalogue.count_valid)} stars used")
+                 f"{c.num(self.matcher.catalogue.count_valid)} / {c.num(self.matcher.catalogue.count)} stars used")
 
         self.positionSkyPlot.invalidate_stars()
         self.magnitudeSkyPlot.invalidate_stars()
@@ -430,7 +437,7 @@ class MainWindow(MainWindowPlots):
     def maskCatalogueFaint(self):
         self.matcher.mask_catalogue(self.matcher.catalogue.vmag(masked=False) > self.dsb_magnitude_limit.value())
         log.info(f"Culled the catalogue to magnitude {self.dsb_magnitude_limit.value()}m: "
-                 f"{self.matcher.catalogue.count_valid} stars used")
+                 f"{c.num(self.matcher.catalogue.count_valid)} / {c.num(self.matcher.catalogue.count)} stars used")
 
         if self.paired:
             self.pair()

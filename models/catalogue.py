@@ -61,7 +61,7 @@ class Catalogue:
             self.stars.loc[:]['use'] = True
         else:
             self.stars['use'] = True
-            self._report_mask()
+        self._report_mask()
 
     def cull(self):
         """ Retain only currently unmasked data """
@@ -88,12 +88,12 @@ class Catalogue:
     def valid(self):
         return self.stars[self.mask]
 
-    def altaz(self, location, time, *, masked: bool):
+    def altaz(self, location, time, *, masked: bool) -> AltAz:
         altaz = AltAz(location=location, obstime=time, pressure=100000 * u.pascal, obswl=550 * u.nm)
         altaz = self.skycoord.transform_to(altaz)
         return altaz[self.mask] if masked else altaz
 
-    def to_altaz(self, location, time, *, masked: bool = True):
+    def to_altaz(self, location, time, *, masked: bool = True) -> np.ndarray[float]:
         """ Returns a packed (N, 2) np.ndarray with altitude and azimuth in radians """
         stars = self.altaz(location, time, masked=masked)
         return np.stack((stars.alt.radian, stars.az.radian), axis=1)
