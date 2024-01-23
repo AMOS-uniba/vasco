@@ -44,7 +44,7 @@ def spherical(x: AltAz, y: AltAz) -> u.Quantity:
     #)
 
 
-def spherical_distance(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+def spherical_distance(a: np.ndarray, b: np.ndarray) -> np.ndarray[float]:
     """
     Compute spherical distance between a and b, each are vectors of points in D dimensions
     a: np.ndarray(A, D)

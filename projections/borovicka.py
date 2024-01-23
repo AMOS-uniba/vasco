@@ -16,7 +16,7 @@ class BorovickaProjection(Projection):
         (None, None),  # a0
         (None, None),  # A
         (None, None),  # F
-        (0, None),     # V
+        (0.001, None), # V
         (None, None),  # S
         (None, None),  # D
         (None, None),  # P
