@@ -2,7 +2,7 @@ import pytest
 import math
 import numpy as np
 
-from base import pytest_generate_tests, TestProjection
+from .base import pytest_generate_tests, TestProjection
 from projections import Projection, BorovickaProjection
 
 
