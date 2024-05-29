@@ -25,7 +25,7 @@ class QMeteorModel(QAbstractTableModel):
         return 10
 
     def rowCount(self, parent=None):
-        return len(self._data)
+        return self._data.count
 
     def data(self, index: QModelIndex, role: int):
         match role:

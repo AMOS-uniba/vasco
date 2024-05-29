@@ -23,6 +23,7 @@ colorama = "*"
 pytest = "*"
 ipython = "*"
 flake8 = "*"
+radon = "*"
 
 [requires]
 python_version = "3.11"

@@ -80,14 +80,14 @@ class Matcher(metaclass=ABCMeta):
         """ Find magnitude error for each dot """
 
     @staticmethod
-    def rms_error(errors) -> float:
+    def rms_error(errors: np.ndarray[float]) -> float:
         if errors.size == 0:
             return np.nan
         else:
             return np.sqrt(np.sum(np.square(errors)) / errors.size)
 
     @staticmethod
-    def max_error(errors) -> float:
+    def max_error(errors: np.ndarray[float]) -> float:
         return np.max(errors, initial=0)
 
     @abstractmethod
