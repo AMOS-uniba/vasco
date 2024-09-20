@@ -1,7 +1,7 @@
 import pytest
 
-from models.sensordata import SensorData
-from models.catalogue import Catalogue
+from vasco.models.sensordata import SensorData
+from vasco.models.catalogue import Catalogue
 
 
 @pytest.fixture

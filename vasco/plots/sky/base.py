@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import matplotlib as mpl
+from matplotlib import pyplot as plt
 
 from abc import abstractmethod
 
@@ -8,8 +9,8 @@ from plots.base import BasePlot
 
 
 class BaseSkyPlot(BasePlot):
-    cmap_stars = mpl.cm.get_cmap('autumn_r')
-    cmap_meteors = mpl.cm.get_cmap('Blues_r')
+    cmap_stars = plt.get_cmap('autumn_r')
+    cmap_meteors = plt.get_cmap('Blues_r')
     colour_stars = 'white'
     colour_dots = 'red'
     colour_meteor = 'cyan'

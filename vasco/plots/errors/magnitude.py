@@ -8,7 +8,7 @@ from matchers import Matcher
 
 class MagnitudeErrorPlot(BaseErrorPlot):
     y_formatter = FuncFormatter(lambda x, pos: f'{x:+.1f}m')
-    cmap_dots = mpl.cm.get_cmap('bwr')
+    cmap_dots = mpl.pyplot.get_cmap('bwr')
 
     target: str = "star magnitudes"
 

@@ -5,7 +5,7 @@ from .base import BasePlot
 
 
 class SensorPlot(BasePlot):
-    cmap_meteors = mpl.cm.get_cmap('Blues_r')
+    cmap_meteors = mpl.pyplot.get_cmap('Blues_r')
 
     def __init__(self, widget, **kwargs):
         self.scatter_meteor = None

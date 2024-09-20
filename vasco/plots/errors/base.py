@@ -8,8 +8,8 @@ from plots.base import BasePlot
 
 
 class BaseErrorPlot(BasePlot):
-    cmap_dots = mpl.cm.get_cmap('autumn_r')
-    cmap_meteor = mpl.cm.get_cmap('Blues')
+    cmap_dots = mpl.pyplot.get_cmap('autumn_r')
+    cmap_meteor = mpl.pyplot.get_cmap('Blues')
     y_formatter = FuncFormatter(lambda x, pos: f'{x:+.2f}')
 
     intent: str = "position dependent errors"

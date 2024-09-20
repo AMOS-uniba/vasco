@@ -9,7 +9,7 @@ from matchers import Matcher
 
 class PositionErrorPlot(BaseErrorPlot):
     y_formatter = FuncFormatter(lambda x, pos: f'{x:.2f}°')
-    cmap_dots = mpl.cm.get_cmap('autumn_r')
+    cmap_dots = mpl.pyplot.get_cmap('autumn_r')
 
     target: str = "star positions"
 
