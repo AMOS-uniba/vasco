@@ -16,7 +16,7 @@ from pathlib import Path
 import matplotlib as mpl
 
 from matchers import Matchmaker, Counselor
-from projections import BorovickaProjection
+from amosutils.projections import BorovickaProjection
 from plotting import MainWindowPlots
 from models import SensorData, QMeteorModel
 from export import XMLExporter

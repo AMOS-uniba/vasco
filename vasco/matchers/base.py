@@ -7,7 +7,7 @@ import scipy as sp
 from abc import ABCMeta, abstractmethod
 from typing import Callable, Optional
 
-from projections import Projection, BorovickaProjection
+from amosutils.projections import Projection, BorovickaProjection
 from photometry import Calibration
 from models import Catalogue, SensorData
 

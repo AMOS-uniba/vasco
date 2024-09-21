@@ -9,7 +9,7 @@ from .base import Matcher
 from astropy.coordinates import AltAz
 
 from models import Catalogue, SensorData
-from projections import Projection
+from amosutils.projections import Projection
 from photometry import Calibration
 from correctors import KernelSmoother
 from correctors import kernels

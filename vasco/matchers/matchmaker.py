@@ -8,7 +8,7 @@ from typing import Callable
 from .base import Matcher
 from .counselor import Counselor
 
-from projections import Projection, BorovickaProjection
+from amosutils.projections import Projection, BorovickaProjection
 from photometry import Calibration
 from models import SensorData, Catalogue
 from utilities import spherical_distance

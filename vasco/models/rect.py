@@ -1,6 +1,6 @@
 import numpy as np
 
-from projections.shifters import ScalingShifter
+from amosutils.projections.shifters import ScalingShifter
 
 
 class Rect:

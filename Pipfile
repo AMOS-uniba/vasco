@@ -18,6 +18,7 @@ pyyaml = "*"
 scipy = "*"
 pyqt6-tools = "*"
 colorama = "*"
+amosutils = "*"
 
 [dev-packages]
 pytest = "*"

@@ -5,7 +5,7 @@ import pandas as pd
 from abc import ABCMeta, abstractmethod
 
 from matchers import Counselor
-from projections import BorovickaProjection
+from amosutils.projections import BorovickaProjection
 from photometry import Calibration
 from astropy.coordinates import EarthLocation
 

@@ -2,7 +2,7 @@ import copy
 import numpy as np
 import logging
 
-from projections import Projection
+from amosutils.projections import Projection
 from photometry import Calibration
 import colour as c
 

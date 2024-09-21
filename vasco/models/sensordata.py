@@ -11,7 +11,7 @@ from astropy.coordinates import EarthLocation
 import astropy.units as u
 
 from .dotcollection import DotCollection
-from projections.shifters import ScalingShifter
+from amosutils.projections.shifters import ScalingShifter
 from .rect import Rect
 
 
