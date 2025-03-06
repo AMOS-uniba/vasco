@@ -268,7 +268,7 @@ class MainWindow(MainWindowPlots):
         self.magnitude_errors = self.matcher.magnitude_errors(self.projection, self.calibration, masked=True)
 
     def loadCatalogue(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "catalogues",
+        filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "../catalogues",
                                                   "Tab-separated values (*.tsv)")
         if filename == '':
             log.warning("No file provided, loading aborted")
@@ -281,7 +281,7 @@ class MainWindow(MainWindowPlots):
             self.onProjectionParametersChanged()
 
     def exportProjectionParameters(self):
-        filename, _ = QFileDialog.getSaveFileName(self, "Export projection parameters to file", "calibrations",
+        filename, _ = QFileDialog.getSaveFileName(self, "Export projection parameters to file", "../calibrations",
                                                   "YAML files (*.yaml)")
         if filename is not None and filename != '':
             self._exportProjectionParameters(filename)
@@ -300,7 +300,7 @@ class MainWindow(MainWindowPlots):
             log.error(f"Could not export projection parameters: {exc}")
 
     def loadSighting(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data",
+        filename, _ = QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "../data",
                                                   "YAML files (*.yml *.yaml)")
         if filename == '':
             log.warning("No file provided, loading aborted")
@@ -337,7 +337,7 @@ class MainWindow(MainWindowPlots):
         self.matcher.sensor_data = SensorData.load_YAML(file)
 
     def importProjectionParameters(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Import projection parameters from file", "calibrations",
+        filename, _ = QFileDialog.getOpenFileName(self, "Import projection parameters from file", "../calibrations",
                                                   "YAML files (*.yml *.yaml)")
         self._importProjectionParameters(filename)
         self.onProjectionParametersChanged()
@@ -467,7 +467,7 @@ class MainWindow(MainWindowPlots):
             log.warning("Cannot export a meteor before pairing dots to the catalogue")
             return None
 
-        filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", "output/",
+        filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", "../output/",
                                                   "XML files (*.xml)")
         if filename is not None and filename != '':
             exporter = XMLExporter(self.matcher, self.location, self.time, self.projection, self.calibration)
