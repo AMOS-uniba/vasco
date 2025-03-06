@@ -46,10 +46,10 @@ class BaseErrorPlot(BasePlot):
         self.axis_az.yaxis.set_major_formatter(self.y_formatter)
         self.axis_az.grid(color='white', alpha=0.2)
 
-        self.scatter_dots_alt = self.axis_alt.scatter([], [], s=[], marker='x', c='cyan')
-        self.scatter_dots_az = self.axis_az.scatter([], [], s=[], marker='x', c='cyan')
-        self.scatter_meteor_alt = self.axis_alt.scatter([], [], s=[], marker='o', c='yellow', linewidth=0.2)
-        self.scatter_meteor_az = self.axis_az.scatter([], [], s=[], marker='o', c='yellow', linewidth=0.2)
+        self.scatter_dots_alt = self.axis_alt.scatter([], [], s=[], marker='x', c='cyan', zorder=1)
+        self.scatter_dots_az = self.axis_az.scatter([], [], s=[], marker='x', c='cyan', zorder=1)
+        self.scatter_meteor_alt = self.axis_alt.scatter([], [], s=[], marker='o', c='yellow', linewidth=0.2, zorder=0)
+        self.scatter_meteor_az = self.axis_az.scatter([], [], s=[], marker='o', c='yellow', linewidth=0.2, zorder=0)
 
         self.axis_alt.set_ylim([0, None])
         self.axis_az.set_ylim([0, None])
