@@ -14,7 +14,7 @@ class QMeteorModel(QAbstractTableModel):
                         ["fno",
                          "z raw", "a raw",
                          "z corrected", "a corrected",
-                         "corr x / mm", "corr y / mm",
+                         "corr x / µm", "corr y / µm",
                          "corr total",
                          "mag raw", "mag corr",
                          ][section]

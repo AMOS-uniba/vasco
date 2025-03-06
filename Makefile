@@ -1,9 +1,9 @@
-widgets/qparameterwidget_ui.py: ui/qparameterwidget.ui
+vasco/widgets/qparameterwidget_ui.py: vasco/ui/qparameterwidget.ui
 	pyuic6 -o $@ $<
 
-main_ui.py: ui/main.ui
+vasco/main_ui.py: vasco/ui/main.ui
 	pyuic6 -o $@ $<
 
 all: \
-	widgets/qparameterwidget_ui.py \
-	main_ui.py ;
+	vasco/widgets/qparameterwidget_ui.py \
+	vasco/main_ui.py ;

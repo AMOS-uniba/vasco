@@ -73,8 +73,8 @@ class MainWindow(MainWindowPlots):
             widget.dsb_value.valueChanged.connect(self.onProjectionParametersChanged)
 
         "The shape of the dot collection and the catalogue must be the same, got {obs.shape} and {cat.shape}"
-        self.pw_x0.setup(title="H shift", symbol="x<sub>0</sub>", unit="mm", minimum=-5, maximum=5, step=0.001)
-        self.pw_y0.setup(title="V shift", symbol="y<sub>0</sub>", unit="mm", minimum=-5, maximum=5, step=0.001)
+        self.pw_x0.setup(title="H shift", symbol="x<sub>0</sub>", unit="µm", minimum=-10, maximum=10, step=0.001)
+        self.pw_y0.setup(title="V shift", symbol="y<sub>0</sub>", unit="µm", minimum=-10, maximum=10, step=0.001)
         self.pw_a0.setup(title="rotation", symbol="a<sub>0</sub>", unit="°", minimum=0, maximum=359.999999, step=0.2,
                          display_to_true=np.radians, true_to_display=np.degrees)
 

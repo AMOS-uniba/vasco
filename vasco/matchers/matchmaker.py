@@ -56,13 +56,23 @@ class Matchmaker(Matcher):
         Apply a function func over the Cartesian product of projected and catalogue stars
         and aggregate over the specified axis
         """
+        altaz = self.catalogue.altaz(self.location, self.time)
+        npaa = np.array([altaz.alt.radian, altaz.az.radian])
         return func(
             self.sensor_data.stars.project(projection, masked=masked),
-            self._altaz if self._altaz is not None else self.catalogue.altaz(self.location,
-                                                                             self.time,
-                                                                             masked=masked),
+            npaa,
             axis=axis,
         )
+
+    def position_errors_sensor_star_to_dot(self,
+                                           projection: Projection,
+                                           *,
+                                           masked: bool) -> np.ndarray[float]:
+        """
+        Find errors from every star to the nearest dot, on sensor
+        Return a numpy array (N): distance [µm]
+        """
+
 
     def position_errors(self, projection: Projection, *, masked: bool) -> np.ndarray:
         return self._cartesian(self.find_nearest_value, projection, masked, 1)
@@ -73,12 +83,13 @@ class Matchmaker(Matcher):
     def magnitude_errors(self,
                          projection: Projection,
                          calibration: Calibration,
-                         *, masked: bool) -> np.ndarray:
+                         *,
+                         masked: bool) -> np.ndarray:
         # Find which star is the nearest for every dot
         nearest = self._cartesian(self.find_nearest_index, projection, masked, 1)
         # Filter the catalogue by that index
         obs = calibration(self.sensor_data.stars.intensities(masked=masked))
-        cat = self.catalogue.valid.iloc[nearest].vmag.values
+        cat = self.catalogue.vmag()
         if cat.size == 0:
             cat = np.tile(np.nan, obs.shape)
         if obs.size == 0:
@@ -92,7 +103,7 @@ class Matchmaker(Matcher):
         raise NotImplementedError("Matchmaker cannot print corrected meteors, use a Counselor instead")
 
     @staticmethod
-    def compute_distances(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float, float]:
+    def compute_distances(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
         """
         Compute distance matrix for observed points projected to the sky and catalogue stars
 

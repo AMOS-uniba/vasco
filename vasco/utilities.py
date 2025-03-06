@@ -38,7 +38,7 @@ def unit_grid(res, *, masked: bool):
 def spherical(x: AltAz, y: AltAz) -> u.Quantity:
     return x.separation(y)
 
-def spherical_distance(a: np.ndarray[float, float], b: np.ndarray[float, float]) -> np.ndarray[float]:
+def spherical_distance(a: np.ndarray[float], b: np.ndarray[float]) -> np.ndarray[float]:
     """
     Compute spherical distance between a and b, each are vectors of points in D dimensions
     a: np.ndarray(A, D)

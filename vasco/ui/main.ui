@@ -266,7 +266,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>mm</string>
+             <string>µm</string>
             </property>
            </widget>
           </item>
@@ -343,7 +343,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>mm</string>
+             <string>µm</string>
             </property>
            </widget>
           </item>
