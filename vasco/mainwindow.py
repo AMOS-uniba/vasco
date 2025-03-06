@@ -14,8 +14,9 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation
 from pathlib import Path
 import matplotlib as mpl
+from astropy.time import Time
 
-from matchers import Matchmaker, Counselor
+from matchers import Matchmaker, Counsellor
 from amosutils.projections import BorovickaProjection
 from plotting import MainWindowPlots
 from models import SensorData, QMeteorModel
@@ -179,7 +180,7 @@ class MainWindow(MainWindowPlots):
         self.onProjectionParametersChanged()
 
     def updateMatcher(self):
-        self.matcher.update(self.location, self.time)
+        self.matcher.update(self.location, Time(self.time))
         self.matcher.update_position_smoother(self.projection)
 
     def updateProjection(self):
@@ -450,7 +451,7 @@ class MainWindow(MainWindowPlots):
 
     @QtCore.pyqtSlot()
     def showCounts(self) -> None:
-        if isinstance(self.matcher, Counselor):
+        if isinstance(self.matcher, Counsellor):
             self.lb_mode.setText("paired")
             self.tab_correction_magnitudes_enabled.setEnabled(True)
         else:

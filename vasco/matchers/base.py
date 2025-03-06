@@ -6,9 +6,14 @@ import scipy as sp
 
 from abc import ABCMeta, abstractmethod
 from typing import Callable, Optional
+from pathlib import Path
+
+from astropy.coordinates import EarthLocation
+from astropy.time import Time
 
 from amosutils.catalogue import Catalogue
 from amosutils.projections import Projection, BorovickaProjection
+
 from photometry import Calibration
 from models import SensorData
 
@@ -20,20 +25,23 @@ class Matcher(metaclass=ABCMeta):
     The base class for matching sensor data to the catalogue.
     """
 
-    def __init__(self, location, time, projection_cls=BorovickaProjection, *,
+    def __init__(self,
+                 location: EarthLocation,
+                 time: Time,
+                 projection_cls=BorovickaProjection, *,
                  catalogue: Optional[Catalogue] = None,
                  sensor_data: Optional[SensorData] = None):
         self._altaz = None
         self.projection_cls: BorovickaProjection = projection_cls
-        self.location = None
-        self.time = None
+        self.location: EarthLocation = None
+        self.time: Time = None
         self.catalogue = Catalogue() if catalogue is None else catalogue
         self.sensor_data = SensorData() if sensor_data is None else sensor_data
         self.update(location, time)
 
-    def load_catalogue(self, filename: str):
+    def load_catalogue(self, filename: Path):
         del self.catalogue
-        self.catalogue = Catalogue.load(filename)
+        self.catalogue = Catalogue(filename)
 
     @property
     def valid(self) -> bool:
@@ -55,17 +63,18 @@ class Matcher(metaclass=ABCMeta):
         self.catalogue.reset_mask()
         self.sensor_data.reset_mask()
 
-    def update(self, location, time):
+    def update(self, location: EarthLocation, time: Time) -> None:
+        """ Update the internal state. """
         self.location = location
         self.time = time
 
     @abstractmethod
     def position_errors(self, projection: Projection, *, masked: bool) -> np.ndarray:
-        """ Find position error for each dot """
+        """ Find position error for each dot. """
 
     @abstractmethod
     def position_errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray:
-        """ Find position error for each star """
+        """ Find position error for each star. """
 
     def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
         pass
@@ -77,7 +86,8 @@ class Matcher(metaclass=ABCMeta):
     def magnitude_errors(self,
                          projection: Projection,
                          calibration: Calibration,
-                         *, masked: bool) -> np.ndarray:
+                         *,
+                         masked: bool) -> np.ndarray:
         """ Find magnitude error for each dot """
 
     @staticmethod

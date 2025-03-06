@@ -8,7 +8,7 @@ import yaml
 from pathlib import Path
 
 from models import Catalogue, SensorData
-from matchers import Matchmaker, Counselor
+from matchers import Matchmaker, Counsellor
 from projections import BorovickaProjection
 import colour as c
 

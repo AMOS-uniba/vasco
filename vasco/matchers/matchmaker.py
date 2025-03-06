@@ -1,19 +1,23 @@
 import logging
+
 import math
 import dotmap
 import numpy as np
 
 from typing import Callable
 
-from .base import Matcher
-from .counselor import Counselor
+from astropy.coordinates import EarthLocation
+from astropy.time import Time
 
 from amosutils.projections import Projection, BorovickaProjection
 from amosutils.catalogue import Catalogue
 
+from .base import Matcher
+from .counsellor import Counsellor
+
 from photometry import Calibration
 from models import SensorData
-from utilities import spherical_distance
+from utilities import spherical
 
 log = logging.getLogger('vasco')
 
@@ -25,14 +29,15 @@ class Matchmaker(Matcher):
     using a pre-defined projection class `projection_cls`
     """
 
-    def __init__(self, location, time, projection_cls=BorovickaProjection, **kwargs):
+    def __init__(self,
+                 location: EarthLocation,
+                 time: Time,
+                 projection_cls: type[Projection] = BorovickaProjection,
+                 **kwargs):
         super().__init__(location, time, projection_cls, **kwargs)
 
     def load_sensor(self, filename: str):
         self.sensor_data = SensorData.load_YAML(filename)
-
-    def update(self, location, time):
-        super().update(location, time)
 
     def update_position_smoother(self, projection, **kwargs):
         """ There is no position smoother in Matchmaker, can be implemented by child classes """
@@ -50,9 +55,9 @@ class Matchmaker(Matcher):
         """
         return func(
             self.sensor_data.stars.project(projection, masked=masked),
-            self._altaz if self._altaz is not None else self.catalogue.to_altaz(self.location,
-                                                                                self.time,
-                                                                                masked=masked),
+            self._altaz if self._altaz is not None else self.catalogue.altaz(self.location,
+                                                                             self.time,
+                                                                             masked=masked),
             axis=axis,
         )
 
@@ -100,7 +105,7 @@ class Matchmaker(Matcher):
         observed = np.expand_dims(observed, 1)
         catalogue = np.expand_dims(catalogue, 0)
         observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed altitude to zenith distance
-        return spherical_distance(observed, catalogue)
+        return spherical(observed, catalogue)
 
     def compute_vector_errors(self, observed, catalogue):
         """
@@ -136,7 +141,7 @@ class Matchmaker(Matcher):
         else:
             return np.empty(shape=((observed.shape[0], catalogue.shape[0])[axis],), dtype=float)
 
-    def pair(self, projection: Projection) -> Counselor:
+    def pair(self, projection: Projection) -> Counsellor:
         # Find which star is the nearest for every dot
         nearest = self._cartesian(self.find_nearest_index, projection, masked=True, axis=1)
         # Filter the catalogue by that index
@@ -144,4 +149,4 @@ class Matchmaker(Matcher):
 
         catalogue = Catalogue(cat[['dec', 'ra', 'vmag']], name=self.catalogue.name)
         sensor_data = self.sensor_data.culled_copy()
-        return Counselor(self.location, self.time, self.projection_cls, catalogue=catalogue, sensor_data=sensor_data)
+        return Counsellor(self.location, self.time, self.projection_cls, catalogue=catalogue, sensor_data=sensor_data)

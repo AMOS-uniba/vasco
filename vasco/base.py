@@ -9,7 +9,7 @@ from main_ui import Ui_MainWindow
 
 
 from photometry import LogCalibration
-from matchers import Counselor
+from matchers import Counsellor
 
 
 class MainWindowBase(QMainWindow, Ui_MainWindow):
@@ -49,7 +49,7 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
 
     @property
     def paired(self) -> bool:
-        return isinstance(self.matcher, Counselor)
+        return isinstance(self.matcher, Counsellor)
 
     def showErrors(self) -> None:
         rms_error = self.matcher.rms_error(self.position_errors)

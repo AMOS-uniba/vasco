@@ -21,9 +21,9 @@ from utilities import spherical_distance, spherical_difference, \
 log = logging.getLogger('vasco')
 
 
-class Counselor(Matcher):
+class Counsellor(Matcher):
     """
-    The Counselor is a Matcher that attempts to reconcile the sensor
+    The Counsellor is a Matcher that attempts to reconcile the sensor
     with the catalogue *after* the stars were paired to sensor dots.
     """
 
