@@ -17,7 +17,7 @@ from .counsellor import Counsellor
 
 from photometry import Calibration
 from models import SensorData
-from utilities import spherical
+from utilities import spherical, spherical_distance
 
 log = logging.getLogger('vasco')
 
@@ -48,7 +48,10 @@ class Matchmaker(Matcher):
     def mask_sensor_data(self, mask):
         self.sensor_data.set_mask(mask)
 
-    def _cartesian(self, func: Callable, projection: Projection, masked: bool, axis: int) -> np.ndarray:
+    def _cartesian(self,
+                   func: Callable,
+                   projection: Projection,
+                   masked: bool, axis: int) -> np.ndarray:
         """
         Apply a function func over the Cartesian product of projected and catalogue stars
         and aggregate over the specified axis
@@ -105,7 +108,7 @@ class Matchmaker(Matcher):
         observed = np.expand_dims(observed, 1)
         catalogue = np.expand_dims(catalogue, 0)
         observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed altitude to zenith distance
-        return spherical(observed, catalogue)
+        return spherical_distance(observed, catalogue)
 
     def compute_vector_errors(self, observed, catalogue):
         """
@@ -121,8 +124,8 @@ class Matchmaker(Matcher):
         Find the nearest dot to star or vice versa
 
         axis: int
-            0 for nearest star to every dot
-            1 for nearest dot to every star
+            0 for the nearest star to every dot
+            1 for the nearest dot to every star
         """
         dist = self.compute_distances(observed, catalogue)
         return np.min(dist, axis=axis, initial=np.inf)
