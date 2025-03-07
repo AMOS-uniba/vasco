@@ -174,8 +174,8 @@ class MainWindow(MainWindowPlots):
 
     def onScalingChanged(self):
         self.matcher.sensor_data.set_shifter_scales(
-            self.dsb_xs.value(),
-            self.dsb_ys.value()
+            self.dsb_xs.value() / 1000,
+            self.dsb_ys.value() / 1000
         )
         self.onProjectionParametersChanged()
 
@@ -337,13 +337,17 @@ class MainWindow(MainWindowPlots):
             self.resetMatcher()
         self.matcher.sensor_data = SensorData.load_YAML(file)
 
+        log.info(f"Loaded a sighting from {file}: "
+                 f"{self.matcher.sensor_data.stars.count} stars, "
+                 f"{self.matcher.sensor_data.meteor.count} frames")
+
     def importProjectionParameters(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Import projection parameters from file", "../calibrations",
                                                   "YAML files (*.yml *.yaml)")
         self._importProjectionParameters(filename)
         self.onProjectionParametersChanged()
 
-    def _importProjectionParameters(self, filename):
+    def _importProjectionParameters(self, filename: Path):
         try:
             self._blockParameterSignals(True)
             with open(filename, 'r') as file:
@@ -353,6 +357,7 @@ class MainWindow(MainWindowPlots):
                         widget.set_display_value(widget.true_to_display(data.projection.parameters[param]))
                         self.dsb_xs.setValue(data.pixels.xs)
                         self.dsb_ys.setValue(data.pixels.ys)
+                    log.info(f"Imported projection parameters from {filename}")
                 except yaml.YAMLError as exc:
                     log.error(f"Could not parse file {filename} as YAML: {exc}")
         except FileNotFoundError:

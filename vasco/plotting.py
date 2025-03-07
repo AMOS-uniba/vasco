@@ -5,6 +5,7 @@ import numpy as np
 from typing import Callable
 
 from PyQt6.QtWidgets import QStackedWidget
+from astropy.time import Time
 
 from plots import SensorPlot
 from plots.sky import PositionSkyPlot, MagnitudeSkyPlot
@@ -101,8 +102,8 @@ class MainWindowPlots(MainWindowBase):
 
     def _plotCatalogueStars(self, plot):
         plot.update_stars(
-            self.matcher.catalogue.altaz(self.location, self.time, masked=True),
-            self.matcher.catalogue.vmag(masked=True)
+            self.matcher.catalogue.altaz_numpy(self.location, Time(self.time)),  # , masked=True),
+            self.matcher.catalogue.vmag(self.location, Time(self.time))
         )
 
     def plotCatalogueStarsPositions(self):

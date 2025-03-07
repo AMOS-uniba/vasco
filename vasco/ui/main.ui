@@ -286,19 +286,19 @@
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
             <property name="decimals">
-             <number>9</number>
+             <number>6</number>
             </property>
             <property name="minimum">
              <double>0.000000000000000</double>
             </property>
             <property name="maximum">
-             <double>1.000000000000000</double>
+             <double>10.000000000000000</double>
             </property>
             <property name="singleStep">
-             <double>0.000001000000000</double>
+             <double>0.01000000000</double>
             </property>
             <property name="value">
-             <double>0.004436000000000</double>
+             <double>4.436000000000</double>
             </property>
            </widget>
           </item>
@@ -308,19 +308,19 @@
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
             <property name="decimals">
-             <number>9</number>
+             <number>6</number>
             </property>
             <property name="minimum">
              <double>0.000000000000000</double>
             </property>
             <property name="maximum">
-             <double>1.000000000000000</double>
+             <double>10.00000000000000</double>
             </property>
             <property name="singleStep">
-             <double>0.000001000000000</double>
+             <double>0.01000000000</double>
             </property>
             <property name="value">
-             <double>0.004426000000000</double>
+             <double>4.426000000000</double>
             </property>
            </widget>
           </item>
@@ -335,15 +335,12 @@
            </widget>
           </item>
           <item row="1" column="3">
-           <widget class="QLabel" name="lu_ys">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
+           <widget class="QLabel" name="lx_ys">
             <property name="text">
-             <string>µm</string>
+             <string>V pixel pitch (y&lt;sub&gt;s&lt;/sub&gt;)</string>
+            </property>
+            <property name="buddy">
+             <cstring>dsb_ys</cstring>
             </property>
            </widget>
           </item>

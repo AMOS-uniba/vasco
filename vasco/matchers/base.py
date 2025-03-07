@@ -42,6 +42,7 @@ class Matcher(metaclass=ABCMeta):
     def load_catalogue(self, filename: Path):
         del self.catalogue
         self.catalogue = Catalogue(filename)
+        log.info(f"Loaded a catalogue from {filename}: {self.catalogue.count} stars")
 
     @property
     def valid(self) -> bool:
@@ -68,11 +69,11 @@ class Matcher(metaclass=ABCMeta):
         self.time = time
 
     @abstractmethod
-    def position_errors(self, projection: Projection, *, masked: bool) -> np.ndarray:
+    def position_errors(self, projection: Projection, *, masked: bool) -> np.ndarray[float]:
         """ Find position error for each dot """
 
     @abstractmethod
-    def position_errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray:
+    def position_errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray[float]:
         """ Find position error for each star """
 
     def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):

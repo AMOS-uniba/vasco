@@ -51,16 +51,16 @@ class Matchmaker(Matcher):
     def _cartesian(self,
                    func: Callable,
                    projection: Projection,
-                   masked: bool, axis: int) -> np.ndarray:
+                   masked: bool,
+                   axis: int) -> np.ndarray:
         """
         Apply a function func over the Cartesian product of projected and catalogue stars
         and aggregate over the specified axis
         """
-        altaz = self.catalogue.altaz(self.location, self.time)
-        npaa = np.array([altaz.alt.radian, altaz.az.radian])
+        altaz = self.catalogue.altaz_numpy(self.location, self.time)
         return func(
             self.sensor_data.stars.project(projection, masked=masked),
-            npaa,
+            altaz,
             axis=axis,
         )
 
@@ -70,6 +70,15 @@ class Matchmaker(Matcher):
                                            masked: bool) -> np.ndarray[float]:
         """
         Find errors from every star to the nearest dot, on sensor
+        Return a numpy array (N): distance [µm]
+        """
+
+    def position_errors_sensor_dot_to_star(self,
+                                           projection: Projection,
+                                           *,
+                                           masked: bool) -> np.ndarray[float]:
+        """
+        Find errors from every dot to the nearest star, on sensor
         Return a numpy array (N): distance [µm]
         """
 
@@ -87,14 +96,16 @@ class Matchmaker(Matcher):
                          masked: bool) -> np.ndarray:
         # Find which star is the nearest for every dot
         nearest = self._cartesian(self.find_nearest_index, projection, masked, 1)
-        # Filter the catalogue by that index
         obs = calibration(self.sensor_data.stars.intensities(masked=masked))
-        cat = self.catalogue.vmag(self.location, self.time)
+        # Filter the catalogue by that index
+        cat = self.catalogue.vmag(self.location, self.time)[nearest]
+
         if cat.size == 0:
             cat = np.tile(np.nan, obs.shape)
         if obs.size == 0:
             obs = np.tile(np.nan, cat.shape)
-        return obs[0, np.newaxis] - cat[np.newaxis, 0]
+
+        return obs - cat
 
     def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
         raise NotImplementedError("Matchmaker cannot correct a meteor, use a Counsellor instead")
@@ -138,6 +149,7 @@ class Matchmaker(Matcher):
             0 for the nearest star to every dot
             1 for the nearest dot to every star
         """
+        log.debug(f"Calculating position errors for {catalogue.shape} × {observed.shape}")
         dist = self.compute_distances(observed, catalogue)
         return np.min(dist, axis=axis, initial=np.inf)
 
@@ -153,15 +165,13 @@ class Matchmaker(Matcher):
         if dist.size > 0:
             return np.argmin(dist, axis=axis)
         else:
-            return np.empty(shape=((observed.shape[0], catalogue.shape[0])[axis],), dtype=float)
+            return np.empty(shape=((observed.shape[0], catalogue.shape[0])[axis], 0), dtype=int)
 
     def pair(self, projection: Projection) -> Counsellor:
         # Find which star is the nearest for every dot
         nearest = self._cartesian(self.find_nearest_index, projection, masked=True, axis=1)
         # Filter the catalogue by that index
-        cat = self.catalogue.valid.iloc[nearest]
 
-        catalogue = Catalogue(cat[['dec', 'ra', 'vmag']], name=self.catalogue.name)
         sensor_data = self.sensor_data.culled_copy()
         return Counsellor(self.location, self.time, self.projection_cls,
-                          catalogue=catalogue, sensor_data=sensor_data)
+                          catalogue=self.catalogue, sensor_data=sensor_data)
