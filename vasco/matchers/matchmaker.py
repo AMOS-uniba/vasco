@@ -89,7 +89,7 @@ class Matchmaker(Matcher):
         nearest = self._cartesian(self.find_nearest_index, projection, masked, 1)
         # Filter the catalogue by that index
         obs = calibration(self.sensor_data.stars.intensities(masked=masked))
-        cat = self.catalogue.vmag()
+        cat = self.catalogue.vmag(self.location, self.time)
         if cat.size == 0:
             cat = np.tile(np.nan, obs.shape)
         if obs.size == 0:
@@ -97,10 +97,10 @@ class Matchmaker(Matcher):
         return obs - cat
 
     def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
-        raise NotImplementedError("Matchmaker cannot correct a meteor, use a Counselor instead")
+        raise NotImplementedError("Matchmaker cannot correct a meteor, use a Counsellor instead")
 
     def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
-        raise NotImplementedError("Matchmaker cannot print corrected meteors, use a Counselor instead")
+        raise NotImplementedError("Matchmaker cannot print corrected meteors, use a Counsellor instead")
 
     @staticmethod
     def compute_distances(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
@@ -163,4 +163,5 @@ class Matchmaker(Matcher):
 
         catalogue = Catalogue(cat[['dec', 'ra', 'vmag']], name=self.catalogue.name)
         sensor_data = self.sensor_data.culled_copy()
-        return Counsellor(self.location, self.time, self.projection_cls, catalogue=catalogue, sensor_data=sensor_data)
+        return Counsellor(self.location, self.time, self.projection_cls,
+                          catalogue=catalogue, sensor_data=sensor_data)

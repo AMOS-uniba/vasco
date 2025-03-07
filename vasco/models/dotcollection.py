@@ -98,3 +98,11 @@ class DotCollection:
 
     def calibrate(self, calibration: Calibration, *, masked: bool) -> np.ndarray[float]:
         return calibration(self.intensities(masked))
+
+    def smoothen(self, bandwidth: float) -> np.ndarray[float]:
+        """
+        Make the sequence of dots smoother: shift the positions closer to the fitting spline.
+        Only makes sense for meteors, not stars.
+        ToDo: Implementation from Dada.
+        """
+        pass

@@ -135,7 +135,7 @@ class Counsellor(Matcher):
     def correction_meteor_xy(self, projection: Projection):
         return self.position_smoother(self._meteor_xy(projection))
 
-    def correction_meteor_mag(self, projection: Projection):
+    def correction_meteor_mag(self, projection: Projection) -> np.ndarray[float]:
         return np.ravel(self.magnitude_smoother(self._meteor_xy(projection)))
 
     def correct_meteor_position(self, projection: Projection) -> AltAz:

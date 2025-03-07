@@ -4,27 +4,25 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+astropy = "*"
 argparse = "*"
 argparsedirs = "*"
-astropy = "*"
 dotmap = "*"
 lxml = "*"
 matplotlib = "*"
-numpy = "*"
+colorama = "*"
 pandas = "*"
+numpy = "*"
 physics-fields = "*"
 pyqt6 = "*"
-pyyaml = "*"
 scipy = "*"
-pyqt6-tools = "*"
-colorama = "*"
-amosutils = "*"
+pyyaml = "*"
+amosutils = {file = "../amosutils", editable = true}
 
 [dev-packages]
 pytest = "*"
 ipython = "*"
 flake8 = "*"
-radon = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.12"

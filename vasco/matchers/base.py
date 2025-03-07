@@ -79,8 +79,14 @@ class Matcher(metaclass=ABCMeta):
     def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
         pass
 
-    def update_magnitude_smoother(self, projection: Projection, calibration: Calibration, *, bandwidth: float = 0.1):
-        pass
+    def update_magnitude_smoother(self,
+                                  projection: Projection,
+                                  calibration: Calibration,
+                                  *,
+                                  bandwidth: float = 0.1):
+        """
+        Update the magnitude smoother.
+        """
 
     @abstractmethod
     def magnitude_errors(self,
