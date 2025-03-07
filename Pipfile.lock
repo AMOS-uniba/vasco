@@ -1,11 +1,15 @@
 {
     "_meta": {
         "hash": {
+<<<<<<< Updated upstream
             "sha256": "c1fe48100c87af57cf96cadab702dc8373c5acb902690e820ac549d7008d3c82"
+=======
+            "sha256": "12cc492df032031bdde15376d5c703fc30029415ff1352f162ea5f0dca92e752"
+>>>>>>> Stashed changes
         },
         "pipfile-spec": 6,
         "requires": {
-            "python_version": "3.12"
+            "python_version": "3.13"
         },
         "sources": [
             {

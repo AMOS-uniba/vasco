@@ -7,6 +7,10 @@ name = "pypi"
 astropy = "*"
 argparse = "*"
 argparsedirs = "*"
+<<<<<<< Updated upstream
+=======
+astropy = "*"
+>>>>>>> Stashed changes
 dotmap = "*"
 lxml = "*"
 matplotlib = "*"
@@ -16,7 +20,12 @@ numpy = "*"
 physics-fields = "*"
 pyqt6 = "*"
 scipy = "*"
+<<<<<<< Updated upstream
 pyyaml = "*"
+=======
+#pyqt6-tools = "*"
+colorama = "*"
+>>>>>>> Stashed changes
 amosutils = {file = "../amosutils", editable = true}
 
 [dev-packages]
@@ -25,4 +34,4 @@ ipython = "*"
 flake8 = "*"
 
 [requires]
-python_version = "3.12"
+python_version = "3.13"

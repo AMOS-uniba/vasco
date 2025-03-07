@@ -94,7 +94,7 @@ class Matchmaker(Matcher):
             cat = np.tile(np.nan, obs.shape)
         if obs.size == 0:
             obs = np.tile(np.nan, cat.shape)
-        return obs - cat
+        return obs[0, np.newaxis] - cat[np.newaxis, 0]
 
     def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
         raise NotImplementedError("Matchmaker cannot correct a meteor, use a Counsellor instead")

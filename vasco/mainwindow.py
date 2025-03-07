@@ -459,9 +459,9 @@ class MainWindow(MainWindowPlots):
             self.tab_correction_magnitudes_enabled.setEnabled(False)
 
         self.lb_catalogue_all.setText(f'{self.matcher.catalogue.count}')
-        self.lb_catalogue_near.setText(f'{self.matcher.catalogue.count_valid}')
+        #self.lb_catalogue_near.setText(f'{self.matcher.catalogue.count_valid}')
         self.lb_objects_all.setText(f'{self.matcher.sensor_data.stars.count}')
-        self.lb_objects_near.setText(f'{self.matcher.sensor_data.stars.count_valid}')
+        #self.lb_objects_near.setText(f'{self.matcher.sensor_data.stars.count_valid}')
 
     def exportCorrectedMeteor(self):
         if not self.paired:

@@ -63,7 +63,9 @@ class BaseSkyPlot(BasePlot):
     def invalidate_meteor(self):
         self.valid_meteor = False
 
-    def update_stars(self, positions, magnitudes):
+    def update_stars(self,
+                     positions: np.ndarray[float],
+                     magnitudes: np.ndarray[float]):
         sizes = 0.2 * np.exp(-0.833 * (magnitudes - 5))
         self.scatter_stars.set_offsets(positions)
         self.scatter_stars.set_sizes(sizes)

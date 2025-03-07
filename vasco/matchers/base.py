@@ -63,37 +63,29 @@ class Matcher(metaclass=ABCMeta):
         self.catalogue.reset_mask()
         self.sensor_data.reset_mask()
 
-    def update(self, location: EarthLocation, time: Time) -> None:
-        """ Update the internal state. """
+    def update(self, location, time):
         self.location = location
         self.time = time
 
     @abstractmethod
     def position_errors(self, projection: Projection, *, masked: bool) -> np.ndarray:
-        """ Find position error for each dot. """
+        """ Find position error for each dot """
 
     @abstractmethod
     def position_errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray:
-        """ Find position error for each star. """
+        """ Find position error for each star """
 
     def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
         pass
 
-    def update_magnitude_smoother(self,
-                                  projection: Projection,
-                                  calibration: Calibration,
-                                  *,
-                                  bandwidth: float = 0.1):
-        """
-        Update the magnitude smoother.
-        """
+    def update_magnitude_smoother(self, projection: Projection, calibration: Calibration, *, bandwidth: float = 0.1):
+        pass
 
     @abstractmethod
     def magnitude_errors(self,
                          projection: Projection,
                          calibration: Calibration,
-                         *,
-                         masked: bool) -> np.ndarray:
+                         *, masked: bool) -> np.ndarray:
         """ Find magnitude error for each dot """
 
     @staticmethod
@@ -152,7 +144,7 @@ class Matcher(metaclass=ABCMeta):
                  *,
                  mask=np.ones(shape=(12,), dtype=bool)):
 
-        self._altaz = self.catalogue.to_altaz(self.location, self.time, masked=True)
+        self._altaz = self.catalogue.altaz(self.location, self.time, masked=True)
         func = self._build_optimization_function(mask)
         args = self._get_optimization_parameters(np.array(x0), mask)
 

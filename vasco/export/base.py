@@ -23,8 +23,12 @@ class Exporter(metaclass=ABCMeta):
     def export(self, filename: str) -> None:
         pass
 
+    @property
+    def matcher(self) -> Counsellor:
+        return self._matcher
+
     def _get_meteor(self):
-        data = self._matcher.correct_meteor(self._projection, self._calibration)
+        data = self.matcher.correct_meteor(self._projection, self._calibration)
 
         df = pd.DataFrame()
         df['ev_r'] = data.position_raw.alt.degree
