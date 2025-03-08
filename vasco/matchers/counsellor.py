@@ -49,8 +49,8 @@ class Counsellor(Matcher):
 
     def mask_catalogue(self, mask):
         """ Here both methods mask_catalogue and mask_sensor_data must do both things """
-        self.catalogue.set_mask(mask)
-        self.sensor_data.set_mask(mask)
+        self.catalogue.mask = mask
+        self.sensor_data.mask = mask
 
     def mask_sensor_data(self, mask):
         """ Here both methods are the same, so just call the other one. """

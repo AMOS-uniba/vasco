@@ -32,18 +32,17 @@ log = logging.getLogger('vasco')
 VERSION = "0.8.0"
 DATE = "2023-07-18"
 
+np.set_printoptions(edgeitems=10, linewidth=100000, formatter=dict(float=lambda x: f"{x:.6f}"))
+
 
 class MainWindow(MainWindowPlots):
     def __init__(self, args, parent=None):
         super().__init__(parent)
         self.populateStations()
-        self.updateProjection()
 
-        self.connectSignalSlots()
-
+        self.setupInitialParameters()
         self.updateLocation()
         self.updateTime()
-
         self.resetMatcher()
 
         if args.catalogue:
@@ -54,10 +53,45 @@ class MainWindow(MainWindowPlots):
             self._importProjectionParameters(args.projection.name)
 
         self.showCounts()
+        self.connectSignalSlots()
         self.onProjectionParametersChanged()
+        self.onLocationChanged()
         self.onScalingChanged()
 
         self.tw_charts.setCurrentIndex(1)
+
+    def setupInitialParameters(self):
+        self.pw_x0.setup(title="H shift", symbol="x<sub>0</sub>", unit="mm",
+                         minimum=-10, maximum=10, step=0.001, initial_value=0)
+        self.pw_y0.setup(title="V shift", symbol="y<sub>0</sub>", unit="mm",
+                         minimum=-10, maximum=10, step=0.001, initial_value=0)
+        self.pw_a0.setup(title="rotation", symbol="a<sub>0</sub>", unit="°",
+                         minimum=0, maximum=359.999999, step=0.2, initial_value=0,
+                         display_to_true=np.radians, true_to_display=np.degrees)
+
+        self.pw_A.setup(title="amplitude", symbol="A", unit="",
+                        minimum=-1, maximum=1, step=0.001)
+        self.pw_F.setup(title="phase", symbol="F", unit="°", minimum=0, maximum=359.999999, step=1,
+                        display_to_true=np.radians, true_to_display=np.degrees)
+
+        self.pw_V.setup(title="linear", symbol="&V", unit="rad/mm",
+                        minimum=0.001, maximum=1, step=0.001, initial_value=0.5)
+        self.pw_S.setup(title="exp coef", symbol="&S", unit="rad/mm",
+                        minimum=-100, maximum=100, step=0.001)
+        self.pw_D.setup(title="exp exp", symbol="&D", unit="mm<sup>-1</sup>",
+                        minimum=-100, maximum=100, step=0.0001)
+        self.pw_P.setup(title="biexp coef", symbol="&P", unit="rad/mm",
+                        minimum=-100, maximum=100, step=0.001)
+        self.pw_Q.setup(title="biexp exp", symbol="&Q", unit="mm<sup>-2</sup>",
+                        minimum=-100, maximum=100, step=0.0001)
+
+        self.pw_epsilon.setup(title="zenith angle", symbol="ε", unit="°", minimum=0, maximum=90, step=0.1,
+                              display_to_true=np.radians, true_to_display=np.degrees)
+        self.pw_E.setup(title="azimuth", symbol="E", unit="°", minimum=0, maximum=359.999999, step=1,
+                        display_to_true=np.radians, true_to_display=np.degrees)
+
+        for widget in self.param_widgets.values():
+            widget.dsb_value.valueChanged.connect(self.onProjectionParametersChanged)
 
     def connectSignalSlots(self):
         self.ac_load_sighting.triggered.connect(self.loadSighting)
@@ -70,30 +104,8 @@ class MainWindow(MainWindowPlots):
         self.ac_optimize.triggered.connect(self.optimize)
         self.ac_about.triggered.connect(self.displayAbout)
 
-        for widget in self.param_widgets.values():
-            widget.dsb_value.valueChanged.connect(self.onProjectionParametersChanged)
 
-        "The shape of the dot collection and the catalogue must be the same, got {obs.shape} and {cat.shape}"
-        self.pw_x0.setup(title="H shift", symbol="x<sub>0</sub>", unit="µm", minimum=-10, maximum=10, step=0.001)
-        self.pw_y0.setup(title="V shift", symbol="y<sub>0</sub>", unit="µm", minimum=-10, maximum=10, step=0.001)
-        self.pw_a0.setup(title="rotation", symbol="a<sub>0</sub>", unit="°", minimum=0, maximum=359.999999, step=0.2,
-                         display_to_true=np.radians, true_to_display=np.degrees)
-
-        self.pw_A.setup(title="amplitude", symbol="A", unit="", minimum=-1, maximum=1, step=0.001)
-        self.pw_F.setup(title="phase", symbol="F", unit="°", minimum=0, maximum=359.999999, step=1,
-                        display_to_true=np.radians, true_to_display=np.degrees)
-
-        self.pw_V.setup(title="linear", symbol="&V", unit="rad/mm", minimum=0.001, maximum=1, step=0.001)
-        self.pw_S.setup(title="exp coef", symbol="&S", unit="rad/mm", minimum=-100, maximum=100, step=0.001)
-        self.pw_D.setup(title="exp exp", symbol="&D", unit="mm<sup>-1</sup>", minimum=-100, maximum=100, step=0.0001)
-        self.pw_P.setup(title="biexp coef", symbol="&P", unit="rad/mm", minimum=-100, maximum=100, step=0.001)
-        self.pw_Q.setup(title="biexp exp", symbol="&Q", unit="mm<sup>-2</sup>", minimum=-100, maximum=100, step=0.0001)
-
-        self.pw_epsilon.setup(title="zenith angle", symbol="ε", unit="°", minimum=0, maximum=90, step=0.1,
-                              display_to_true=np.radians, true_to_display=np.degrees)
-        self.pw_E.setup(title="azimuth", symbol="E", unit="°", minimum=0, maximum=359.999999, step=1,
-                        display_to_true=np.radians, true_to_display=np.degrees)
-
+        self.cb_stations.currentIndexChanged.connect(self.selectStation)
         self.dt_time.dateTimeChanged.connect(self.updateTime)
         self.dt_time.dateTimeChanged.connect(self.onTimeChanged)
 
@@ -102,17 +114,20 @@ class MainWindow(MainWindowPlots):
         self.dsb_xs.valueChanged.connect(self.onScalingChanged)
         self.dsb_ys.valueChanged.connect(self.onScalingChanged)
 
+        # Parameter global interface
         self.pb_optimize.clicked.connect(self.optimize)
         self.pb_pair.clicked.connect(self.pair)
         self.pb_export.clicked.connect(self.exportProjectionParameters)
         self.pb_import.clicked.connect(self.importProjectionParameters)
 
+        # Catalogue operations
         self.pb_mask_unidentified.clicked.connect(self.maskSensor)
         self.pb_mask_distant.clicked.connect(self.maskCatalogueDistant)
         self.pb_mask_faint.clicked.connect(self.maskCatalogueFaint)
         self.pb_reset.clicked.connect(self.resetValid)
         self.dsb_error_limit.valueChanged.connect(self.onErrorLimitChanged)
 
+        # Smoother
         self.hs_bandwidth.actionTriggered.connect(self.onBandwidthSettingChanged)
         self.hs_bandwidth.sliderMoved.connect(self.onBandwidthSettingChanged)
         self.hs_bandwidth.actionTriggered.connect(self.onBandwidthChanged)
@@ -127,12 +142,13 @@ class MainWindow(MainWindowPlots):
         self.pb_export_xml.clicked.connect(self.ac_export_meteor.trigger)
 
         self.tw_charts.currentChanged.connect(self.updatePlots)
+        log.debug(f"Signals and slots connected")
 
     def populateStations(self):
         for name, station in AMOS.stations.items():
             self.cb_stations.addItem(station.name)
 
-        self.cb_stations.currentIndexChanged.connect(self.selectStation)
+        log.debug(f"Populated stations: {len(self.cb_stations)}")
 
     def selectStation(self, index):
         if index == 0:
@@ -166,6 +182,7 @@ class MainWindow(MainWindowPlots):
             self.dsb_lat.value() * u.deg,
             self.dsb_alt.value() * u.m,
         )
+        log.debug(f"Updated location to {self.location.geodetic}")
 
     def setTime(self, time):
         self.dt_time.setDateTime(QDateTime(time.date(), time.time(), Qt.TimeSpec.UTC))
@@ -182,7 +199,7 @@ class MainWindow(MainWindowPlots):
 
     def updateMatcher(self):
         log.info(f"Time / location changed: {self.time}, {self.location}")
-        self.matcher.update(self.location, Time(self.time))
+        self.matcher.update_location_time(self.location, Time(self.time))
         self.matcher.update_position_smoother(self.projection)
 
     def updateProjection(self):
@@ -271,7 +288,7 @@ class MainWindow(MainWindowPlots):
         self.magnitude_errors = self.matcher.magnitude_errors(self.projection, self.calibration, masked=True)
 
     def loadCatalogue(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "../catalogues",
+        filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "catalogues",
                                                   "Tab-separated values (*.tsv)")
         if filename == '':
             log.warning("No file provided, loading aborted")
@@ -284,7 +301,7 @@ class MainWindow(MainWindowPlots):
             self.onProjectionParametersChanged()
 
     def exportProjectionParameters(self):
-        filename, _ = QFileDialog.getSaveFileName(self, "Export projection parameters to file", "../calibrations",
+        filename, _ = QFileDialog.getSaveFileName(self, "Export projection parameters to file", "calibrations",
                                                   "YAML files (*.yaml)")
         if filename is not None and filename != '':
             self._exportProjectionParameters(filename)
@@ -303,7 +320,7 @@ class MainWindow(MainWindowPlots):
             log.error(f"Could not export projection parameters: {exc}")
 
     def loadSighting(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "../data",
+        filename, _ = QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data",
                                                   "YAML files (*.yml *.yaml)")
         if filename == '':
             log.warning("No file provided, loading aborted")
@@ -425,7 +442,7 @@ class MainWindow(MainWindowPlots):
         errors = self.matcher.position_errors_inverse(self.projection, masked=False)
         self.matcher.mask_catalogue(errors < np.radians(self.dsb_distance_limit.value()))
         log.info(f"Culled the catalogue to {c.num(f'{self.dsb_distance_limit.value():.3f}')}°: "
-                 f"{c.num(self.matcher.catalogue.count_valid)} stars used")
+                 f"{c.num(self.matcher.catalogue.visible_count)} stars used")
 
         self.positionSkyPlot.invalidate_stars()
         self.magnitudeSkyPlot.invalidate_stars()
@@ -436,9 +453,9 @@ class MainWindow(MainWindowPlots):
         self.showCounts()
 
     def maskCatalogueFaint(self):
-        self.matcher.mask_catalogue(self.matcher.catalogue.vmag(masked=False) > self.dsb_magnitude_limit.value())
+        self.matcher.mask_catalogue(self.matcher.vmag_to_numpy(masked=False) < self.dsb_magnitude_limit.value())
         log.info(f"Culled the catalogue to magnitude {self.dsb_magnitude_limit.value()}m: "
-                 f"{self.matcher.catalogue.count_valid} stars used")
+                 f"{self.matcher.catalogue.visible_count} stars used")
 
         if self.paired:
             self.pair()
@@ -454,6 +471,7 @@ class MainWindow(MainWindowPlots):
     def resetValid(self):
         self.matcher.reset_mask()
         self.onProjectionParametersChanged()
+        self.onLocationChanged()
         self.showCounts()
 
     @QtCore.pyqtSlot()

@@ -258,13 +258,7 @@
            <number>3</number>
           </property>
           <item row="0" column="3">
-           <widget class="QLabel" name="lb_xs">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
+           <widget class="QLabel" name="lu_xs">
             <property name="text">
              <string>µm</string>
             </property>
@@ -335,12 +329,9 @@
            </widget>
           </item>
           <item row="1" column="3">
-           <widget class="QLabel" name="lx_ys">
+           <widget class="QLabel" name="lu_ys">
             <property name="text">
-             <string>V pixel pitch (y&lt;sub&gt;s&lt;/sub&gt;)</string>
-            </property>
-            <property name="buddy">
-             <cstring>dsb_ys</cstring>
+             <string>µm</string>
             </property>
            </widget>
           </item>
@@ -1420,7 +1411,7 @@
              <double>0.100000000000000</double>
             </property>
             <property name="value">
-             <double>0.500000000000000</double>
+             <double>1.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -1502,7 +1493,7 @@
              <enum>QAbstractSpinBox::DefaultStepType</enum>
             </property>
             <property name="value">
-             <double>0.500000000000000</double>
+             <double>1.000000000000000</double>
             </property>
            </widget>
           </item>

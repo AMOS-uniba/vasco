@@ -28,17 +28,21 @@ class Matcher(metaclass=ABCMeta):
     def __init__(self,
                  location: EarthLocation,
                  time: Time,
-                 projection_cls: Projection = BorovickaProjection,
+                 projection_cls: type[Projection] = BorovickaProjection,
                  *,
                  catalogue: Optional[Catalogue] = None,
                  sensor_data: Optional[SensorData] = None):
         self._altaz = None
+        self._altaz_valid = False
+
         self.projection_cls: BorovickaProjection = projection_cls
         self.location: EarthLocation = None
         self.time: Time = None
         self.catalogue = Catalogue() if catalogue is None else catalogue
         self.sensor_data = SensorData() if sensor_data is None else sensor_data
-        self.update(location, time)
+        self.update_location_time(location, time)
+
+        log.debug(f"Created a Matcher ({self.projection_cls.__qualname__})")
 
     def load_catalogue(self, filename: Path):
         del self.catalogue
@@ -62,12 +66,34 @@ class Matcher(metaclass=ABCMeta):
         """ Assign the nearest catalogue star to every dot """
 
     def reset_mask(self):
-        self.catalogue.reset_mask()
-        self.sensor_data.reset_mask()
+        self.catalogue.mask = None
+        self.sensor_data.stars.mask = None
 
-    def update(self, location, time):
+    def update_location_time(self, location, time):
+        """
+        Update internal location and time and request the catalogue to recompute the stars' positions.
+        """
         self.location = location
         self.time = time
+
+        if self.catalogue.populated:
+            self._altaz = self.altaz_to_numpy(masked=True)
+            self._altaz_valid = True
+
+    def altaz_to_numpy(self, *, masked: bool):
+        """
+        Return the current masked catalogue altaz as a numpy array
+        """
+        altaz = self.catalogue.altaz(self.location, self.time, masked=masked)
+        converted = np.array([np.pi / 2 - altaz.alt.radian, altaz.az.radian], dtype=float).T
+        return converted
+
+    def vmag_to_numpy(self, *, masked: bool):
+        """
+        Return the current masked catalogue vmag as a numpy array
+        """
+        vmag = self.catalogue.vmag(self.location, self.time, masked=masked)
+        return vmag
 
     @abstractmethod
     def position_errors(self, projection: Projection, *, masked: bool) -> np.ndarray[float]:
@@ -87,7 +113,8 @@ class Matcher(metaclass=ABCMeta):
     def magnitude_errors(self,
                          projection: Projection,
                          calibration: Calibration,
-                         *, masked: bool) -> np.ndarray:
+                         *,
+                         masked: bool) -> np.ndarray:
         """ Find magnitude error for each dot """
 
     @staticmethod
@@ -119,8 +146,8 @@ class Matcher(metaclass=ABCMeta):
     def _build_optimization_function(self,
                                      mask: np.ndarray[float]) -> Callable[[np.ndarray[float], ...], float]:
         """
-        Split the parameter vector into immutable and variable part depending on mask
-        and return a loss function in which only variable parameters are to be optimized
+        Split the parameter vector into immutable and variable part depending on mask.
+        Return a loss function in which only variable parameters are to be optimized
         and immutable ones are treated as constants
         """
         ifixed = np.where(~mask)
@@ -146,7 +173,7 @@ class Matcher(metaclass=ABCMeta):
                  *,
                  mask=np.ones(shape=(12,), dtype=bool)):
 
-        self._altaz = self.catalogue.altaz(self.location, self.time, masked=True)
+        self._altaz = self.altaz_to_numpy(masked=True)
         func = self._build_optimization_function(mask)
         args = self._get_optimization_parameters(np.array(x0), mask)
 

@@ -67,7 +67,10 @@ class BaseSkyPlot(BasePlot):
                      positions: np.ndarray[float],
                      magnitudes: np.ndarray[float]):
         sizes = 0.2 * np.exp(-0.833 * (magnitudes - 5))
-        self.scatter_stars.set_offsets(positions)
+        newp = np.zeros_like(positions)
+        newp[:, 0] = positions[:, 1]
+        newp[:, 1] = np.degrees(positions[:, 0])
+        self.scatter_stars.set_offsets(newp)
         self.scatter_stars.set_sizes(sizes)
         self.valid_stars = True
         self.draw()

@@ -21,6 +21,7 @@ class QParameterWidget(QWidget, Ui_Form):
               maximum: float = 1,
               step: float = 0.001,
               decimals: int = 6,
+              initial_value: float = 0,
               display_to_true: Callable[[float], float] = lambda x: x,
               true_to_display: Callable[[float], float] = lambda x: x):
         self.lb_title.setText(title)
@@ -31,6 +32,7 @@ class QParameterWidget(QWidget, Ui_Form):
         self.dsb_value.setMaximum(maximum)
         self.dsb_value.setSingleStep(step)
         self.dsb_value.setDecimals(decimals)
+        self.dsb_value.setValue(initial_value)
 
         self.display_to_true = display_to_true
         self.true_to_display = true_to_display

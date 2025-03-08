@@ -43,10 +43,10 @@ class Matchmaker(Matcher):
         """ There is no position smoother in Matchmaker, can be implemented by child classes """
 
     def mask_catalogue(self, mask):
-        self.catalogue.set_mask(mask)
+        self.catalogue.mask &= mask
 
     def mask_sensor_data(self, mask):
-        self.sensor_data.set_mask(mask)
+        self.sensor_data.stars.mask &= mask
 
     def _cartesian(self,
                    func: Callable,
@@ -57,10 +57,13 @@ class Matchmaker(Matcher):
         Apply a function func over the Cartesian product of projected and catalogue stars
         and aggregate over the specified axis
         """
-        altaz = self.catalogue.altaz_numpy(self.location, self.time)
+        if not self._altaz_valid:
+            log.debug("Asking for a new catalogue")
+            self._altaz = self.altaz_to_numpy(masked=masked)
+
         return func(
             self.sensor_data.stars.project(projection, masked=masked),
-            altaz,
+            self._altaz,
             axis=axis,
         )
 
@@ -98,7 +101,7 @@ class Matchmaker(Matcher):
         nearest = self._cartesian(self.find_nearest_index, projection, masked, 1)
         obs = calibration(self.sensor_data.stars.intensities(masked=masked))
         # Filter the catalogue by that index
-        cat = self.catalogue.vmag(self.location, self.time)[nearest]
+        cat = self.catalogue.vmag(self.location, self.time, masked=masked)[nearest]
 
         if cat.size == 0:
             cat = np.tile(np.nan, obs.shape)
@@ -129,7 +132,6 @@ class Matchmaker(Matcher):
         """
         observed = np.expand_dims(observed, 1)
         catalogue = np.expand_dims(catalogue, 0)
-        observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed altitude to zenith distance
         return spherical_distance(observed, catalogue)
 
     def compute_vector_errors(self, observed, catalogue):

@@ -1,3 +1,6 @@
+pixels:
+  xs: 4.36
+  ys: 4.36
 projection:
   name: "Borovi\u010Dka"
   parameters:
@@ -13,6 +16,3 @@ projection:
     epsilon: 0.00824901945687088
     x0: -0.481636
     y0: -0.282756
-pixels:
-  xs: 4.36
-  ys: 4.26

@@ -5,8 +5,7 @@ import matplotlib as mpl
 from astropy.coordinates import AltAz
 import astropy.units as u
 
-from typing import Tuple, Union
-
+from typing import Tuple, Union, Optional
 
 QuarterTau = math.tau / 4
 
@@ -71,7 +70,7 @@ def spherical_difference(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     return np.stack((dz, da * np.cos(a[..., 0])), axis=1)
 
 
-def altaz_to_disk(altaz: Union[None, AltAz]) -> np.ndarray:
+def altaz_to_disk(altaz: Optional[AltAz]) -> np.ndarray[float]:
     if altaz is None:
         return np.empty(shape=(0, 2))
     else:
