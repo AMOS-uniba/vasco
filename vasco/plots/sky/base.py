@@ -66,7 +66,6 @@ class BaseSkyPlot(BasePlot):
     def update_stars(self,
                      positions: np.ndarray[float],
                      magnitudes: np.ndarray[float]):
-        print(positions[0][0])
         sizes = 0.2 * np.exp(-0.833 * (magnitudes - 5))
         self.scatter_stars.set_offsets(positions)
         self.scatter_stars.set_sizes(sizes)
