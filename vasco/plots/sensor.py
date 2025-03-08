@@ -1,11 +1,12 @@
 import matplotlib as mpl
+from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
 from .base import BasePlot
 
 
 class SensorPlot(BasePlot):
-    cmap_meteors = mpl.pyplot.get_cmap('Blues_r')
+    cmap_meteors = plt.get_cmap('Blues_r')
 
     def __init__(self, widget, **kwargs):
         self.scatter_meteor = None

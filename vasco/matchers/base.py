@@ -28,7 +28,8 @@ class Matcher(metaclass=ABCMeta):
     def __init__(self,
                  location: EarthLocation,
                  time: Time,
-                 projection_cls=BorovickaProjection, *,
+                 projection_cls: Projection = BorovickaProjection,
+                 *,
                  catalogue: Optional[Catalogue] = None,
                  sensor_data: Optional[SensorData] = None):
         self._altaz = None

@@ -4,34 +4,20 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-astropy = "*"
-argparse = "*"
-argparsedirs = "*"
-<<<<<<< Updated upstream
-=======
-astropy = "*"
->>>>>>> Stashed changes
-dotmap = "*"
-lxml = "*"
-matplotlib = "*"
-colorama = "*"
-pandas = "*"
-numpy = "*"
-physics-fields = "*"
 pyqt6 = "*"
+astropy = "*"
+numpy = "*"
 scipy = "*"
-<<<<<<< Updated upstream
+matplotlib = "*"
 pyyaml = "*"
-=======
-#pyqt6-tools = "*"
-colorama = "*"
->>>>>>> Stashed changes
+lxml = "*"
 amosutils = {file = "../amosutils", editable = true}
+colorama = "*"
+pytest = "*"
+dotmap = "*"
 
 [dev-packages]
 pytest = "*"
-ipython = "*"
-flake8 = "*"
 
 [requires]
 python_version = "3.13"

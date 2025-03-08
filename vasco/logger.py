@@ -6,7 +6,7 @@ import colour as c
 
 class VascoFormatter(logging.Formatter):
     def __init__(self):
-        super().__init__('[{levelname}] {message}', "%H:%M:%S", '{')
+        super().__init__('{asctime} {levelname} {message}', "%H:%M:%S", '{')
 
     def format(self, record):
         record.levelname = {

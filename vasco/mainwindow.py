@@ -45,6 +45,7 @@ class MainWindow(MainWindowPlots):
         self.updateTime()
 
         self.resetMatcher()
+
         if args.catalogue:
             self.matcher.load_catalogue(args.catalogue.name)
         if args.sighting:
@@ -170,7 +171,7 @@ class MainWindow(MainWindowPlots):
         self.dt_time.setDateTime(QDateTime(time.date(), time.time(), Qt.TimeSpec.UTC))
 
     def updateTime(self):
-        self.time = self.dt_time.dateTime().toPyDateTime()
+        self.time = Time(self.dt_time.dateTime().toPyDateTime())
 
     def onScalingChanged(self):
         self.matcher.sensor_data.set_shifter_scales(
@@ -180,14 +181,15 @@ class MainWindow(MainWindowPlots):
         self.onProjectionParametersChanged()
 
     def updateMatcher(self):
+        log.info(f"Time / location changed: {self.time}, {self.location}")
         self.matcher.update(self.location, Time(self.time))
         self.matcher.update_position_smoother(self.projection)
 
     def updateProjection(self):
+        log.info(f"Projection parameters changed: {self.getProjectionParameters()}")
         self.projection = BorovickaProjection(*self.getProjectionParameters())
 
     def onProjectionParametersChanged(self):
-        log.info(f"Parameters changed: {self.getProjectionParameters()}")
         self.updateProjection()
 
         self.positionSkyPlot.invalidate_dots()
