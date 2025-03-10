@@ -102,7 +102,7 @@ class MainWindowPlots(MainWindowBase):
 
     def _plotCatalogueStars(self, plot):
         plot.update_stars(
-            self.matcher.altaz_to_numpy(masked=True),
+            self.matcher.altaz(masked=True),
             self.matcher.catalogue.vmag(self.location, Time(self.time), masked=True)
         )
 

@@ -15,6 +15,7 @@ amosutils = {file = "../amosutils", editable = true}
 colorama = "*"
 pytest = "*"
 dotmap = "*"
+pyside6 = "*"
 
 [dev-packages]
 pytest = "*"

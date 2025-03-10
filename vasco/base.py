@@ -56,6 +56,12 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         max_error = self.matcher.max_error(self.position_errors)
         self.lb_rms_error.setText(f'{np.degrees(rms_error):.6f}°')
         self.lb_max_error.setText(f'{np.degrees(max_error):.6f}°')
-        self.lb_total_stars.setText(f'{self.matcher.catalogue.count}')
-        outside_limit = self.position_errors[self.position_errors > np.radians(self.dsb_error_limit.value())].size
-        self.lb_outside_limit.setText(f'{outside_limit}')
+
+        errors = self.matcher.position_errors(self.projection, masked=True)
+        dot_to_nearest_star = np.min(errors, axis=1, initial=np.inf)
+        star_to_nearest_dot = np.min(errors, axis=1, initial=np.inf)
+
+        outside_limit = dot_to_nearest_star[dot_to_nearest_star.position_errors > np.radians(self.dsb_error_limit.value())].size
+        self.lb_sensor_outside.setText(f'{outside_limit}')
+        outside_limit = star_to_nearest_dot[star_to_nearest_dot.position_errors > np.radians(self.dsb_error_limit.value())].size
+        self.lb_catalogue_outside.setText(f'{outside_limit}')

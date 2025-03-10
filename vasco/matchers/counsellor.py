@@ -83,8 +83,8 @@ class Counsellor(Matcher):
 
     def position_errors(self, projection: Projection, *, masked: bool):
         sensor = self.sensor_data.stars.project(projection, masked=masked)
-        altaz = self._altaz \
-            if self._altaz is not None and self._altaz.shape == sensor.shape \
+        altaz = self._altaz_cache \
+            if self._altaz_cache is not None and self._altaz_cache.shape == sensor.shape \
             else self.catalogue.to_altaz(self.location, self.time, masked=masked)
         assert sensor.shape == altaz.shape, \
             f"The shape of the dot collection and the catalogue must be the same, got {sensor.shape} and {altaz.shape}"

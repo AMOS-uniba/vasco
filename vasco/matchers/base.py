@@ -8,7 +8,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Callable, Optional
 from pathlib import Path
 
-from astropy.coordinates import EarthLocation
+from astropy.coordinates import EarthLocation, AltAz
 from astropy.time import Time
 
 from amosutils.catalogue import Catalogue
@@ -32,12 +32,13 @@ class Matcher(metaclass=ABCMeta):
                  *,
                  catalogue: Optional[Catalogue] = None,
                  sensor_data: Optional[SensorData] = None):
-        self._altaz = None
-        self._altaz_valid = False
+        self._altaz: Optional[AltAz] = None
+        self._altaz_numpy: Optional[np.ndarray] = None
+        self._altaz_masked: Optional[np.ndarray] = None
 
-        self.projection_cls: BorovickaProjection = projection_cls
-        self.location: EarthLocation = None
-        self.time: Time = None
+        self.projection_cls: type[Projection] = projection_cls
+        self.location: Optional[EarthLocation] = None
+        self.time: Optional[Time] = None
         self.catalogue = Catalogue() if catalogue is None else catalogue
         self.sensor_data = SensorData() if sensor_data is None else sensor_data
         self.update_location_time(location, time)
@@ -77,21 +78,33 @@ class Matcher(metaclass=ABCMeta):
         self.time = time
 
         if self.catalogue.populated:
-            self._altaz = self.altaz_to_numpy(masked=True)
-            self._altaz_valid = True
+            self.invalidate_altaz()
 
-    def altaz_to_numpy(self, *, masked: bool):
+    def invalidate_altaz(self):
+        self._altaz = None
+
+    def altaz(self, *, masked: bool, force_reload: bool = False):
         """
         Return the current masked catalogue altaz as a numpy array
         """
-        altaz = self.catalogue.altaz(self.location, self.time, masked=masked)
-        converted = np.array([np.pi / 2 - altaz.alt.radian, altaz.az.radian], dtype=float).T
-        return converted
+        if self._altaz is None:
+            log.debug(f"Requesting catalogue for {self.location}, {self.time}, {masked}")
+            self._altaz = self.catalogue.altaz(self.location, self.time, masked=False)
+            self._altaz_masked = self._altaz[self.catalogue.mask]
+        else:
+            log.debug(f"Requesting catalogue for {self.location}, {self.time}, {masked} (using cached)")
+
+        converted = np.array([np.pi / 2 - self._altaz.alt.radian, self._altaz.az.radian], dtype=float).T
+        if masked:
+            return converted[self.catalogue.mask]
+        else:
+            return converted
 
     def vmag_to_numpy(self, *, masked: bool):
         """
         Return the current masked catalogue vmag as a numpy array
         """
+        log.debug("Requesting a new magnitude catalogue")
         vmag = self.catalogue.vmag(self.location, self.time, masked=masked)
         return vmag
 
@@ -171,9 +184,8 @@ class Matcher(metaclass=ABCMeta):
                  x0=np.array((0, 0, 0, 0, math.tau / 4, 1, 0, 0, 0, 0, 0, 0)),
                  maxiter=30,
                  *,
-                 mask=np.ones(shape=(12,), dtype=bool)):
-
-        self._altaz = self.altaz_to_numpy(masked=True)
+                 mask=np.ones(shape=(12,), dtype=bool),
+                 callback: Callable = lambda x: log.debug(x)):
         func = self._build_optimization_function(mask)
         args = self._get_optimization_parameters(np.array(x0), mask)
 
@@ -188,7 +200,7 @@ class Matcher(metaclass=ABCMeta):
             method='Nelder-Mead',
             bounds=self.get_optimization_bounds(mask),
             options=dict(maxiter=maxiter, disp=True),
-            callback=lambda x: log.debug(x),
+            callback=callback,
         )
 
         # Restore the full parameter vector from immutable original args and variable optimized args

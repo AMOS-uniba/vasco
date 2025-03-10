@@ -116,15 +116,16 @@ class MainWindow(MainWindowPlots):
 
         # Parameter global interface
         self.pb_optimize.clicked.connect(self.optimize)
+        self.sb_maxiter.valueChanged.connect(self.onMaxiterChanged)
         self.pb_pair.clicked.connect(self.pair)
         self.pb_export.clicked.connect(self.exportProjectionParameters)
         self.pb_import.clicked.connect(self.importProjectionParameters)
 
         # Catalogue operations
-        self.pb_mask_unidentified.clicked.connect(self.maskSensor)
+        self.pb_mask_dots.clicked.connect(self.maskSensor)
         self.pb_mask_distant.clicked.connect(self.maskCatalogueDistant)
         self.pb_mask_faint.clicked.connect(self.maskCatalogueFaint)
-        self.pb_reset.clicked.connect(self.resetValid)
+        self.pb_catalogue_reset.clicked.connect(self.resetCatalogue)
         self.dsb_error_limit.valueChanged.connect(self.onErrorLimitChanged)
 
         # Smoother
@@ -275,6 +276,9 @@ class MainWindow(MainWindowPlots):
         self.magnitudeCorrectionPlot.invalidate_grid()
         self.updatePlots()
 
+    def onMaxiterChanged(self):
+        self.pg_optimize.setMaximum(self.sb_maxiter.value())
+
     def bandwidth(self):
         return 10**(-self.hs_bandwidth.value() / 100)
 
@@ -398,10 +402,21 @@ class MainWindow(MainWindowPlots):
         self.w_input.setEnabled(False)
         self.w_input.repaint()
 
+        iters = 0
+        maxiters = self.sb_maxiter.value()
+        original_title = self.gb_identify.title()
+
+        def callback(x):
+            nonlocal iters
+            log.debug(x)
+            iters += 1
+            self.pg_optimize.setValue(iters)
+
         result = self.matcher.minimize(
             x0=self.getProjectionParameters(),
-            maxiter=self.sb_maxiter.value(),
-            mask=np.array([widget.is_checked() for widget in self.param_widgets.values()], dtype=bool)
+            maxiter=maxiters,
+            mask=np.array([widget.is_checked() for widget in self.param_widgets.values()], dtype=bool),
+            callback=callback,
         )
 
         self._blockParameterSignals(True)
@@ -409,6 +424,8 @@ class MainWindow(MainWindowPlots):
             widget.set_true_value(value)
         self._blockParameterSignals(False)
 
+        self.pg_optimize.setValue(maxiters)
+        self.gb_identify.setTitle(original_title)
         self.w_input.setEnabled(True)
         self.w_input.repaint()
         self.onProjectionParametersChanged()
@@ -432,6 +449,12 @@ class MainWindow(MainWindowPlots):
         self.matcher.mask_sensor_data(errors < np.radians(self.dsb_error_limit.value()))
         log.info(f"Culled the dots to {c.param(f'{self.dsb_error_limit.value():.3f}')}°: "
                  f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
+        self.onProjectionParametersChanged()
+        self.showCounts()
+
+    def resetSensor(self):
+        log.debug("Reset the sensor mask")
+        self.matcher.sensor_data.reset_mask()
         self.onProjectionParametersChanged()
         self.showCounts()
 
@@ -468,8 +491,9 @@ class MainWindow(MainWindowPlots):
         self.updatePlots()
         self.showCounts()
 
-    def resetValid(self):
-        self.matcher.reset_mask()
+    def resetCatalogue(self):
+        log.debug("Reset the catalogue mask")
+        self.matcher.catalogue.mask = None
         self.onProjectionParametersChanged()
         self.onLocationChanged()
         self.showCounts()
@@ -483,10 +507,10 @@ class MainWindow(MainWindowPlots):
             self.lb_mode.setText("unpaired")
             self.tab_correction_magnitudes_enabled.setEnabled(False)
 
-        self.lb_catalogue_all.setText(f'{self.matcher.catalogue.count}')
-        #self.lb_catalogue_near.setText(f'{self.matcher.catalogue.count_valid}')
-        self.lb_objects_all.setText(f'{self.matcher.sensor_data.stars.count}')
-        #self.lb_objects_near.setText(f'{self.matcher.sensor_data.stars.count_valid}')
+        self.lb_catalogue_total.setText(f'{self.matcher.catalogue.count}')
+        self.lb_catalogue_unmasked.setText(f'{self.matcher.catalogue.visible_count}')
+        self.lb_sensor_total.setText(f'{self.matcher.sensor_data.stars.count}')
+        self.lb_sensor_unmasked.setText(f'{self.matcher.sensor_data.stars.count_valid}')
 
     def exportCorrectedMeteor(self):
         if not self.paired:

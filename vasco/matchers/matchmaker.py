@@ -44,6 +44,7 @@ class Matchmaker(Matcher):
 
     def mask_catalogue(self, mask):
         self.catalogue.mask &= mask
+        self.invalidate_altaz()
 
     def mask_sensor_data(self, mask):
         self.sensor_data.stars.mask &= mask
@@ -51,20 +52,15 @@ class Matchmaker(Matcher):
     def _cartesian(self,
                    func: Callable,
                    projection: Projection,
-                   masked: bool,
-                   axis: int) -> np.ndarray:
+                   *,
+                   masked: bool) -> np.ndarray:
         """
         Apply a function func over the Cartesian product of projected and catalogue stars
         and aggregate over the specified axis
         """
-        if not self._altaz_valid:
-            log.debug("Asking for a new catalogue")
-            self._altaz = self.altaz_to_numpy(masked=masked)
-
         return func(
             self.sensor_data.stars.project(projection, masked=masked),
-            self._altaz,
-            axis=axis,
+            self.altaz(masked=masked),
         )
 
     def position_errors_sensor_star_to_dot(self,
@@ -87,10 +83,10 @@ class Matchmaker(Matcher):
 
 
     def position_errors(self, projection: Projection, *, masked: bool) -> np.ndarray:
-        return self._cartesian(self.find_nearest_value, projection, masked, 1)
+        return self._cartesian(self.find_nearest_value, projection, masked=masked)
 
     def position_errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray:
-        return self._cartesian(self.find_nearest_value, projection, masked, 0)
+        return self._cartesian(self.find_nearest_value, projection, masked=masked)
 
     def magnitude_errors(self,
                          projection: Projection,
@@ -98,7 +94,7 @@ class Matchmaker(Matcher):
                          *,
                          masked: bool) -> np.ndarray:
         # Find which star is the nearest for every dot
-        nearest = self._cartesian(self.find_nearest_index, projection, masked, 1)
+        nearest = self._cartesian(self.find_nearest_index, projection, masked=masked)
         obs = calibration(self.sensor_data.stars.intensities(masked=masked))
         # Filter the catalogue by that index
         cat = self.catalogue.vmag(self.location, self.time, masked=masked)[nearest]
@@ -117,7 +113,7 @@ class Matchmaker(Matcher):
         raise NotImplementedError("Matchmaker cannot print corrected meteors, use a Counsellor instead")
 
     @staticmethod
-    def compute_distances(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
+    def compute_distances_sky(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
         """
         Compute distance matrix for observed points projected to the sky and catalogue stars
 
@@ -133,6 +129,12 @@ class Matchmaker(Matcher):
         observed = np.expand_dims(observed, 1)
         catalogue = np.expand_dims(catalogue, 0)
         return spherical_distance(observed, catalogue)
+
+    @staticmethod
+    def compute_distances_sensor(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
+        observed = np.expand_dims(observed, 1)
+        catalogue = np.expand_dims(catalogue, 0)
+        #return distance(observed, catalogue)
 
     def compute_vector_errors(self, observed, catalogue):
         """
@@ -152,7 +154,7 @@ class Matchmaker(Matcher):
             1 for the nearest dot to every star
         """
         log.debug(f"Calculating position errors for {catalogue.shape} × {observed.shape}")
-        dist = self.compute_distances(observed, catalogue)
+        dist = self.compute_distances_sky(observed, catalogue)
         return np.min(dist, axis=axis, initial=np.inf)
 
     def find_nearest_index(self, observed, catalogue, *, axis):
@@ -163,7 +165,7 @@ class Matchmaker(Matcher):
             0 for nearest star to every dot
             1 for nearest dot to every star
         """
-        dist = self.compute_distances(observed, catalogue)
+        dist = self.compute_distances_sky(observed, catalogue)
         if dist.size > 0:
             return np.argmin(dist, axis=axis)
         else:
