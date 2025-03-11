@@ -10,7 +10,7 @@ class QMeteorModel(QAbstractTableModel):
         match role:
             case Qt.ItemDataRole.DisplayRole:
                 if orientation == Qt.Orientation.Horizontal:
-                    return\
+                    return \
                         ["fno",
                          "z raw", "a raw",
                          "z corrected", "a corrected",

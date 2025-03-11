@@ -22,7 +22,8 @@ class TestAngularFunction:
 
 class TestSpherical:
     def test_distance(self):
-        assert np.allclose(spherical_distance(np.array([0, 0]), np.array([0, np.pi / 2])), np.pi / 2)
+        dist = spherical_distance(np.array([0, 0]), np.array([0, np.pi / 2]))
+        assert np.allclose(dist, np.pi / 2)
 
     def test_distance_2(self):
         assert np.allclose(spherical_distance(np.array([0, 1]), np.array([0, 1.1])), 0.1)

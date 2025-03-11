@@ -13,6 +13,11 @@ class PositionErrorPlot(BaseErrorPlot):
 
     target: str = "star positions"
 
+    def add_axes(self):
+        super().add_axes()
+        self.hline_alt = self.axis_alt.axhline(0)
+        self.hline_az = self.axis_az.axhline(0)
+
     def norm(self, limit):
         return mpl.colors.Normalize(vmin=0, vmax=limit)
 
@@ -28,4 +33,10 @@ class PositionErrorPlot(BaseErrorPlot):
 
     def update_dots(self, positions, magnitudes, errors, *, limit=1):
         errors = np.degrees(errors)  # Convert errors in radians to degrees first
+
+        self.hline_alt.remove()
+        self.hline_alt = self.axis_alt.axhline(limit, c='red', lw=0.5)
+        self.hline_az.remove()
+        self.hline_az = self.axis_az.axhline(limit, c='red', lw=0.5)
+
         super().update_dots(positions, magnitudes, errors, limit=limit)

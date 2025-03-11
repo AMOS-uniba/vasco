@@ -15,10 +15,10 @@ amosutils = {file = "../amosutils", editable = true}
 colorama = "*"
 pytest = "*"
 dotmap = "*"
-pyside6 = "*"
 
 [dev-packages]
 pytest = "*"
+pyside6 = "*"
 
 [requires]
-python_version = "3.13"
+python_version = "3"

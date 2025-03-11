@@ -31,7 +31,7 @@ class Counsellor(Matcher):
                  catalogue: Catalogue,
                  sensor_data: SensorData):
         super().__init__(location, time, projection_cls)
-        # a Counselor has fixed pairs: they have to be set on creation
+        # a Counsellor has fixed pairs: they have to be set on creation
         assert sensor_data.stars.count == catalogue.count, \
             f"Sensor data count ({sensor_data.stars.count}) does not match the catalogue data count ({catalogue.count})"
         self.catalogue = catalogue
@@ -91,7 +91,7 @@ class Counsellor(Matcher):
 
         return self.compute_distances(sensor, altaz)
 
-    def magnitude_errors(self, projection: Projection, calibration: Calibration, *, masked: bool):
+    def magnitude_errors_sky(self, projection: Projection, calibration: Calibration, *, masked: bool):
         obs = calibration(self.sensor_data.stars.intensities(masked=masked))
         cat = self.catalogue.vmag(masked=masked)
         assert obs.shape == cat.shape, \
@@ -157,7 +157,7 @@ class Counsellor(Matcher):
         return self._grid(self.magnitude_smoother, resolution, masked=False)
 
     def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
-        log.debug("Correcting a meteor")
+        log.debug("Computing vector correction for the meteor")
         positions_raw = self.project_meteor(projection)
         positions_corrected = self.correct_meteor_position(projection)
         positions_correction_angle = positions_raw.separation(positions_corrected)

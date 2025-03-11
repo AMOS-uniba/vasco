@@ -22,7 +22,7 @@ log = logging.getLogger('vasco')
 class MainWindowPlots(MainWindowBase):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.sensorPlot = SensorPlot(self.tab_sensor)
+        self.sensorPlot = SensorPlot(self.tab_sensor_plot)
         self.positionSkyPlot = PositionSkyPlot(self.tab_sky_positions)
         self.magnitudeSkyPlot = MagnitudeSkyPlot(self.tab_sky_magnitudes)
         self.positionErrorPlot = PositionErrorPlot(self.tab_errors_positions)
@@ -31,11 +31,15 @@ class MainWindowPlots(MainWindowBase):
         self.magnitudeCorrectionPlot = MagnitudeCorrectionPlot(self.tab_correction_magnitudes_enabled)
 
     def updatePlots(self):
+        """
+        Iterate over all plots and update all that are no longer valid
+        """
         self.showErrors()
         links = [
             [
                 (self.sensorPlot.valid, self.plotSensorData),
             ],
+            [],
             [
                 (self.positionSkyPlot.valid_dots, self.plotObservedStarsPositions),
                 (self.positionSkyPlot.valid_stars, self.plotCatalogueStarsPositions),
@@ -69,6 +73,7 @@ class MainWindowPlots(MainWindowBase):
             if not valid:
                 function()
 
+        self.updateSensorTable()
         self.updateMeteorTable()
 
     """ Methods for plotting sensor data """
@@ -93,12 +98,12 @@ class MainWindowPlots(MainWindowBase):
     def plotObservedStarsPositions(self):
         log.debug(f"Plotting dot positions")
         self._plotObservedStars(self.positionSkyPlot, self.position_errors,
-                                limit=np.radians(self.dsb_error_limit.value()))
+                                limit=np.radians(self.dsb_sensor_limit_dist.value()))
 
     def plotObservedStarsMagnitudes(self):
         log.debug(f"Plotting dot magnitudes")
         self._plotObservedStars(self.magnitudeSkyPlot, self.magnitude_errors,
-                                limit=np.radians(self.dsb_error_limit.value()))
+                                limit=np.radians(self.dsb_sensor_limit_dist.value()))
 
     def _plotCatalogueStars(self, plot):
         plot.update_stars(
@@ -119,7 +124,7 @@ class MainWindowPlots(MainWindowBase):
     def _plotErrorsDots(self, plot, errors):
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=True)
         magnitudes = self.matcher.sensor_data.stars.intensities(True)
-        plot.update_dots(positions, magnitudes, errors, limit=self.dsb_error_limit.value())
+        plot.update_dots(positions, magnitudes, errors, limit=self.dsb_sensor_limit_dist.value())
 
     def plotPositionErrorsDots(self):
         log.debug(f"Plotting position errors")
@@ -164,7 +169,7 @@ class MainWindowPlots(MainWindowBase):
                 self.matcher.sensor_data.stars.project(self.projection, masked=True),
                 self.matcher.catalogue.vmag(masked=True),
                 self.matcher.sensor_data.stars.calibrate(self.calibration, masked=True),
-                limit=np.radians(self.dsb_error_limit.value()),
+                limit=np.radians(self.dsb_sensor_limit_dist.value()),
                 scale=1 / self.sb_arrow_scale.value(),
             )
         else:

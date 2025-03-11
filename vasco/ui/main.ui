@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>2101</width>
-    <height>1540</height>
+    <width>1773</width>
+    <height>1106</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -756,6 +756,9 @@
                <property name="text">
                 <string>&amp;Optimize</string>
                </property>
+               <property name="icon">
+                <iconset theme="QIcon::ThemeIcon::WeatherClearNight"/>
+               </property>
               </widget>
              </item>
              <item row="2" column="1">
@@ -803,7 +806,7 @@
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer_4">
+        <spacer name="vs_left">
          <property name="orientation">
           <enum>Qt::Orientation::Vertical</enum>
          </property>
@@ -827,35 +830,51 @@
        <enum>QTabWidget::TabPosition::North</enum>
       </property>
       <property name="currentIndex">
-       <number>7</number>
+       <number>8</number>
       </property>
-      <widget class="QWidget" name="tab_sensor">
+      <widget class="QWidget" name="tab_sensor_plot">
        <attribute name="title">
         <string>[&amp;1] Sensor plot</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_4"/>
       </widget>
+      <widget class="QWidget" name="tab_sensor_data">
+       <attribute name="title">
+        <string>[&amp;2] Sensor table</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_15">
+        <item>
+         <widget class="QTableView" name="tv_sensor">
+          <property name="font">
+           <font>
+            <family>Noto Mono</family>
+           </font>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="tab_sky_positions">
        <attribute name="title">
-        <string>[&amp;2] Sky positions</string>
+        <string>[&amp;3] Sky positions</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_2"/>
       </widget>
       <widget class="QWidget" name="tab_sky_magnitudes">
        <attribute name="title">
-        <string>[&amp;3] Sky magnitudes</string>
+        <string>[&amp;4] Sky magnitudes</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_7"/>
       </widget>
       <widget class="QWidget" name="tab_errors_positions">
        <attribute name="title">
-        <string>[&amp;4] Position errors</string>
+        <string>[&amp;5] Position errors</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_12"/>
       </widget>
       <widget class="QWidget" name="tab_errors_magnitudes">
        <attribute name="title">
-        <string>[&amp;5] Magnitude errors</string>
+        <string>[&amp;6] Magnitude errors</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_8"/>
       </widget>
@@ -864,7 +883,7 @@
         <bool>true</bool>
        </property>
        <attribute name="title">
-        <string>[&amp;6] Position correction</string>
+        <string>[&amp;7] Position correction</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
@@ -931,7 +950,7 @@
       </widget>
       <widget class="QWidget" name="tab_correction_magnitudes">
        <attribute name="title">
-        <string>[&amp;7] Magnitude correction</string>
+        <string>[&amp;8] Magnitude correction</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_11">
         <item>
@@ -998,7 +1017,7 @@
       </widget>
       <widget class="QWidget" name="tab">
        <attribute name="title">
-        <string>[&amp;8] Correction table</string>
+        <string>[&amp;9] Correction table</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
@@ -1084,6 +1103,9 @@
                  <property name="text">
                   <string>Export as XML</string>
                  </property>
+                 <property name="icon">
+                  <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
+                 </property>
                 </widget>
                </item>
                <item>
@@ -1099,6 +1121,9 @@
                  </property>
                  <property name="text">
                   <string>Export as CSV</string>
+                 </property>
+                 <property name="icon">
+                  <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
                  </property>
                 </widget>
                </item>
@@ -1288,62 +1313,8 @@
           <property name="spacing">
            <number>3</number>
           </property>
-          <item row="0" column="2">
-           <widget class="QLabel" name="lb_sensor_total">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>48</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>14</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="2">
-           <widget class="QLabel" name="lb_sensor_outside">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>100</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>14</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
           <item row="4" column="2">
-           <widget class="QPushButton" name="pb_mask_dots">
+           <widget class="QPushButton" name="pb_sensor_mask_dist">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
               <horstretch>0</horstretch>
@@ -1358,6 +1329,51 @@
             </property>
             <property name="text">
              <string>Mask unmatched</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="lx_sensor_limit_dist">
+            <property name="text">
+             <string>Error limit</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="lx_sensor_unmasked">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Not masked</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="lx_sensor_outside">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Outside limit</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="3">
+           <widget class="Line" name="line_sensor">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -1401,53 +1417,35 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="0" colspan="3">
-           <widget class="Line" name="line_3">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="lx_sensor_unmasked">
+          <item row="0" column="2">
+           <widget class="QLabel" name="lb_sensor_total">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
-            <property name="text">
-             <string>Not masked</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="lx_sensor_outside">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
+            <property name="minimumSize">
+             <size>
+              <width>48</width>
+              <height>0</height>
+             </size>
             </property>
             <property name="font">
              <font>
-              <pointsize>12</pointsize>
+              <pointsize>14</pointsize>
              </font>
             </property>
             <property name="text">
-             <string>Outside limit</string>
+             <string>0</string>
             </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="lx_error_limit">
-            <property name="text">
-             <string>Error limit</string>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
             </property>
            </widget>
           </item>
           <item row="4" column="1">
-           <widget class="QDoubleSpinBox" name="dsb_error_limit">
+           <widget class="QDoubleSpinBox" name="dsb_sensor_limit_dist">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -1467,7 +1465,7 @@
              <double>5.000000000000000</double>
             </property>
             <property name="singleStep">
-             <double>0.010000000000000</double>
+             <double>0.005000000000000</double>
             </property>
             <property name="stepType">
              <enum>QAbstractSpinBox::StepType::DefaultStepType</enum>
@@ -1477,10 +1475,100 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="0" colspan="3">
-           <widget class="QPushButton" name="pb_sensor_reset">
+          <item row="8" column="0" colspan="3">
+           <widget class="QPushButton" name="pb_sensor_mask_reset">
             <property name="text">
-             <string>Reset</string>
+             <string>Reset mask</string>
+            </property>
+            <property name="icon">
+             <iconset theme="QIcon::ThemeIcon::EditClear"/>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="lb_sensor_outside">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>14</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="lx_sensor_limit_alt">
+            <property name="text">
+             <string>Altitude limit</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QDoubleSpinBox" name="dsb_sensor_limit_alt">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>°</string>
+            </property>
+            <property name="decimals">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <double>90.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.500000000000000</double>
+            </property>
+            <property name="value">
+             <double>10.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="2">
+           <widget class="QPushButton" name="pb_sensor_mask_alt">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>128</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Mask starts that are not close to any dot</string>
+            </property>
+            <property name="text">
+             <string>Mask low</string>
+            </property>
+            <property name="icon">
+             <iconset theme="QIcon::ThemeIcon::GoDown"/>
             </property>
            </widget>
           </item>
@@ -1508,8 +1596,192 @@
           <property name="spacing">
            <number>3</number>
           </property>
-          <item row="4" column="2">
-           <widget class="QLabel" name="lb_catalogue_outside">
+          <item row="10" column="2">
+           <widget class="QPushButton" name="pb_catalogue_mask_dist">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>128</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Mask starts that are not close to any dot</string>
+            </property>
+            <property name="text">
+             <string>Mask distant</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QLabel" name="lx_catalogue_outside">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Outside limit</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="2">
+           <widget class="QPushButton" name="pb_catalogue_mask_mag">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>128</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Mask faint</string>
+            </property>
+            <property name="icon">
+             <iconset theme="weather-clear-night"/>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QDoubleSpinBox" name="dsb_catalogue_limit_dist">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>°</string>
+            </property>
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="maximum">
+             <double>10.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.050000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="1">
+           <widget class="QDoubleSpinBox" name="dsb_catalogue_limit_mag">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+            <property name="prefix">
+             <string/>
+            </property>
+            <property name="suffix">
+             <string>m</string>
+            </property>
+            <property name="decimals">
+             <number>1</number>
+            </property>
+            <property name="minimum">
+             <double>-5.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>10.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+            <property name="value">
+             <double>5.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="1">
+           <widget class="QDoubleSpinBox" name="dsb_catalogue_limit_alt">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>°</string>
+            </property>
+            <property name="decimals">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <double>90.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.500000000000000</double>
+            </property>
+            <property name="value">
+             <double>10.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="0">
+           <widget class="QLabel" name="lx_catalogue_limit_mag">
+            <property name="text">
+             <string>Magnitude limit</string>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="2">
+           <widget class="QPushButton" name="pb_catalogue_mask_alt">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>128</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Mask starts that are not close to any dot</string>
+            </property>
+            <property name="text">
+             <string>Mask low</string>
+            </property>
+            <property name="icon">
+             <iconset theme="QIcon::ThemeIcon::GoDown"/>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="lb_catalogue_unmasked">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
               <horstretch>0</horstretch>
@@ -1553,22 +1825,57 @@
             </property>
            </widget>
           </item>
+          <item row="20" column="0" colspan="3">
+           <widget class="QPushButton" name="pb_catalogue_mask_reset">
+            <property name="text">
+             <string>Reset mask</string>
+            </property>
+            <property name="icon">
+             <iconset theme="QIcon::ThemeIcon::EditClear"/>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0">
+           <widget class="QLabel" name="lx_catalogue_limit_dist">
+            <property name="text">
+             <string>Distance limit</string>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="0">
+           <widget class="QLabel" name="lx_catalogue_limit_alt">
+            <property name="text">
+             <string>Altitude limit</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="QLabel" name="lx_catalogue_total">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Total</string>
+            </property>
+           </widget>
+          </item>
           <item row="9" column="0" colspan="3">
-           <widget class="Line" name="line_2">
+           <widget class="Line" name="line_catalogue">
             <property name="orientation">
              <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
-          <item row="21" column="0" colspan="3">
-           <widget class="QPushButton" name="pb_catalogue_reset">
-            <property name="text">
-             <string>Reset</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="2">
-           <widget class="QLabel" name="lb_catalogue_unmasked">
+          <item row="4" column="2">
+           <widget class="QLabel" name="lb_catalogue_outside">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
               <horstretch>0</horstretch>
@@ -1591,47 +1898,6 @@
             </property>
             <property name="alignment">
              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="0">
-           <widget class="QLabel" name="lx_distance_limit">
-            <property name="text">
-             <string>Distance limit</string>
-            </property>
-           </widget>
-          </item>
-          <item row="12" column="1">
-           <widget class="QDoubleSpinBox" name="dsb_magnitude_limit">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-            </property>
-            <property name="prefix">
-             <string/>
-            </property>
-            <property name="suffix">
-             <string>m</string>
-            </property>
-            <property name="decimals">
-             <number>1</number>
-            </property>
-            <property name="minimum">
-             <double>-5.000000000000000</double>
-            </property>
-            <property name="maximum">
-             <double>10.000000000000000</double>
-            </property>
-            <property name="singleStep">
-             <double>0.100000000000000</double>
-            </property>
-            <property name="value">
-             <double>5.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -1659,125 +1925,6 @@
             </property>
             <property name="alignment">
              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0" colspan="2">
-           <widget class="QLabel" name="lx_catalogue_total">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>12</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Total objects</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="2">
-           <widget class="QPushButton" name="pb_mask_distant">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>128</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string>Mask starts that are not close to any dot</string>
-            </property>
-            <property name="text">
-             <string>Mask distant</string>
-            </property>
-           </widget>
-          </item>
-          <item row="17" column="0" colspan="2">
-           <widget class="Line" name="line">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="1">
-           <widget class="QDoubleSpinBox" name="dsb_distance_limit">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-            </property>
-            <property name="suffix">
-             <string>°</string>
-            </property>
-            <property name="decimals">
-             <number>3</number>
-            </property>
-            <property name="maximum">
-             <double>10.000000000000000</double>
-            </property>
-            <property name="singleStep">
-             <double>0.100000000000000</double>
-            </property>
-            <property name="value">
-             <double>1.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="12" column="2">
-           <widget class="QPushButton" name="pb_mask_faint">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>128</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Mask faint</string>
-            </property>
-           </widget>
-          </item>
-          <item row="12" column="0">
-           <widget class="QLabel" name="lx_magnitude_limit">
-            <property name="text">
-             <string>Magnitude limit</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0" colspan="2">
-           <widget class="QLabel" name="lx_catalogue_outside">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>12</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Outside limit</string>
             </property>
            </widget>
           </item>
@@ -1977,7 +2124,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>2101</width>
+     <width>1773</width>
      <height>23</height>
     </rect>
    </property>
@@ -2114,11 +2261,11 @@
   <tabstop>pb_export</tabstop>
   <tabstop>pb_optimize</tabstop>
   <tabstop>sb_maxiter</tabstop>
-  <tabstop>dsb_distance_limit</tabstop>
-  <tabstop>pb_mask_distant</tabstop>
-  <tabstop>dsb_magnitude_limit</tabstop>
-  <tabstop>pb_mask_faint</tabstop>
-  <tabstop>pb_catalogue_reset</tabstop>
+  <tabstop>dsb_catalogue_limit_dist</tabstop>
+  <tabstop>pb_catalogue_mask_dist</tabstop>
+  <tabstop>dsb_catalogue_limit_mag</tabstop>
+  <tabstop>pb_catalogue_mask_mag</tabstop>
+  <tabstop>pb_catalogue_mask_reset</tabstop>
   <tabstop>cb_show_errors</tabstop>
   <tabstop>cb_show_grid</tabstop>
   <tabstop>hs_bandwidth</tabstop>

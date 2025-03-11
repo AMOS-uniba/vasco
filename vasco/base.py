@@ -57,11 +57,14 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         self.lb_rms_error.setText(f'{np.degrees(rms_error):.6f}°')
         self.lb_max_error.setText(f'{np.degrees(max_error):.6f}°')
 
-        errors = self.matcher.position_errors(self.projection, masked=True)
+        errors = self.matcher.distance_sky(self.projection, masked=True)
         dot_to_nearest_star = np.min(errors, axis=1, initial=np.inf)
-        star_to_nearest_dot = np.min(errors, axis=1, initial=np.inf)
+        star_to_nearest_dot = np.min(errors, axis=0, initial=np.inf)
 
-        outside_limit = dot_to_nearest_star[dot_to_nearest_star.position_errors > np.radians(self.dsb_error_limit.value())].size
+        limit = np.radians(self.dsb_sensor_limit_dist.value())
+        outside_limit = dot_to_nearest_star[dot_to_nearest_star > limit].size
         self.lb_sensor_outside.setText(f'{outside_limit}')
-        outside_limit = star_to_nearest_dot[star_to_nearest_dot.position_errors > np.radians(self.dsb_error_limit.value())].size
+
+        limit = np.radians(self.dsb_catalogue_limit_dist.value())
+        outside_limit = star_to_nearest_dot[star_to_nearest_dot > limit].size
         self.lb_catalogue_outside.setText(f'{outside_limit}')

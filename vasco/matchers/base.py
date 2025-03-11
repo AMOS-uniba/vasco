@@ -94,7 +94,7 @@ class Matcher(metaclass=ABCMeta):
         else:
             log.debug(f"Requesting catalogue for {self.location}, {self.time}, {masked} (using cached)")
 
-        converted = np.array([np.pi / 2 - self._altaz.alt.radian, self._altaz.az.radian], dtype=float).T
+        converted = np.array([self._altaz.alt.radian, self._altaz.az.radian], dtype=float).T
         if masked:
             return converted[self.catalogue.mask]
         else:
@@ -109,12 +109,12 @@ class Matcher(metaclass=ABCMeta):
         return vmag
 
     @abstractmethod
-    def position_errors(self, projection: Projection, *, masked: bool) -> np.ndarray[float]:
-        """ Find position error for each dot """
+    def distance_sky(self, projection: Projection, *, masked: bool):
+        pass
 
     @abstractmethod
-    def position_errors_inverse(self, projection: Projection, *, masked: bool) -> np.ndarray[float]:
-        """ Find position error for each star """
+    def position_errors_sky(self, projection: Projection, axis: int, *, masked: bool) -> np.ndarray[float]:
+        """ Find position error for each dot """
 
     def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
         pass
@@ -123,11 +123,12 @@ class Matcher(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def magnitude_errors(self,
-                         projection: Projection,
-                         calibration: Calibration,
-                         *,
-                         masked: bool) -> np.ndarray:
+    def magnitude_errors_sky(self,
+                             projection: Projection,
+                             calibration: Calibration,
+                             axis: int,
+                             *,
+                             masked: bool) -> np.ndarray:
         """ Find magnitude error for each dot """
 
     @staticmethod
@@ -173,7 +174,7 @@ class Matcher(metaclass=ABCMeta):
             np.put(vec, ivariable, variable)
             np.put(vec, ifixed, np.array(args))
 
-            return self.rms_error(self.position_errors(self.projection_cls(*vec), masked=True))
+            return self.rms_error(self.position_errors_sky(self.projection_cls(*vec), axis=1, masked=True))
 
         return func
 

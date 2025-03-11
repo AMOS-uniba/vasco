@@ -2,7 +2,7 @@ from .base import Exporter
 
 
 class XMLExporter(Exporter):
-    """ XML based meteor exporter. Currently a semi-hardcoded mess but works for typical use cases. """
+    """ XML-based meteor exporter. Currently, it is a semi-hardcoded mess, but works for typical use cases. """
 
     def export(self, filename):
         with open(filename, 'w') as file:

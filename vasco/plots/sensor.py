@@ -32,7 +32,7 @@ class SensorPlot(BasePlot):
 
     def update(self, data):
         self.axis.set_xlim([data.rect.xmin, data.rect.xmax])
-        self.axis.set_ylim([data.rect.ymax, data.rect.ymin])
+        self.axis.set_ylim([data.rect.ymin, data.rect.ymax])
         self.scatter_stars.set_offsets(data._stars.xy)
         self.scatter_stars.set_sizes(data._stars.i / 100)
         self.scatter_meteor.set_offsets(data._meteor.xy)

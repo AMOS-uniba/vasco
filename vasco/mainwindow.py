@@ -18,6 +18,8 @@ from astropy.time import Time
 
 from matchers import Matchmaker, Counsellor
 from amosutils.projections import BorovickaProjection
+
+from models.qcataloguemodel import QCatalogueModel
 from plotting import MainWindowPlots
 from models import SensorData, QMeteorModel
 from export import XMLExporter
@@ -29,8 +31,8 @@ mpl.use('Qt5Agg')
 
 log = logging.getLogger('vasco')
 
-VERSION = "0.8.0"
-DATE = "2023-07-18"
+VERSION = "0.9.0"
+DATE = "2025-03-11"
 
 np.set_printoptions(edgeitems=10, linewidth=100000, formatter=dict(float=lambda x: f"{x:.6f}"))
 
@@ -97,13 +99,12 @@ class MainWindow(MainWindowPlots):
         self.ac_load_sighting.triggered.connect(self.loadSighting)
         self.ac_load_catalogue.triggered.connect(self.loadCatalogue)
         self.ac_export_meteor.triggered.connect(self.exportCorrectedMeteor)
-        self.ac_mask_unmatched.triggered.connect(self.maskSensor)
+        self.ac_mask_unmatched.triggered.connect(self.maskSensorDist)
         self.ac_create_pairing.triggered.connect(self.pair)
         self.ac_load_parameters.triggered.connect(self.importProjectionParameters)
         self.ac_save_parameters.triggered.connect(self.exportProjectionParameters)
         self.ac_optimize.triggered.connect(self.optimize)
         self.ac_about.triggered.connect(self.displayAbout)
-
 
         self.cb_stations.currentIndexChanged.connect(self.selectStation)
         self.dt_time.dateTimeChanged.connect(self.updateTime)
@@ -121,12 +122,18 @@ class MainWindow(MainWindowPlots):
         self.pb_export.clicked.connect(self.exportProjectionParameters)
         self.pb_import.clicked.connect(self.importProjectionParameters)
 
+        # Sensor operations
+        self.pb_sensor_mask_dist.clicked.connect(self.maskSensorDist)
+        self.pb_sensor_mask_alt.clicked.connect(self.maskSensorAlt)
+        self.pb_sensor_mask_reset.clicked.connect(self.resetSensorMask)
+        self.dsb_sensor_limit_dist.valueChanged.connect(self.onErrorLimitChanged)
+
         # Catalogue operations
-        self.pb_mask_dots.clicked.connect(self.maskSensor)
-        self.pb_mask_distant.clicked.connect(self.maskCatalogueDistant)
-        self.pb_mask_faint.clicked.connect(self.maskCatalogueFaint)
-        self.pb_catalogue_reset.clicked.connect(self.resetCatalogue)
-        self.dsb_error_limit.valueChanged.connect(self.onErrorLimitChanged)
+        self.pb_catalogue_mask_dist.clicked.connect(self.maskCatalogueDist)
+        self.pb_catalogue_mask_mag.clicked.connect(self.maskCatalogueMag)
+        self.pb_catalogue_mask_alt.clicked.connect(self.maskCatalogueAlt)
+        self.pb_catalogue_mask_reset.clicked.connect(self.resetCatalogueMask)
+        self.dsb_catalogue_limit_dist.valueChanged.connect(self.onErrorLimitChanged)
 
         # Smoother
         self.hs_bandwidth.actionTriggered.connect(self.onBandwidthSettingChanged)
@@ -286,10 +293,10 @@ class MainWindow(MainWindowPlots):
         self.matcher = Matchmaker(self.location, self.time)
 
     def computePositionErrors(self):
-        self.position_errors = self.matcher.position_errors(self.projection, masked=True)
+        self.position_errors = self.matcher.position_errors_sky(self.projection, 1, masked=True)
 
     def computeMagnitudeErrors(self):
-        self.magnitude_errors = self.matcher.magnitude_errors(self.projection, self.calibration, masked=True)
+        self.magnitude_errors = self.matcher.magnitude_errors_sky(self.projection, self.calibration, 1, masked=True)
 
     def loadCatalogue(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "catalogues",
@@ -430,6 +437,30 @@ class MainWindow(MainWindowPlots):
         self.w_input.repaint()
         self.onProjectionParametersChanged()
 
+    def updateSensorTable(self):
+        positions = self.matcher.sensor_data.stars.project(self.projection, masked=False)
+        x = self.matcher.sensor_data.stars.xs(masked=False)
+        y = self.matcher.sensor_data.stars.ys(masked=False)
+        shifted = self.matcher.sensor_data.shifter.invert(x, y)
+
+        data = dotmap.DotMap(
+            x=x,
+            y=y,
+            px=shifted[0],
+            py=shifted[1],
+            alt=np.degrees(positions[..., 0]),
+            az=np.degrees(positions[..., 1]),
+            mask=self.matcher.sensor_data.stars.mask,
+            count=self.matcher.sensor_data.stars.count,
+            _dynamic=False,
+        )
+
+        model = QCatalogueModel(data)
+        self.tv_sensor.setModel(model)
+
+        for i, width in enumerate([120, 120, 160, 160, 120, 120, 80]):
+            self.tv_sensor.setColumnWidth(i, width)
+
     def updateMeteorTable(self):
         if self.paired:
             self.tabs_table.setCurrentIndex(1)
@@ -441,57 +472,84 @@ class MainWindow(MainWindowPlots):
         else:
             self.tabs_table.setCurrentIndex(0)
 
-    def maskSensor(self):
+    def maskSensorDist(self):
         if self.paired:
             self.pair()
 
-        errors = self.matcher.position_errors(self.projection, masked=False)
-        self.matcher.mask_sensor_data(errors < np.radians(self.dsb_error_limit.value()))
-        log.info(f"Culled the dots to {c.param(f'{self.dsb_error_limit.value():.3f}')}°: "
+        errors = self.matcher.position_errors_sky(self.projection, axis=1, masked=False)
+        limit = self.dsb_sensor_limit_dist.value()
+        self.matcher.mask_sensor_data(errors < np.radians(limit))
+        log.info(f"Masked reference dots > {c.param(f'{limit:.3f}')}°: "
                  f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
+
         self.onProjectionParametersChanged()
         self.showCounts()
 
-    def resetSensor(self):
+    def maskSensorAlt(self):
+        if self.paired:
+            self.pair()
+
+        positions = self.matcher.sensor_data.stars.project(self.projection, masked=False)
+        limit = self.dsb_sensor_limit_dist.value()
+        self.matcher.mask_sensor_data(positions[..., 0] < np.radians(90 - limit))
+        log.info(f"Masked reference dots < {c.param(f'{limit:.1f}')}°: "
+                 f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
+
+        self.onProjectionParametersChanged()
+        self.showCounts()
+
+    def resetSensorMask(self):
         log.debug("Reset the sensor mask")
         self.matcher.sensor_data.reset_mask()
         self.onProjectionParametersChanged()
         self.showCounts()
 
-    def maskCatalogueDistant(self):
+    def _updateAfterMasking(self):
+        """
+        Update everything after the catalogue mask was changed
+        """
         if self.paired:
             self.pair()
 
-        errors = self.matcher.position_errors_inverse(self.projection, masked=False)
-        self.matcher.mask_catalogue(errors < np.radians(self.dsb_distance_limit.value()))
-        log.info(f"Culled the catalogue to {c.num(f'{self.dsb_distance_limit.value():.3f}')}°: "
+        self.positionSkyPlot.invalidate_stars()
+        self.magnitudeSkyPlot.invalidate_stars()
+
+        self.computePositionErrors()
+        self.computeMagnitudeErrors()
+        self.updatePlots()
+        self.showCounts()
+
+    def maskCatalogueDist(self):
+        if self.paired:
+            self.pair()
+
+        errors = self.matcher.position_errors_sky(self.projection, axis=0, masked=False)
+        limit = self.dsb_catalogue_limit_dist.value()
+        self.matcher.mask_catalogue(errors < np.radians(limit))
+        log.info(f"Masked the catalogue to errors <{c.num(f'{limit:.3f}')}°: "
                  f"{c.num(self.matcher.catalogue.visible_count)} stars used")
 
-        self.positionSkyPlot.invalidate_stars()
-        self.magnitudeSkyPlot.invalidate_stars()
+        self._updateAfterMasking()
 
-        self.computePositionErrors()
-        self.computeMagnitudeErrors()
-        self.updatePlots()
-        self.showCounts()
+    def maskCatalogueMag(self):
+        limit = self.dsb_catalogue_limit_mag.value()
+        self.matcher.mask_catalogue(self.matcher.vmag_to_numpy(masked=False) < limit)
+        log.info(f"Masked the catalogue to magnitude <{c.num(f'{limit:.1f}')}m: "
+                 f"{c.num(self.matcher.catalogue.visible_count)} stars used")
 
-    def maskCatalogueFaint(self):
-        self.matcher.mask_catalogue(self.matcher.vmag_to_numpy(masked=False) < self.dsb_magnitude_limit.value())
-        log.info(f"Culled the catalogue to magnitude {self.dsb_magnitude_limit.value()}m: "
-                 f"{self.matcher.catalogue.visible_count} stars used")
+        self._updateAfterMasking()
 
-        if self.paired:
-            self.pair()
+    def maskCatalogueAlt(self):
+        limit = self.dsb_catalogue_limit_alt.value()
+        self.matcher.mask_catalogue(
+            (self.matcher.altaz(masked=False)[..., 0]) > np.radians(limit)
+        )
+        log.info(f"Masked the catalogue to altitude >{c.num(f'{limit:.1f}')}m: "
+                 f"{c.num(self.matcher.catalogue.visible_count)} stars used")
 
-        self.positionSkyPlot.invalidate_stars()
-        self.magnitudeSkyPlot.invalidate_stars()
+        self._updateAfterMasking()
 
-        self.computePositionErrors()
-        self.computeMagnitudeErrors()
-        self.updatePlots()
-        self.showCounts()
-
-    def resetCatalogue(self):
+    def resetCatalogueMask(self):
         log.debug("Reset the catalogue mask")
         self.matcher.catalogue.mask = None
         self.onProjectionParametersChanged()
@@ -556,6 +614,6 @@ class MainWindow(MainWindowPlots):
         msg.setIcon(QMessageBox.Icon.Information)
         msg.setWindowTitle("About")
         msg.setModal(True)
-        msg.setInformativeText(f"Version {VERSION}, built on {DATE}")
+        msg.setInformativeText(f"Version {VERSION}, {DATE}")
         msg.move((self.width() - msg.width()) // 2, (self.height() - msg.height()) // 2)
         return msg.exec()
