@@ -1,4 +1,6 @@
-from PyQt6.QtCore import Qt, QVariant, QModelIndex, QAbstractTableModel
+from PyQt6.QtCore import Qt, QModelIndex, QAbstractTableModel
+from PyQt6.QtGui import QIcon, QColor
+from PyQt6.QtWidgets import QWidget, QStyle
 
 
 class QCatalogueModel(QAbstractTableModel):
@@ -12,7 +14,8 @@ class QCatalogueModel(QAbstractTableModel):
                 if orientation == Qt.Orientation.Horizontal:
                     return ["x [px]", "y [px]", "x [mm]", "y [mm]", "alt", "az", "mask"][section]
             case _:
-                return QVariant()
+                return None
+
 
     def columnCount(self, parent=None):
         return 7
@@ -38,8 +41,11 @@ class QCatalogueModel(QAbstractTableModel):
                     case 5:
                         return f"{self._data.az[row]:.6f}°"
                     case 6:
-                        return f"{self._data.mask[row]}"
+                        return f"{'\u2714' if self._data.mask[row] else '\u274C'}"
                     case _:
-                        return QVariant()
+                        return None
             case Qt.ItemDataRole.TextAlignmentRole:
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            case Qt.ItemDataRole.ForegroundRole:
+                if index.column() == 6:
+                    return QColor('green') if self._data.mask[index.row()] else QColor('red')

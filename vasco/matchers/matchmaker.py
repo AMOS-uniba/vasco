@@ -83,20 +83,25 @@ class Matchmaker(Matcher):
                             projection: Projection,
                             axis: int,
                             *,
-                            masked: bool) -> np.ndarray[float]:
-        return np.min(self.distance_sky(projection, masked=masked), axis=axis, initial=np.pi / 2)
+                            mask_catalogue: bool,
+                            mask_sensor: bool) -> np.ndarray[float]:
+        return np.min(self.distance_sky(projection, mask_catalogue=mask_catalogue, mask_sensor=mask_sensor), axis=axis, initial=np.pi / 2)
 
     def magnitude_errors_sky(self,
                              projection: Projection,
                              calibration: Calibration,
                              axis: int,
                              *,
-                             masked: bool) -> np.ndarray:
+                             mask_catalogue: bool,
+                             mask_sensor: bool) -> np.ndarray:
         # Find which star is the nearest for every dot
-        nearest = self.find_nearest_index(self.distance_sky(projection, masked=masked), axis=axis)
-        obs = calibration(self.sensor_data.stars.intensities(masked=masked))
+        nearest = self.find_nearest_index(
+            self.distance_sky(projection, mask_catalogue=mask_catalogue, mask_sensor=mask_sensor),
+            axis=axis
+        )
+        obs = calibration(self.sensor_data.stars.intensities(masked=mask_sensor))
         # Filter the catalogue by that index
-        cat = self.catalogue.vmag(self.location, self.time, masked=masked)[nearest]
+        cat = self.catalogue.vmag(self.location, self.time, masked=mask_catalogue)[nearest]
 
         if cat.size == 0:
             cat = np.tile(np.nan, obs.shape)
@@ -111,10 +116,10 @@ class Matchmaker(Matcher):
     def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
         raise NotImplementedError("Matchmaker cannot print corrected meteors, use a Counsellor instead")
 
-    def distance_sky(self, projection: Projection, *, masked: bool):
+    def distance_sky(self, projection: Projection, *, mask_catalogue: bool, mask_sensor: bool):
         return self._compute_distances_sky(
-            self.sensor_data.stars.project(projection, masked=masked),
-            self.altaz(masked=masked),
+            self.sensor_data.stars.project(projection, masked=mask_sensor),
+            self.altaz(masked=mask_catalogue),
         )
 
     @staticmethod

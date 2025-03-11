@@ -57,7 +57,7 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         self.lb_rms_error.setText(f'{np.degrees(rms_error):.6f}°')
         self.lb_max_error.setText(f'{np.degrees(max_error):.6f}°')
 
-        errors = self.matcher.distance_sky(self.projection, masked=True)
+        errors = self.matcher.distance_sky(self.projection, mask_catalogue=True, mask_sensor=True)
         dot_to_nearest_star = np.min(errors, axis=1, initial=np.inf)
         star_to_nearest_dot = np.min(errors, axis=0, initial=np.inf)
 

@@ -293,10 +293,12 @@ class MainWindow(MainWindowPlots):
         self.matcher = Matchmaker(self.location, self.time)
 
     def computePositionErrors(self):
-        self.position_errors = self.matcher.position_errors_sky(self.projection, 1, masked=True)
+        self.position_errors = self.matcher.position_errors_sky(self.projection, 1,
+                                                                mask_catalogue=True, mask_sensor=True)
 
     def computeMagnitudeErrors(self):
-        self.magnitude_errors = self.matcher.magnitude_errors_sky(self.projection, self.calibration, 1, masked=True)
+        self.magnitude_errors = self.matcher.magnitude_errors_sky(self.projection, self.calibration, 1,
+                                                                  mask_catalogue=True, mask_sensor=True)
 
     def loadCatalogue(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "catalogues",
@@ -476,7 +478,7 @@ class MainWindow(MainWindowPlots):
         if self.paired:
             self.pair()
 
-        errors = self.matcher.position_errors_sky(self.projection, axis=1, masked=False)
+        errors = self.matcher.position_errors_sky(self.projection, axis=1, mask_catalogue=True, mask_sensor=False)
         limit = self.dsb_sensor_limit_dist.value()
         self.matcher.mask_sensor_data(errors < np.radians(limit))
         log.info(f"Masked reference dots > {c.param(f'{limit:.3f}')}°: "
@@ -523,7 +525,7 @@ class MainWindow(MainWindowPlots):
         if self.paired:
             self.pair()
 
-        errors = self.matcher.position_errors_sky(self.projection, axis=0, masked=False)
+        errors = self.matcher.position_errors_sky(self.projection, axis=0, mask_catalogue=False, mask_sensor=True)
         limit = self.dsb_catalogue_limit_dist.value()
         self.matcher.mask_catalogue(errors < np.radians(limit))
         log.info(f"Masked the catalogue to errors <{c.num(f'{limit:.3f}')}°: "

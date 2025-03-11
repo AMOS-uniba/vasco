@@ -110,11 +110,16 @@ class Matcher(metaclass=ABCMeta):
         return vmag
 
     @abstractmethod
-    def distance_sky(self, projection: Projection, *, masked: bool):
+    def distance_sky(self, projection: Projection, *, mask_catalogue: bool, mask_sensor: bool):
         pass
 
     @abstractmethod
-    def position_errors_sky(self, projection: Projection, axis: int, *, masked: bool) -> np.ndarray[float]:
+    def position_errors_sky(self,
+                            projection: Projection,
+                            axis: int,
+                            *,
+                            mask_catalogue: bool,
+                            mask_sensor: bool) -> np.ndarray[float]:
         """ Find position error for each dot """
 
     def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
@@ -129,7 +134,8 @@ class Matcher(metaclass=ABCMeta):
                              calibration: Calibration,
                              axis: int,
                              *,
-                             masked: bool) -> np.ndarray:
+                             mask_catalogue: bool,
+                             mask_sensor: bool) -> np.ndarray:
         """ Find magnitude error for each dot """
 
     @staticmethod
@@ -175,7 +181,8 @@ class Matcher(metaclass=ABCMeta):
             np.put(vec, ivariable, variable)
             np.put(vec, ifixed, np.array(args))
 
-            return self.rms_error(self.position_errors_sky(self.projection_cls(*vec), axis=1, masked=True))
+            return self.rms_error(self.position_errors_sky(self.projection_cls(*vec), axis=1,
+                                                           mask_catalogue=True, mask_sensor=True))
 
         return func
 
@@ -195,6 +202,7 @@ class Matcher(metaclass=ABCMeta):
             log.warning("At least one parameter must be allowed to vary")
             return tuple(x0)
 
+        # Do the actual optimization over the selected values
         result = sp.optimize.minimize(
             func,
             x0[mask],
