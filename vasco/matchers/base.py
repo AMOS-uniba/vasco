@@ -81,6 +81,7 @@ class Matcher(metaclass=ABCMeta):
             self.invalidate_altaz()
 
     def invalidate_altaz(self):
+        log.debug("Invalidating the cached altaz")
         self._altaz = None
 
     def altaz(self, *, masked: bool, force_reload: bool = False):
