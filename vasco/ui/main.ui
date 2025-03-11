@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1773</width>
-    <height>1106</height>
+    <width>1834</width>
+    <height>965</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -395,7 +395,7 @@
           <item>
            <widget class="QGroupBox" name="gb_sensor_alignment">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -427,12 +427,6 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>10</height>
-                </size>
-               </property>
               </widget>
              </item>
              <item row="1" column="0">
@@ -442,12 +436,6 @@
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>10</height>
-                </size>
                </property>
               </widget>
              </item>
@@ -459,12 +447,6 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>10</height>
-                </size>
-               </property>
               </widget>
              </item>
             </layout>
@@ -473,7 +455,7 @@
           <item>
            <widget class="QGroupBox" name="gb_elliptic">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -498,48 +480,16 @@
               <number>3</number>
              </property>
              <item row="0" column="2">
-              <widget class="QParameterWidget" name="pw_A" native="true">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>10</height>
-                </size>
-               </property>
-              </widget>
+              <widget class="QParameterWidget" name="pw_A" native="true"/>
              </item>
              <item row="1" column="2">
-              <widget class="QParameterWidget" name="pw_F" native="true">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>10</height>
-                </size>
-               </property>
-              </widget>
+              <widget class="QParameterWidget" name="pw_F" native="true"/>
              </item>
             </layout>
            </widget>
           </item>
           <item>
            <widget class="QGroupBox" name="gb_radial">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
             <property name="title">
              <string>Radial distance scaling</string>
             </property>
@@ -560,84 +510,19 @@
               <number>3</number>
              </property>
              <item row="3" column="1">
-              <widget class="QParameterWidget" name="pw_S" native="true">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>10</height>
-                </size>
-               </property>
-              </widget>
+              <widget class="QParameterWidget" name="pw_S" native="true"/>
              </item>
              <item row="4" column="1">
-              <widget class="QParameterWidget" name="pw_D" native="true">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>10</height>
-                </size>
-               </property>
-              </widget>
+              <widget class="QParameterWidget" name="pw_D" native="true"/>
              </item>
              <item row="0" column="1">
-              <widget class="QParameterWidget" name="pw_V" native="true">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>10</height>
-                </size>
-               </property>
-              </widget>
+              <widget class="QParameterWidget" name="pw_V" native="true"/>
              </item>
              <item row="5" column="1">
-              <widget class="QParameterWidget" name="pw_P" native="true">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>10</height>
-                </size>
-               </property>
-              </widget>
+              <widget class="QParameterWidget" name="pw_P" native="true"/>
              </item>
              <item row="6" column="1">
-              <widget class="QParameterWidget" name="pw_Q" native="true">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>10</height>
-                </size>
-               </property>
-              </widget>
+              <widget class="QParameterWidget" name="pw_Q" native="true"/>
              </item>
             </layout>
            </widget>
@@ -670,36 +555,10 @@
               <number>3</number>
              </property>
              <item row="1" column="0">
-              <widget class="QParameterWidget" name="pw_epsilon" native="true">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>10</height>
-                </size>
-               </property>
-              </widget>
+              <widget class="QParameterWidget" name="pw_epsilon" native="true"/>
              </item>
              <item row="2" column="0">
-              <widget class="QParameterWidget" name="pw_E" native="true">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>10</height>
-                </size>
-               </property>
-              </widget>
+              <widget class="QParameterWidget" name="pw_E" native="true"/>
              </item>
             </layout>
            </widget>
@@ -712,6 +571,9 @@
             <property name="text">
              <string>Import from file</string>
             </property>
+            <property name="icon">
+             <iconset theme="QIcon::ThemeIcon::DocumentOpen"/>
+            </property>
            </widget>
           </item>
           <item>
@@ -721,6 +583,9 @@
             </property>
             <property name="text">
              <string>Export to file</string>
+            </property>
+            <property name="icon">
+             <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
             </property>
            </widget>
           </item>
@@ -830,7 +695,7 @@
        <enum>QTabWidget::TabPosition::North</enum>
       </property>
       <property name="currentIndex">
-       <number>8</number>
+       <number>7</number>
       </property>
       <widget class="QWidget" name="tab_sensor_plot">
        <attribute name="title">
@@ -1026,7 +891,7 @@
            <bool>true</bool>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tab_table_disabled">
            <property name="enabled">
@@ -1175,6 +1040,9 @@
          </property>
          <property name="text">
           <string>Pair</string>
+         </property>
+         <property name="icon">
+          <iconset theme="QIcon::ThemeIcon::EditCopy"/>
          </property>
         </widget>
        </item>
@@ -1478,7 +1346,7 @@
           <item row="8" column="0" colspan="3">
            <widget class="QPushButton" name="pb_sensor_mask_reset">
             <property name="text">
-             <string>Reset mask</string>
+             <string>Reset sensor mask</string>
             </property>
             <property name="icon">
              <iconset theme="QIcon::ThemeIcon::EditClear"/>
@@ -1828,7 +1696,7 @@
           <item row="20" column="0" colspan="3">
            <widget class="QPushButton" name="pb_catalogue_mask_reset">
             <property name="text">
-             <string>Reset mask</string>
+             <string>Reset catalogue mask</string>
             </property>
             <property name="icon">
              <iconset theme="QIcon::ThemeIcon::EditClear"/>
@@ -2124,7 +1992,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1773</width>
+     <width>1834</width>
      <height>23</height>
     </rect>
    </property>
