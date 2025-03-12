@@ -101,7 +101,7 @@ class MainWindow(MainWindowPlots):
         self.ac_load_catalogue.triggered.connect(self.load_catalogue)
         self.ac_export_meteor.triggered.connect(self.export_corrected_meteor)
         self.ac_mask_unmatched.triggered.connect(self.mask_sensor_dist)
-        self.ac_create_pairing.triggered.connect(self.pair)
+        self.ac_create_pairing.triggered.connect(self.on_pair_clicked)
         self.ac_load_parameters.triggered.connect(self.import_projection_parameters)
         self.ac_save_parameters.triggered.connect(self.export_projection_parameters)
         self.ac_optimize.triggered.connect(self.optimize)
@@ -119,7 +119,7 @@ class MainWindow(MainWindowPlots):
         # Parameter global interface
         self.pb_optimize.clicked.connect(self.optimize)
         self.sb_maxiter.valueChanged.connect(self.on_maxiter_changed)
-        self.pb_pair.clicked.connect(self.pair)
+        self.pb_pair.clicked.connect(self.on_pair_clicked)
         self.pb_import.clicked.connect(self.import_projection_parameters)
         self.pb_export.clicked.connect(self.export_projection_parameters)
 
@@ -486,7 +486,7 @@ class MainWindow(MainWindowPlots):
 
     def mask_sensor_dist(self):
         if self.paired:
-            self.pair()
+            self.on_pair_clicked()
 
         errors = self.matcher.position_errors_sky(self.projection, axis=1, mask_catalogue=True, mask_sensor=False)
         limit = self.dsb_sensor_limit_dist.value()
@@ -499,7 +499,7 @@ class MainWindow(MainWindowPlots):
 
     def mask_sensor_alt(self):
         if self.paired:
-            self.pair()
+            self.on_pair_clicked()
 
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=False)
         limit = self.dsb_sensor_limit_alt.value()
@@ -521,7 +521,7 @@ class MainWindow(MainWindowPlots):
         Update everything after the catalogue mask was changed
         """
         if self.paired:
-            self.pair()
+            self.on_pair_clicked()
 
         self.positionSkyPlot.invalidate_stars()
         self.positionSkyPlot.invalidate_dots()
@@ -535,7 +535,7 @@ class MainWindow(MainWindowPlots):
 
     def mask_catalogue_dist(self):
         if self.paired:
-            self.pair()
+            self.on_pair_clicked()
 
         errors = self.matcher.position_errors_sky(self.projection, axis=0, mask_catalogue=False, mask_sensor=True)
         limit = self.dsb_catalogue_limit_dist.value()
@@ -599,15 +599,17 @@ class MainWindow(MainWindowPlots):
     def grid_resolution(self):
         return self.sb_resolution.value()
 
-    def pair(self):
+    def on_pair_clicked(self):
         if (rms_error := np.degrees(self.matcher.rms_error(self.position_errors))) > 0.5:
             reply = QMessageBox.warning(self, "Mean position error limit exceeded!",
                                         f"Mean position error is currently {rms_error:.6f}°.\n"
                                         f"Are you sure your approximate solution is correct?",
                                         QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
-            if reply != QMessageBox.StandardButton.Ok:
+            if reply == QMessageBox.StandardButton.Ok:
                 return False
+        self.pair()
 
+    def pair(self):
         self.matcher = self.matcher.pair(self.projection)
         self.matcher.update_position_smoother(self.projection, bandwidth=self.bandwidth())
         self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=self.bandwidth())

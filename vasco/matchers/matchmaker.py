@@ -1,6 +1,8 @@
 import logging
 
 import math
+from lib2to3.fixes.fix_metaclass import find_metas
+
 import dotmap
 import numpy as np
 
@@ -48,19 +50,6 @@ class Matchmaker(Matcher):
     def mask_sensor_data(self, mask):
         self.sensor_data.stars.mask &= mask
 
-    def _cartesian(self,
-                   func: Callable,
-                   projection: Projection,
-                   *,
-                   masked: bool) -> np.ndarray:
-        """
-        Apply a function func over the Cartesian product of projected and catalogue stars
-        """
-        return func(
-            self.sensor_data.stars.project(projection, masked=masked),
-            self.altaz(masked=masked),
-        )
-
     def position_errors_sensor_star_to_dot(self,
                                            projection: Projection,
                                            *,
@@ -85,7 +74,8 @@ class Matchmaker(Matcher):
                             *,
                             mask_catalogue: bool,
                             mask_sensor: bool) -> np.ndarray[float]:
-        return np.min(self.distance_sky(projection, mask_catalogue=mask_catalogue, mask_sensor=mask_sensor), axis=axis, initial=np.pi / 2)
+        return np.min(self.distance_sky(projection, mask_catalogue=mask_catalogue, mask_sensor=mask_sensor),
+                      axis=axis, initial=np.pi / 2)
 
     def magnitude_errors_sky(self,
                              projection: Projection,
@@ -185,7 +175,11 @@ class Matchmaker(Matcher):
 
     def pair(self, projection: Projection) -> Counsellor:
         # Find which star is the nearest for every dot
-        nearest = self._cartesian(self.find_nearest_index, projection, masked=True, axis=1)
+
+        errors = self.distance_sky(projection, mask_catalogue=False, mask_sensor=True)
+        nearest = Matchmaker.find_nearest_index(errors, axis=1)
+        print(nearest)
+
         # Filter the catalogue by that index
 
         sensor_data = self.sensor_data.culled_copy()
