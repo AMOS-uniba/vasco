@@ -1,12 +1,6 @@
 import logging
-
-import math
-from lib2to3.fixes.fix_metaclass import find_metas
-
 import dotmap
 import numpy as np
-
-from typing import Callable
 
 from astropy.coordinates import EarthLocation
 from astropy.time import Time
