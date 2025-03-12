@@ -12,7 +12,21 @@ class QCatalogueModel(QAbstractTableModel):
         match role:
             case Qt.ItemDataRole.DisplayRole:
                 if orientation == Qt.Orientation.Horizontal:
-                    return ["x [px]", "y [px]", "x [mm]", "y [mm]", "alt", "az", "mask"][section]
+                    match section:
+                        case 0:
+                            return "x [px]"
+                        case 1:
+                            return "y [px]"
+                        case 2:
+                            return "x [mm]"
+                        case 3:
+                            return "y [mm]"
+                        case 4:
+                            return "alt"
+                        case 5:
+                            return "az"
+                        case 6:
+                            return "used"
             case _:
                 return None
 

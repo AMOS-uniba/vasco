@@ -7,6 +7,7 @@ import numpy as np
 import dotmap
 
 from PyQt6 import QtCore
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
 from PyQt6.QtCore import QDateTime, Qt
 
@@ -31,8 +32,8 @@ mpl.use('Qt5Agg')
 
 log = logging.getLogger('vasco')
 
-VERSION = "0.9.0"
-DATE = "2025-03-11"
+VERSION = "0.9.1"
+DATE = "2025-03-12"
 
 np.set_printoptions(edgeitems=10, linewidth=100000, formatter=dict(float=lambda x: f"{x:.6f}"))
 
@@ -40,29 +41,29 @@ np.set_printoptions(edgeitems=10, linewidth=100000, formatter=dict(float=lambda 
 class MainWindow(MainWindowPlots):
     def __init__(self, args, parent=None):
         super().__init__(parent)
-        self.populateStations()
+        self.populate_stations()
 
-        self.setupInitialParameters()
-        self.updateLocation()
-        self.updateTime()
-        self.resetMatcher()
+        self.setup_parameters()
+        self.update_location()
+        self.update_time()
+        self.reset_matcher()
 
         if args.catalogue:
             self.matcher.load_catalogue(args.catalogue.name)
         if args.sighting:
-            self._loadSighting(args.sighting.name)
+            self._load_sighting(args.sighting.name)
         if args.projection:
-            self._importProjectionParameters(args.projection.name)
+            self._import_projection_parameters(args.projection.name)
 
-        self.showCounts()
-        self.connectSignalSlots()
-        self.onProjectionParametersChanged()
-        self.onLocationChanged()
-        self.onScalingChanged()
+        self.show_counts()
+        self.connect_signal_slots()
+        self.on_projection_parameters_changed()
+        self.on_location_changed()
+        self.on_scaling_changed()
 
         self.tw_charts.setCurrentIndex(1)
 
-    def setupInitialParameters(self):
+    def setup_parameters(self):
         self.pw_x0.setup(title="H shift", symbol="x<sub>0</sub>", unit="mm",
                          minimum=-10, maximum=10, step=0.001, initial_value=0)
         self.pw_y0.setup(title="V shift", symbol="y<sub>0</sub>", unit="mm",
@@ -93,72 +94,80 @@ class MainWindow(MainWindowPlots):
                         display_to_true=np.radians, true_to_display=np.degrees)
 
         for widget in self.param_widgets.values():
-            widget.dsb_value.valueChanged.connect(self.onProjectionParametersChanged)
+            widget.dsb_value.valueChanged.connect(self.on_projection_parameters_changed)
 
-    def connectSignalSlots(self):
-        self.ac_load_sighting.triggered.connect(self.loadSighting)
-        self.ac_load_catalogue.triggered.connect(self.loadCatalogue)
-        self.ac_export_meteor.triggered.connect(self.exportCorrectedMeteor)
-        self.ac_mask_unmatched.triggered.connect(self.maskSensorDist)
+    def connect_signal_slots(self):
+        self.ac_load_sighting.triggered.connect(self.load_sighting)
+        self.ac_load_catalogue.triggered.connect(self.load_catalogue)
+        self.ac_export_meteor.triggered.connect(self.export_corrected_meteor)
+        self.ac_mask_unmatched.triggered.connect(self.mask_sensor_dist)
         self.ac_create_pairing.triggered.connect(self.pair)
-        self.ac_load_parameters.triggered.connect(self.importProjectionParameters)
-        self.ac_save_parameters.triggered.connect(self.exportProjectionParameters)
+        self.ac_load_parameters.triggered.connect(self.import_projection_parameters)
+        self.ac_save_parameters.triggered.connect(self.export_projection_parameters)
         self.ac_optimize.triggered.connect(self.optimize)
-        self.ac_about.triggered.connect(self.displayAbout)
+        self.ac_about.triggered.connect(self.display_about)
 
-        self.cb_stations.currentIndexChanged.connect(self.selectStation)
-        self.dt_time.dateTimeChanged.connect(self.updateTime)
-        self.dt_time.dateTimeChanged.connect(self.onTimeChanged)
+        self.cb_stations.currentIndexChanged.connect(self.select_station)
+        self.dt_time.dateTimeChanged.connect(self.update_time)
+        self.dt_time.dateTimeChanged.connect(self.on_time_changed)
 
-        self.dsb_lat.valueChanged.connect(self.onLocationChanged)
-        self.dsb_lon.valueChanged.connect(self.onLocationChanged)
-        self.dsb_xs.valueChanged.connect(self.onScalingChanged)
-        self.dsb_ys.valueChanged.connect(self.onScalingChanged)
+        self.dsb_lat.valueChanged.connect(self.on_location_changed)
+        self.dsb_lon.valueChanged.connect(self.on_location_changed)
+        self.dsb_xs.valueChanged.connect(self.on_scaling_changed)
+        self.dsb_ys.valueChanged.connect(self.on_scaling_changed)
 
         # Parameter global interface
         self.pb_optimize.clicked.connect(self.optimize)
-        self.sb_maxiter.valueChanged.connect(self.onMaxiterChanged)
+        self.sb_maxiter.valueChanged.connect(self.on_maxiter_changed)
         self.pb_pair.clicked.connect(self.pair)
-        self.pb_export.clicked.connect(self.exportProjectionParameters)
-        self.pb_import.clicked.connect(self.importProjectionParameters)
+        self.pb_import.clicked.connect(self.import_projection_parameters)
+        self.pb_export.clicked.connect(self.export_projection_parameters)
+
+        self.pb_import.setIcon(QIcon.fromTheme('document-open'))
+        self.pb_export.setIcon(QIcon.fromTheme('document-save'))
 
         # Sensor operations
-        self.pb_sensor_mask_dist.clicked.connect(self.maskSensorDist)
-        self.pb_sensor_mask_alt.clicked.connect(self.maskSensorAlt)
-        self.pb_sensor_mask_reset.clicked.connect(self.resetSensorMask)
-        self.dsb_sensor_limit_dist.valueChanged.connect(self.onErrorLimitChanged)
+        self.dsb_sensor_limit_dist.valueChanged.connect(self.on_error_limit_changed)
+        self.dsb_sensor_limit_alt.valueChanged.connect(self.on_error_limit_changed)
+        self.pb_sensor_mask_dist.clicked.connect(self.mask_sensor_dist)
+        self.pb_sensor_mask_alt.clicked.connect(self.mask_sensor_alt)
+        self.pb_sensor_mask_reset.clicked.connect(self.reset_sensor_mask)
+        self.pb_sensor_mask_reset.setIcon(QIcon.fromTheme('edit-clear'))
 
         # Catalogue operations
-        self.pb_catalogue_mask_dist.clicked.connect(self.maskCatalogueDist)
-        self.pb_catalogue_mask_mag.clicked.connect(self.maskCatalogueMag)
-        self.pb_catalogue_mask_alt.clicked.connect(self.maskCatalogueAlt)
-        self.pb_catalogue_mask_reset.clicked.connect(self.resetCatalogueMask)
-        self.dsb_catalogue_limit_dist.valueChanged.connect(self.onErrorLimitChanged)
+        self.dsb_catalogue_limit_dist.valueChanged.connect(self.on_error_limit_changed)
+        self.dsb_catalogue_limit_mag.valueChanged.connect(self.on_error_limit_changed)
+        self.dsb_catalogue_limit_alt.valueChanged.connect(self.on_error_limit_changed)
+        self.pb_catalogue_mask_dist.clicked.connect(self.mask_catalogue_dist)
+        self.pb_catalogue_mask_mag.clicked.connect(self.mask_catalogue_mag)
+        self.pb_catalogue_mask_alt.clicked.connect(self.mask_catalogue_alt)
+        self.pb_catalogue_mask_reset.clicked.connect(self.reset_catalogue_mask)
+        self.pb_catalogue_mask_reset.setIcon(QIcon.fromTheme('edit-clear'))
 
         # Smoother
-        self.hs_bandwidth.actionTriggered.connect(self.onBandwidthSettingChanged)
-        self.hs_bandwidth.sliderMoved.connect(self.onBandwidthSettingChanged)
-        self.hs_bandwidth.actionTriggered.connect(self.onBandwidthChanged)
-        self.hs_bandwidth.sliderReleased.connect(self.onBandwidthChanged)
-        self.sb_arrow_scale.valueChanged.connect(self.onArrowScaleChanged)
-        self.sb_resolution.valueChanged.connect(self.onResolutionChanged)
+        self.hs_bandwidth.actionTriggered.connect(self.on_bandwidth_setting_changed)
+        self.hs_bandwidth.sliderMoved.connect(self.on_bandwidth_setting_changed)
+        self.hs_bandwidth.actionTriggered.connect(self.on_bandwidth_changed)
+        self.hs_bandwidth.sliderReleased.connect(self.on_bandwidth_changed)
+        self.sb_arrow_scale.valueChanged.connect(self.on_arrow_scale_changed)
+        self.sb_resolution.valueChanged.connect(self.on_resolution_changed)
 
-        self.cb_show_errors.clicked.connect(self.plotPositionCorrectionErrors)
-        self.cb_show_grid.clicked.connect(self.plotPositionCorrectionGrid)
-        self.cb_interpolation.currentIndexChanged.connect(self.plotMagnitudeCorrectionGrid)
+        self.cb_show_errors.clicked.connect(self.plot_position_correction_errors)
+        self.cb_show_grid.clicked.connect(self.plot_position_correction_grid)
+        self.cb_interpolation.currentIndexChanged.connect(self.plot_magnitude_correction_grid)
 
         self.pb_export_xml.clicked.connect(self.ac_export_meteor.trigger)
 
-        self.tw_charts.currentChanged.connect(self.updatePlots)
+        self.tw_charts.currentChanged.connect(self.update_plots)
         log.debug(f"Signals and slots connected")
 
-    def populateStations(self):
+    def populate_stations(self):
         for name, station in AMOS.stations.items():
             self.cb_stations.addItem(station.name)
 
         log.debug(f"Populated stations: {len(self.cb_stations)}")
 
-    def selectStation(self, index):
+    def select_station(self, index):
         if index == 0:
             station = Station(0, "c", "custom", self.dsb_lat.value(), self.dsb_lon.value(), self.dsb_alt.value())
         else:
@@ -168,23 +177,23 @@ class MainWindow(MainWindowPlots):
         self.dsb_lon.setValue(station.longitude)
         self.dsb_alt.setValue(station.altitude)
 
-        self.updateMatcher()
-        self.onLocationTimeChanged()
+        self.update_matcher()
+        self.on_location_time_changed()
 
-    def onTimeChanged(self):
-        self.updateTime()
-        self.onLocationTimeChanged()
+    def on_time_changed(self):
+        self.update_time()
+        self.on_location_time_changed()
 
-    def onLocationChanged(self):
-        self.updateLocation()
-        self.onLocationTimeChanged()
+    def on_location_changed(self):
+        self.update_location()
+        self.on_location_time_changed()
 
-    def setLocation(self, lat, lon, alt):
+    def set_location(self, lat, lon, alt):
         self.dsb_lat.setValue(lat)
         self.dsb_lon.setValue(lon)
         self.dsb_alt.setValue(alt)
 
-    def updateLocation(self):
+    def update_location(self):
         self.location = EarthLocation(
             self.dsb_lon.value() * u.deg,
             self.dsb_lat.value() * u.deg,
@@ -192,30 +201,30 @@ class MainWindow(MainWindowPlots):
         )
         log.debug(f"Updated location to {self.location.geodetic}")
 
-    def setTime(self, time):
+    def set_time(self, time):
         self.dt_time.setDateTime(QDateTime(time.date(), time.time(), Qt.TimeSpec.UTC))
 
-    def updateTime(self):
+    def update_time(self):
         self.time = Time(self.dt_time.dateTime().toPyDateTime())
 
-    def onScalingChanged(self):
+    def on_scaling_changed(self):
         self.matcher.sensor_data.set_shifter_scales(
             self.dsb_xs.value() / 1000,
             self.dsb_ys.value() / 1000
         )
-        self.onProjectionParametersChanged()
+        self.on_projection_parameters_changed()
 
-    def updateMatcher(self):
+    def update_matcher(self):
         log.info(f"Time / location changed: {self.time}, {self.location}")
         self.matcher.update_location_time(self.location, Time(self.time))
         self.matcher.update_position_smoother(self.projection)
 
-    def updateProjection(self):
-        log.info(f"Projection parameters changed: {self.getProjectionParameters()}")
-        self.projection = BorovickaProjection(*self.getProjectionParameters())
+    def update_projection(self):
+        log.info(f"Projection parameters changed: {self.get_projection_parameters()}")
+        self.projection = BorovickaProjection(*self.get_projection_parameters())
 
-    def onProjectionParametersChanged(self):
-        self.updateProjection()
+    def on_projection_parameters_changed(self):
+        self.update_projection()
 
         self.positionSkyPlot.invalidate_dots()
         self.positionSkyPlot.invalidate_meteor()
@@ -227,12 +236,12 @@ class MainWindow(MainWindowPlots):
         self.magnitudeCorrectionPlot.invalidate()
         self.matcher.update_position_smoother(self.projection, bandwidth=self.bandwidth())
 
-        self.computePositionErrors()
-        self.computeMagnitudeErrors()
-        self.updatePlots()
+        self.compute_position_errors()
+        self.compute_magnitude_errors()
+        self.update_plots()
 
-    def onLocationTimeChanged(self):
-        self.updateMatcher()
+    def on_location_time_changed(self):
+        self.update_matcher()
         self.positionSkyPlot.invalidate_stars()
         self.positionSkyPlot.invalidate_dots()
         self.magnitudeSkyPlot.invalidate_stars()
@@ -246,21 +255,21 @@ class MainWindow(MainWindowPlots):
         self.positionCorrectionPlot.invalidate()
         self.magnitudeCorrectionPlot.invalidate()
 
-        self.computePositionErrors()
-        self.computeMagnitudeErrors()
-        self.updatePlots()
+        self.compute_position_errors()
+        self.compute_magnitude_errors()
+        self.update_plots()
 
-    def onErrorLimitChanged(self):
+    def on_error_limit_changed(self):
         self.positionSkyPlot.invalidate_dots()
         self.positionErrorPlot.invalidate()
         self.positionCorrectionPlot.invalidate_dots()
-        self.updatePlots()
+        self.update_plots()
 
-    def onBandwidthSettingChanged(self):
+    def on_bandwidth_setting_changed(self):
         bandwidth = self.bandwidth()
         self.lb_bandwidth.setText(f"{bandwidth:.03f}")
 
-    def onBandwidthChanged(self, action=0):
+    def on_bandwidth_changed(self, action=0):
         if action == 7:  # do not do anything if the user did not drop the slider yet
             return
 
@@ -271,55 +280,56 @@ class MainWindow(MainWindowPlots):
         self.positionCorrectionPlot.invalidate_meteor()
         self.magnitudeCorrectionPlot.invalidate_grid()
         self.magnitudeCorrectionPlot.invalidate_meteor()
-        self.updatePlots()
+        self.update_plots()
 
-    def onArrowScaleChanged(self):
+    def on_arrow_scale_changed(self):
         self.positionCorrectionPlot.invalidate_dots()
         self.positionCorrectionPlot.invalidate_meteor()
-        self.updatePlots()
+        self.update_plots()
 
-    def onResolutionChanged(self):
+    def on_resolution_changed(self):
         self.positionCorrectionPlot.invalidate_grid()
         self.magnitudeCorrectionPlot.invalidate_grid()
-        self.updatePlots()
+        self.update_plots()
 
-    def onMaxiterChanged(self):
+    def on_maxiter_changed(self):
+        self.pg_optimize.setValue(0)
         self.pg_optimize.setMaximum(self.sb_maxiter.value())
 
     def bandwidth(self):
         return 10**(-self.hs_bandwidth.value() / 100)
 
-    def resetMatcher(self):
+    def reset_matcher(self):
         self.matcher = Matchmaker(self.location, self.time)
 
-    def computePositionErrors(self):
+    def compute_position_errors(self):
         self.position_errors = self.matcher.position_errors_sky(self.projection, 1,
                                                                 mask_catalogue=True, mask_sensor=True)
 
-    def computeMagnitudeErrors(self):
+    def compute_magnitude_errors(self):
         self.magnitude_errors = self.matcher.magnitude_errors_sky(self.projection, self.calibration, 1,
                                                                   mask_catalogue=True, mask_sensor=True)
 
-    def loadCatalogue(self):
+    def load_catalogue(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "catalogues",
                                                   "Tab-separated values (*.tsv)")
         if filename == '':
             log.warning("No file provided, loading aborted")
         else:
             if self.paired:
-                self.resetMatcher()
+                self.reset_matcher()
             self.matcher.load_catalogue(filename)
             self.positionSkyPlot.invalidate_stars()
             self.magnitudeSkyPlot.invalidate_stars()
-            self.onProjectionParametersChanged()
+            self.on_projection_parameters_changed()
 
-    def exportProjectionParameters(self):
+    def export_projection_parameters(self):
         filename, _ = QFileDialog.getSaveFileName(self, "Export projection parameters to file", "calibrations",
                                                   "YAML files (*.yaml)")
         if filename is not None and filename != '':
-            self._exportProjectionParameters(filename)
+            self._export_projection_parameters(filename)
 
-    def _exportProjectionParameters(self, filename):
+    def _export_projection_parameters(self, filename):
         try:
             with open(filename, 'w+') as file:
                 yaml.dump(dict(
@@ -332,19 +342,19 @@ class MainWindow(MainWindowPlots):
         except FileNotFoundError as exc:
             log.error(f"Could not export projection parameters: {exc}")
 
-    def loadSighting(self):
+    def load_sighting(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data",
                                                   "YAML files (*.yml *.yaml)")
         if filename == '':
             log.warning("No file provided, loading aborted")
         else:
-            self._loadSighting(filename)
+            self._load_sighting(filename)
 
         if (station := AMOS.stations.get(self.matcher.sensor_data.station, None)) is not None:
             log.info(f"Position for station {station.code} found, loading properties from AMOS database")
             self.cb_stations.setCurrentIndex(station.id)
             if (path := Path(f'./calibrations/{station.code}.yaml')).exists():
-                self._importProjectionParameters(path)
+                self._import_projection_parameters(path)
                 log.info(f"Calibration file {path} found, loading projection parameters")
             else:
                 log.info(f"Calibration file {path} not found, skipping")
@@ -352,36 +362,36 @@ class MainWindow(MainWindowPlots):
             log.warning(f"Station not found in the database, marking as custom coordinates")
             self.cb_stations.setCurrentIndex(0)
 
-        self.onLocationTimeChanged()
-        self.onProjectionParametersChanged()
+        self.on_location_time_changed()
+        self.on_projection_parameters_changed()
         self.sensorPlot.invalidate()
-        self.updatePlots()
+        self.update_plots()
 
-    def _loadSighting(self, file):
+    def _load_sighting(self, file):
         data = dotmap.DotMap(yaml.safe_load(open(file, 'r')), _dynamic=False)
-        self.setLocation(data.Latitude, data.Longitude, data.Altitude)
-        self.updateLocation()
-        self.setTime(pytz.UTC.localize(datetime.datetime.strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f")))
-        self.updateTime()
+        self.set_location(data.Latitude, data.Longitude, data.Altitude)
+        self.update_location()
+        self.set_time(pytz.UTC.localize(datetime.datetime.strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f")))
+        self.update_time()
         self.sensorPlot.invalidate()
 
         if self.paired:
-            self.resetMatcher()
+            self.reset_matcher()
         self.matcher.sensor_data = SensorData.load_YAML(file)
 
         log.info(f"Loaded a sighting from {file}: "
                  f"{self.matcher.sensor_data.stars.count} stars, "
                  f"{self.matcher.sensor_data.meteor.count} frames")
 
-    def importProjectionParameters(self):
+    def import_projection_parameters(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Import projection parameters from file", "../calibrations",
                                                   "YAML files (*.yml *.yaml)")
-        self._importProjectionParameters(filename)
-        self.onProjectionParametersChanged()
+        self._import_projection_parameters(Path(filename))
+        self.on_projection_parameters_changed()
 
-    def _importProjectionParameters(self, filename: Path):
+    def _import_projection_parameters(self, filename: Path):
         try:
-            self._blockParameterSignals(True)
+            self._block_parameter_signals(True)
             with open(filename, 'r') as file:
                 try:
                     data = dotmap.DotMap(yaml.safe_load(file), _dynamic=False)
@@ -397,14 +407,14 @@ class MainWindow(MainWindowPlots):
         except Exception as exc:
             log.error(f"Could not import projection parameters: {exc}")
         finally:
-            self._blockParameterSignals(False)
-            self.updateProjection()
+            self._block_parameter_signals(False)
+            self.update_projection()
 
-    def _blockParameterSignals(self, block: bool) -> None:
+    def _block_parameter_signals(self, block: bool) -> None:
         for widget in self.param_widgets.values():
             widget.dsb_value.blockSignals(block)
 
-    def getProjectionParameters(self):
+    def get_projection_parameters(self):
         return np.array([widget.true_value for widget in self.param_widgets.values()], dtype=float)
 
     def optimize(self) -> None:
@@ -422,24 +432,24 @@ class MainWindow(MainWindowPlots):
             self.pg_optimize.setValue(iters)
 
         result = self.matcher.minimize(
-            x0=self.getProjectionParameters(),
+            x0=self.get_projection_parameters(),
             maxiter=maxiters,
             mask=np.array([widget.is_checked() for widget in self.param_widgets.values()], dtype=bool),
             callback=callback,
         )
 
-        self._blockParameterSignals(True)
+        self._block_parameter_signals(True)
         for value, widget in zip(result, self.param_widgets.values()):
             widget.set_true_value(value)
-        self._blockParameterSignals(False)
+        self._block_parameter_signals(False)
 
         self.pg_optimize.setValue(maxiters)
         self.gb_identify.setTitle(original_title)
         self.w_input.setEnabled(True)
         self.w_input.repaint()
-        self.onProjectionParametersChanged()
+        self.on_projection_parameters_changed()
 
-    def updateSensorTable(self):
+    def update_sensor_table(self):
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=False)
         x = self.matcher.sensor_data.stars.xs(masked=False)
         y = self.matcher.sensor_data.stars.ys(masked=False)
@@ -463,7 +473,7 @@ class MainWindow(MainWindowPlots):
         for i, width in enumerate([120, 120, 160, 160, 120, 120, 80]):
             self.tv_sensor.setColumnWidth(i, width)
 
-    def updateMeteorTable(self):
+    def update_meteor_table(self):
         if self.paired:
             self.tabs_table.setCurrentIndex(1)
             data = self.matcher.correct_meteor(self.projection, self.calibration)
@@ -474,39 +484,39 @@ class MainWindow(MainWindowPlots):
         else:
             self.tabs_table.setCurrentIndex(0)
 
-    def maskSensorDist(self):
+    def mask_sensor_dist(self):
         if self.paired:
             self.pair()
 
         errors = self.matcher.position_errors_sky(self.projection, axis=1, mask_catalogue=True, mask_sensor=False)
         limit = self.dsb_sensor_limit_dist.value()
         self.matcher.mask_sensor_data(errors < np.radians(limit))
-        log.info(f"Masked reference dots > {c.param(f'{limit:.3f}')}°: "
+        log.info(f"Masked reference dots: distance > {c.param(f'{limit:.3f}')}°: "
                  f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
 
-        self.onProjectionParametersChanged()
-        self.showCounts()
+        self.on_projection_parameters_changed()
+        self.show_counts()
 
-    def maskSensorAlt(self):
+    def mask_sensor_alt(self):
         if self.paired:
             self.pair()
 
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=False)
-        limit = self.dsb_sensor_limit_dist.value()
+        limit = self.dsb_sensor_limit_alt.value()
         self.matcher.mask_sensor_data(positions[..., 0] < np.radians(90 - limit))
-        log.info(f"Masked reference dots < {c.param(f'{limit:.1f}')}°: "
+        log.info(f"Masked reference dots: altitude < {c.param(f'{limit:.1f}')}°: "
                  f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
 
-        self.onProjectionParametersChanged()
-        self.showCounts()
+        self.on_projection_parameters_changed()
+        self.show_counts()
 
-    def resetSensorMask(self):
+    def reset_sensor_mask(self):
         log.debug("Reset the sensor mask")
         self.matcher.sensor_data.reset_mask()
-        self.onProjectionParametersChanged()
-        self.showCounts()
+        self.on_projection_parameters_changed()
+        self.show_counts()
 
-    def _updateAfterMasking(self):
+    def _update_after_masking(self):
         """
         Update everything after the catalogue mask was changed
         """
@@ -514,14 +524,16 @@ class MainWindow(MainWindowPlots):
             self.pair()
 
         self.positionSkyPlot.invalidate_stars()
+        self.positionSkyPlot.invalidate_dots()
         self.magnitudeSkyPlot.invalidate_stars()
+        self.magnitudeSkyPlot.invalidate_dots()
 
-        self.computePositionErrors()
-        self.computeMagnitudeErrors()
-        self.updatePlots()
-        self.showCounts()
+        self.compute_position_errors()
+        self.compute_magnitude_errors()
+        self.update_plots()
+        self.show_counts()
 
-    def maskCatalogueDist(self):
+    def mask_catalogue_dist(self):
         if self.paired:
             self.pair()
 
@@ -531,17 +543,17 @@ class MainWindow(MainWindowPlots):
         log.info(f"Masked the catalogue to errors <{c.num(f'{limit:.3f}')}°: "
                  f"{c.num(self.matcher.catalogue.visible_count)} stars used")
 
-        self._updateAfterMasking()
+        self._update_after_masking()
 
-    def maskCatalogueMag(self):
+    def mask_catalogue_mag(self):
         limit = self.dsb_catalogue_limit_mag.value()
-        self.matcher.mask_catalogue(self.matcher.vmag_to_numpy(masked=False) < limit)
+        self.matcher.mask_catalogue(self.matcher.vmag(masked=False) < limit)
         log.info(f"Masked the catalogue to magnitude <{c.num(f'{limit:.1f}')}m: "
                  f"{c.num(self.matcher.catalogue.visible_count)} stars used")
 
-        self._updateAfterMasking()
+        self._update_after_masking()
 
-    def maskCatalogueAlt(self):
+    def mask_catalogue_alt(self):
         limit = self.dsb_catalogue_limit_alt.value()
         self.matcher.mask_catalogue(
             (self.matcher.altaz(masked=False)[..., 0]) > np.radians(limit)
@@ -549,17 +561,17 @@ class MainWindow(MainWindowPlots):
         log.info(f"Masked the catalogue to altitude >{c.num(f'{limit:.1f}')}m: "
                  f"{c.num(self.matcher.catalogue.visible_count)} stars used")
 
-        self._updateAfterMasking()
+        self._update_after_masking()
 
-    def resetCatalogueMask(self):
+    def reset_catalogue_mask(self):
         log.debug("Reset the catalogue mask")
         self.matcher.catalogue.mask = None
-        self.onProjectionParametersChanged()
-        self.onLocationChanged()
-        self.showCounts()
+        self.on_projection_parameters_changed()
+        self.on_location_changed()
+        self.show_counts()
 
     @QtCore.pyqtSlot()
-    def showCounts(self) -> None:
+    def show_counts(self) -> None:
         if isinstance(self.matcher, Counsellor):
             self.lb_mode.setText("paired")
             self.tab_correction_magnitudes_enabled.setEnabled(True)
@@ -568,11 +580,11 @@ class MainWindow(MainWindowPlots):
             self.tab_correction_magnitudes_enabled.setEnabled(False)
 
         self.lb_catalogue_total.setText(f'{self.matcher.catalogue.count}')
-        self.lb_catalogue_unmasked.setText(f'{self.matcher.catalogue.visible_count}')
+        self.lb_catalogue_used.setText(f'{self.matcher.catalogue.visible_count}')
         self.lb_sensor_total.setText(f'{self.matcher.sensor_data.stars.count}')
-        self.lb_sensor_unmasked.setText(f'{self.matcher.sensor_data.stars.count_valid}')
+        self.lb_sensor_used.setText(f'{self.matcher.sensor_data.stars.count_valid}')
 
-    def exportCorrectedMeteor(self):
+    def export_corrected_meteor(self):
         if not self.paired:
             log.warning("Cannot export a meteor before pairing dots to the catalogue")
             return None
@@ -588,7 +600,7 @@ class MainWindow(MainWindowPlots):
         return self.sb_resolution.value()
 
     def pair(self):
-        if (rms_error := np.degrees(self.matcher.rms_error(self.position_errors))) > 0.3:
+        if (rms_error := np.degrees(self.matcher.rms_error(self.position_errors))) > 0.5:
             reply = QMessageBox.warning(self, "Mean position error limit exceeded!",
                                         f"Mean position error is currently {rms_error:.6f}°.\n"
                                         f"Are you sure your approximate solution is correct?",
@@ -608,10 +620,10 @@ class MainWindow(MainWindowPlots):
         self.magnitudeErrorPlot.invalidate()
         self.positionCorrectionPlot.invalidate()
         self.magnitudeCorrectionPlot.invalidate()
-        self.showCounts()
-        self.updatePlots()
+        self.show_counts()
+        self.update_plots()
 
-    def displayAbout(self):
+    def display_about(self):
         msg = QMessageBox(self, text="VASCO Virtual All-Sky CorrectOr plate")
         msg.setIcon(QMessageBox.Icon.Information)
         msg.setWindowTitle("About")

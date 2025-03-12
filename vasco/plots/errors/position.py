@@ -1,6 +1,6 @@
-import math
 import numpy as np
 import matplotlib as mpl
+from matplotlib import pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
 from plots.errors.base import BaseErrorPlot
@@ -8,8 +8,8 @@ from matchers import Matcher
 
 
 class PositionErrorPlot(BaseErrorPlot):
-    y_formatter = FuncFormatter(lambda x, pos: f'{x:.2f}°')
-    cmap_dots = mpl.pyplot.get_cmap('autumn_r')
+    y_formatter = FuncFormatter(lambda x, pos: f'{x:.3f}°')
+    cmap_dots = plt.get_cmap('autumn_r')
 
     target: str = "star positions"
 

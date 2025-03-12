@@ -30,41 +30,41 @@ class MainWindowPlots(MainWindowBase):
         self.positionCorrectionPlot = PositionCorrectionPlot(self.tab_correction_positions_enabled)
         self.magnitudeCorrectionPlot = MagnitudeCorrectionPlot(self.tab_correction_magnitudes_enabled)
 
-    def updatePlots(self):
+    def update_plots(self):
         """
         Iterate over all plots and update all that are no longer valid
         """
-        self.showErrors()
+        self.show_errors()
         links = [
             [
-                (self.sensorPlot.valid, self.plotSensorData),
+                (self.sensorPlot.valid, self.plot_sensor_data),
             ],
             [],
             [
-                (self.positionSkyPlot.valid_dots, self.plotObservedStarsPositions),
-                (self.positionSkyPlot.valid_stars, self.plotCatalogueStarsPositions),
+                (self.positionSkyPlot.valid_dots, self.plot_observed_stars_positions),
+                (self.positionSkyPlot.valid_stars, self.plot_catalogue_stars_positions),
             ],
             [
-                (self.magnitudeSkyPlot.valid_dots, self.plotObservedStarsMagnitudes),
-                (self.magnitudeSkyPlot.valid_stars, self.plotCatalogueStarsMagnitudes),
+                (self.magnitudeSkyPlot.valid_dots, self.plot_observed_stars_magnitudes),
+                (self.magnitudeSkyPlot.valid_stars, self.plot_catalogue_stars_magnitudes),
             ],
             [
-                (self.positionErrorPlot.valid_dots, self.plotPositionErrorsDots),
-                (self.positionErrorPlot.valid_meteor, self.plotPositionErrorsMeteor),
+                (self.positionErrorPlot.valid_dots, self.plot_position_errors_dots),
+                (self.positionErrorPlot.valid_meteor, self.plot_position_errors_meteor),
             ],
             [
-                (self.magnitudeErrorPlot.valid_dots, self.plotMagnitudeErrorsDots),
-                (self.magnitudeErrorPlot.valid_meteor, self.plotMagnitudeErrorsMeteor),
+                (self.magnitudeErrorPlot.valid_dots, self.plot_magnitude_errors_dots),
+                (self.magnitudeErrorPlot.valid_meteor, self.plot_magnitude_errors_meteor),
             ],
             [
-                (self.positionCorrectionPlot.valid_dots, self.plotPositionCorrectionErrors),
+                (self.positionCorrectionPlot.valid_dots, self.plot_position_correction_errors),
                 (self.positionCorrectionPlot.valid_meteor, self.plotPositionCorrectionMeteor),
-                (self.positionCorrectionPlot.valid_grid, self.plotPositionCorrectionGrid),
+                (self.positionCorrectionPlot.valid_grid, self.plot_position_correction_grid),
             ],
             [
                 (self.magnitudeCorrectionPlot.valid_dots, self.plotMagnitudeCorrectionErrors),
                 (self.magnitudeCorrectionPlot.valid_meteor, self.plotMagnitudeCorrectionMeteor),
-                (self.magnitudeCorrectionPlot.valid_grid, self.plotMagnitudeCorrectionGrid),
+                (self.magnitudeCorrectionPlot.valid_grid, self.plot_magnitude_correction_grid),
             ],
             [],
         ][self.tw_charts.currentIndex()]
@@ -73,17 +73,17 @@ class MainWindowPlots(MainWindowBase):
             if not valid:
                 function()
 
-        self.updateSensorTable()
-        self.updateMeteorTable()
+        self.update_sensor_table()
+        self.update_meteor_table()
 
     """ Methods for plotting sensor data """
 
-    def plotSensorData(self):
+    def plot_sensor_data(self):
         self.sensorPlot.update(self.matcher.sensor_data)
 
     """ Methods for plotting sky charts """
 
-    def _plotObservedStars(self, plot, errors, *, limit=None):
+    def _plot_observed_stars(self, plot, errors, *, limit=None):
         plot.update_dots(
             self.matcher.sensor_data.stars.project(self.projection, masked=True),
             self.matcher.sensor_data.stars.i,
@@ -95,59 +95,59 @@ class MainWindowPlots(MainWindowBase):
             self.matcher.sensor_data.meteor.i
         )
 
-    def plotObservedStarsPositions(self):
+    def plot_observed_stars_positions(self):
         log.debug(f"Plotting dot positions")
-        self._plotObservedStars(self.positionSkyPlot, self.position_errors,
-                                limit=np.radians(self.dsb_sensor_limit_dist.value()))
+        self._plot_observed_stars(self.positionSkyPlot, self.position_errors,
+                                  limit=np.radians(self.dsb_sensor_limit_dist.value()))
 
-    def plotObservedStarsMagnitudes(self):
+    def plot_observed_stars_magnitudes(self):
         log.debug(f"Plotting dot magnitudes")
-        self._plotObservedStars(self.magnitudeSkyPlot, self.magnitude_errors,
-                                limit=np.radians(self.dsb_sensor_limit_dist.value()))
+        self._plot_observed_stars(self.magnitudeSkyPlot, self.magnitude_errors,
+                                  limit=np.radians(self.dsb_sensor_limit_dist.value()))
 
-    def _plotCatalogueStars(self, plot):
+    def _plot_catalogue_stars(self, plot):
         plot.update_stars(
             self.matcher.altaz(masked=True),
             self.matcher.catalogue.vmag(self.location, Time(self.time), masked=True)
         )
 
-    def plotCatalogueStarsPositions(self):
+    def plot_catalogue_stars_positions(self):
         log.debug(f"Plotting star positions")
-        self._plotCatalogueStars(self.positionSkyPlot)
+        self._plot_catalogue_stars(self.positionSkyPlot)
 
-    def plotCatalogueStarsMagnitudes(self):
+    def plot_catalogue_stars_magnitudes(self):
         log.debug(f"Plotting star magnitudes")
-        self._plotCatalogueStars(self.magnitudeSkyPlot)
+        self._plot_catalogue_stars(self.magnitudeSkyPlot)
 
     """ Methods for plotting error charts """
 
-    def _plotErrorsDots(self, plot, errors):
+    def _plot_errors_dots(self, plot, errors):
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=True)
         magnitudes = self.matcher.sensor_data.stars.intensities(True)
         plot.update_dots(positions, magnitudes, errors, limit=self.dsb_sensor_limit_dist.value())
 
-    def plotPositionErrorsDots(self):
+    def plot_position_errors_dots(self):
         log.debug(f"Plotting position errors")
-        self._plotErrorsDots(self.positionErrorPlot, self.position_errors)
+        self._plot_errors_dots(self.positionErrorPlot, self.position_errors)
 
-    def plotMagnitudeErrorsDots(self):
+    def plot_magnitude_errors_dots(self):
         log.debug(f"Plotting magnitude errors")
-        self._plotErrorsDots(self.magnitudeErrorPlot, self.magnitude_errors)
+        self._plot_errors_dots(self.magnitudeErrorPlot, self.magnitude_errors)
 
-    def _plotErrorsMeteor(self, plot, errors):
+    def _plot_errors_meteor(self, plot, errors):
         positions = self.matcher.sensor_data.meteor.project(self.projection, masked=True)
         magnitudes = self.matcher.sensor_data.meteor.intensities(True)
         plot.update_meteor(positions, magnitudes, errors, limit=0.1)
 
-    def plotPositionErrorsMeteor(self):
+    def plot_position_errors_meteor(self):
         if self.paired:
             xy = self.matcher.correction_meteor_xy(self.projection)
             correction = np.degrees(np.sqrt(xy[..., 0]**2 + xy[..., 1]**2))
-            self._plotErrorsMeteor(self.positionErrorPlot, correction)
+            self._plot_errors_meteor(self.positionErrorPlot, correction)
 
-    def plotMagnitudeErrorsMeteor(self):
+    def plot_magnitude_errors_meteor(self):
         if self.paired:
-            self._plotErrorsMeteor(self.magnitudeErrorPlot, self.matcher.correction_meteor_mag(self.projection))
+            self._plot_errors_meteor(self.magnitudeErrorPlot, self.matcher.correction_meteor_mag(self.projection))
 
     """ Methods for updating correction plots """
 
@@ -175,7 +175,7 @@ class MainWindowPlots(MainWindowBase):
         else:
             plot.clear_errors()
 
-    def plotPositionCorrectionErrors(self) -> None:
+    def plot_position_correction_errors(self) -> None:
         self._switch_tabs(self.tabs_positions, self._plotCorrectionErrors, self.positionCorrectionPlot)
 
     def plotMagnitudeCorrectionErrors(self) -> None:
@@ -203,14 +203,14 @@ class MainWindowPlots(MainWindowBase):
         else:
             plot.clear_grid()
 
-    def plotPositionCorrectionGrid(self):
+    def plot_position_correction_grid(self):
         self._switch_tabs(
             self.tabs_positions,
             lambda plot: self._plotCorrectionGrid(plot, self.matcher.position_grid, masked=True),
             self.positionCorrectionPlot,
         )
 
-    def plotMagnitudeCorrectionGrid(self):
+    def plot_magnitude_correction_grid(self):
         self._switch_tabs(
             self.tabs_magnitudes,
             lambda plot: self._plotCorrectionGrid(plot, self.matcher.magnitude_grid, masked=False,

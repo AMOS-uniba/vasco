@@ -84,7 +84,7 @@ class Matcher(metaclass=ABCMeta):
         log.debug("Invalidating the cached altaz")
         self._altaz = None
 
-    def altaz(self, *, masked: bool, force_reload: bool = False):
+    def altaz(self, *, masked: bool):
         """
         Return the current masked catalogue altaz as a numpy array
         """
@@ -101,7 +101,7 @@ class Matcher(metaclass=ABCMeta):
         else:
             return converted
 
-    def vmag_to_numpy(self, *, masked: bool):
+    def vmag(self, *, masked: bool):
         """
         Return the current masked catalogue vmag as a numpy array
         """
@@ -158,7 +158,7 @@ class Matcher(metaclass=ABCMeta):
 #        """ Correct a meteor and return an XML fragment """
 
     def func(self, x):
-        return self.rms_error(self.position_errors(self.projection_cls(*x), masked=True))
+        return self.rms_error(self.position_errors_sky(self.projection_cls(*x), masked=True))
 
     @staticmethod
     def _get_optimization_parameters(x0, mask):

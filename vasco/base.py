@@ -1,10 +1,12 @@
+from typing import Callable
+
 import dotmap
 import numpy as np
 
 from matplotlib import pyplot as plt
 from collections import OrderedDict
 
-from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtWidgets import QMainWindow, QDoubleSpinBox, QLabel
 from main_ui import Ui_MainWindow
 
 
@@ -51,20 +53,45 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
     def paired(self) -> bool:
         return isinstance(self.matcher, Counsellor)
 
-    def showErrors(self) -> None:
+    def _update_maskable_count(self,
+                               dsb_in: QDoubleSpinBox,
+                               lb_out: QLabel,
+                               values: np.ndarray[float],
+                               *,
+                               func: Callable[[float], float] = lambda x: x,
+                               invert_mask: bool = False):
+        """
+        Helper function:
+        - take value from QDoubleSpinBox `dsb_in`,
+        - filter `values` that are larger (or smaller, if `invert` is True,
+        - output their count to `lb_out`.
+        """
+        limit = func(dsb_in.value())
+        mask = values < limit if invert_mask else values > limit
+        outside_limit = values[mask].size
+        lb_out.setText(f'{-outside_limit}')
+
+    def show_errors(self) -> None:
         rms_error = self.matcher.rms_error(self.position_errors)
         max_error = self.matcher.max_error(self.position_errors)
         self.lb_rms_error.setText(f'{np.degrees(rms_error):.6f}°')
         self.lb_max_error.setText(f'{np.degrees(max_error):.6f}°')
 
         errors = self.matcher.distance_sky(self.projection, mask_catalogue=True, mask_sensor=True)
-        dot_to_nearest_star = np.min(errors, axis=1, initial=np.inf)
-        star_to_nearest_dot = np.min(errors, axis=0, initial=np.inf)
 
-        limit = np.radians(self.dsb_sensor_limit_dist.value())
-        outside_limit = dot_to_nearest_star[dot_to_nearest_star > limit].size
-        self.lb_sensor_outside.setText(f'{outside_limit}')
+        self._update_maskable_count(self.dsb_sensor_limit_dist, self.lb_sensor_dist,
+                                    np.min(errors, axis=1, initial=np.inf),
+                                    func=lambda x: np.radians(x))
+        self._update_maskable_count(self.dsb_sensor_limit_alt, self.lb_sensor_alt,
+                                    self.matcher.sensor_data.stars.project(self.projection, masked=True)[..., 0],
+                                    func=lambda x: np.radians(90 - x))
 
-        limit = np.radians(self.dsb_catalogue_limit_dist.value())
-        outside_limit = star_to_nearest_dot[star_to_nearest_dot > limit].size
-        self.lb_catalogue_outside.setText(f'{outside_limit}')
+        self._update_maskable_count(self.dsb_catalogue_limit_dist, self.lb_catalogue_dist,
+                                    np.min(errors, axis=0, initial=np.inf),
+                                    func=lambda x: np.radians(x))
+        self._update_maskable_count(self.dsb_catalogue_limit_alt, self.lb_catalogue_alt,
+                                    self.matcher.altaz(masked=True)[..., 0],
+                                    func=lambda x: np.radians(x),
+                                    invert_mask=True)
+        self._update_maskable_count(self.dsb_catalogue_limit_mag, self.lb_catalogue_mag,
+                                    self.matcher.vmag(masked=True))
