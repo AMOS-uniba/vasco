@@ -55,13 +55,12 @@ class MainWindow(MainWindowPlots):
         if args.projection:
             self._import_projection_parameters(args.projection.name)
 
-        self.show_counts()
         self.connect_signal_slots()
-        self.on_projection_parameters_changed()
         self.on_location_changed()
         self.on_scaling_changed()
+        self.show_counts()
 
-        self.tw_charts.setCurrentIndex(1)
+        self.tw_charts.setCurrentIndex(2)
 
     def setup_parameters(self):
         self.pw_x0.setup(title="H shift", symbol="x<sub>0</sub>", unit="mm",
@@ -226,14 +225,14 @@ class MainWindow(MainWindowPlots):
     def on_projection_parameters_changed(self):
         self.update_projection()
 
-        self.positionSkyPlot.invalidate_dots()
-        self.positionSkyPlot.invalidate_meteor()
-        self.magnitudeSkyPlot.invalidate_dots()
-        self.magnitudeSkyPlot.invalidate_meteor()
-        self.positionErrorPlot.invalidate()
-        self.magnitudeErrorPlot.invalidate()
-        self.positionCorrectionPlot.invalidate()
-        self.magnitudeCorrectionPlot.invalidate()
+        self.position_sky_plot.invalidate_dots()
+        self.position_sky_plot.invalidate_meteor()
+        self.magnitude_sky_plot.invalidate_dots()
+        self.magnitude_sky_plot.invalidate_meteor()
+        self.position_error_plot.invalidate()
+        self.magnitude_error_plot.invalidate()
+        self.position_correction_plot.invalidate()
+        self.magnitude_correction_plot.invalidate()
         self.matcher.update_position_smoother(self.projection, bandwidth=self.bandwidth())
 
         self.compute_position_errors()
@@ -242,27 +241,27 @@ class MainWindow(MainWindowPlots):
 
     def on_location_time_changed(self):
         self.update_matcher()
-        self.positionSkyPlot.invalidate_stars()
-        self.positionSkyPlot.invalidate_dots()
-        self.magnitudeSkyPlot.invalidate_stars()
-        self.magnitudeSkyPlot.invalidate_dots()
-        self.positionErrorPlot.invalidate()
-        self.magnitudeErrorPlot.invalidate()
+        self.position_sky_plot.invalidate_stars()
+        self.position_sky_plot.invalidate_dots()
+        self.magnitude_sky_plot.invalidate_stars()
+        self.magnitude_sky_plot.invalidate_dots()
+        self.position_error_plot.invalidate()
+        self.magnitude_error_plot.invalidate()
 
         bandwidth = self.bandwidth()
         self.matcher.update_position_smoother(self.projection, bandwidth=bandwidth)
         self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=bandwidth)
-        self.positionCorrectionPlot.invalidate()
-        self.magnitudeCorrectionPlot.invalidate()
+        self.position_correction_plot.invalidate()
+        self.magnitude_correction_plot.invalidate()
 
         self.compute_position_errors()
         self.compute_magnitude_errors()
         self.update_plots()
 
     def on_error_limit_changed(self):
-        self.positionSkyPlot.invalidate_dots()
-        self.positionErrorPlot.invalidate()
-        self.positionCorrectionPlot.invalidate_dots()
+        self.position_sky_plot.invalidate_dots()
+        self.position_error_plot.invalidate()
+        self.position_correction_plot.invalidate_dots()
         self.update_plots()
 
     def on_bandwidth_setting_changed(self):
@@ -276,20 +275,20 @@ class MainWindow(MainWindowPlots):
         bandwidth = self.bandwidth()
         self.matcher.update_position_smoother(self.projection, bandwidth=bandwidth)
         self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=bandwidth)
-        self.positionCorrectionPlot.invalidate_grid()
-        self.positionCorrectionPlot.invalidate_meteor()
-        self.magnitudeCorrectionPlot.invalidate_grid()
-        self.magnitudeCorrectionPlot.invalidate_meteor()
+        self.position_correction_plot.invalidate_grid()
+        self.position_correction_plot.invalidate_meteor()
+        self.magnitude_correction_plot.invalidate_grid()
+        self.magnitude_correction_plot.invalidate_meteor()
         self.update_plots()
 
     def on_arrow_scale_changed(self):
-        self.positionCorrectionPlot.invalidate_dots()
-        self.positionCorrectionPlot.invalidate_meteor()
+        self.position_correction_plot.invalidate_dots()
+        self.position_correction_plot.invalidate_meteor()
         self.update_plots()
 
     def on_resolution_changed(self):
-        self.positionCorrectionPlot.invalidate_grid()
-        self.magnitudeCorrectionPlot.invalidate_grid()
+        self.position_correction_plot.invalidate_grid()
+        self.magnitude_correction_plot.invalidate_grid()
         self.update_plots()
 
     def on_maxiter_changed(self):
@@ -319,8 +318,8 @@ class MainWindow(MainWindowPlots):
             if self.paired:
                 self.reset_matcher()
             self.matcher.load_catalogue(filename)
-            self.positionSkyPlot.invalidate_stars()
-            self.magnitudeSkyPlot.invalidate_stars()
+            self.position_sky_plot.invalidate_stars()
+            self.magnitude_sky_plot.invalidate_stars()
             self.on_projection_parameters_changed()
 
     def export_projection_parameters(self):
@@ -364,7 +363,7 @@ class MainWindow(MainWindowPlots):
 
         self.on_location_time_changed()
         self.on_projection_parameters_changed()
-        self.sensorPlot.invalidate()
+        self.sensor_plot.invalidate()
         self.update_plots()
 
     def _load_sighting(self, file):
@@ -373,7 +372,7 @@ class MainWindow(MainWindowPlots):
         self.update_location()
         self.set_time(pytz.UTC.localize(datetime.datetime.strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f")))
         self.update_time()
-        self.sensorPlot.invalidate()
+        self.sensor_plot.invalidate()
 
         if self.paired:
             self.reset_matcher()
@@ -484,84 +483,65 @@ class MainWindow(MainWindowPlots):
         else:
             self.tabs_table.setCurrentIndex(0)
 
-    def mask_sensor_dist(self):
-        if self.paired:
-            self.on_pair_clicked()
-
-        errors = self.matcher.position_errors_sky(self.projection, axis=1, mask_catalogue=True, mask_sensor=False)
-        limit = self.dsb_sensor_limit_dist.value()
-        self.matcher.mask_sensor_data(errors < np.radians(limit))
-        log.info(f"Masked reference dots: distance > {c.param(f'{limit:.3f}')}°: "
-                 f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
-
-        self.on_projection_parameters_changed()
-        self.show_counts()
-
-    def mask_sensor_alt(self):
-        if self.paired:
-            self.on_pair_clicked()
-
-        positions = self.matcher.sensor_data.stars.project(self.projection, masked=False)
-        limit = self.dsb_sensor_limit_alt.value()
-        self.matcher.mask_sensor_data(positions[..., 0] < np.radians(90 - limit))
-        log.info(f"Masked reference dots: altitude < {c.param(f'{limit:.1f}')}°: "
-                 f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
-
-        self.on_projection_parameters_changed()
-        self.show_counts()
-
     def reset_sensor_mask(self):
         log.debug("Reset the sensor mask")
         self.matcher.sensor_data.reset_mask()
         self.on_projection_parameters_changed()
         self.show_counts()
 
-    def _update_after_masking(self):
+    def _mask_sensor(self, mask: np.ndarray, message: str):
+        self.matcher.mask_sensor_data(mask)
+        log.info(f"Masked reference dots: {message}: "
+                 f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
+        self._update_catalogue_mask()
+
+    def mask_sensor_dist(self):
+        errors = self.matcher.position_errors_sky(self.projection, axis=1, mask_catalogue=True, mask_sensor=False)
+        limit = self.dsb_sensor_limit_dist.value()
+        self._mask_sensor(errors < np.radians(limit), f"position errors < {c.num(f'{limit:.3f}°')}")
+
+        #self.on_projection_parameters_changed()
+        #self.show_counts()
+
+    def mask_sensor_alt(self):
+        positions = self.matcher.sensor_data.stars.project(self.projection, masked=False)
+        limit = self.dsb_sensor_limit_alt.value()
+        self._mask_sensor(positions[..., 0] < np.radians(90 - limit), f"altitude < {c.num(f'{limit:.1f}°')}")
+
+    def _update_catalogue_mask(self):
         """
         Update everything after the catalogue mask was changed
         """
-        if self.paired:
-            self.on_pair_clicked()
-
-        self.positionSkyPlot.invalidate_stars()
-        self.positionSkyPlot.invalidate_dots()
-        self.magnitudeSkyPlot.invalidate_stars()
-        self.magnitudeSkyPlot.invalidate_dots()
+        self.position_sky_plot.invalidate_stars()
+        self.position_sky_plot.invalidate_dots()
+        self.magnitude_sky_plot.invalidate_stars()
+        self.magnitude_sky_plot.invalidate_dots()
 
         self.compute_position_errors()
         self.compute_magnitude_errors()
         self.update_plots()
         self.show_counts()
 
+    def _mask_catalogue(self, mask: np.ndarray, message: str):
+        self.matcher.mask_catalogue(mask)
+        log.info(f"Masked the catalogue: {message}: "
+                 f"{c.num(self.matcher.catalogue.visible_count)} stars visible")
+        self._update_catalogue_mask()
+
     def mask_catalogue_dist(self):
-        if self.paired:
-            self.on_pair_clicked()
-
-        errors = self.matcher.position_errors_sky(self.projection, axis=0, mask_catalogue=False, mask_sensor=True)
-        limit = self.dsb_catalogue_limit_dist.value()
-        self.matcher.mask_catalogue(errors < np.radians(limit))
-        log.info(f"Masked the catalogue to errors <{c.num(f'{limit:.3f}')}°: "
-                 f"{c.num(self.matcher.catalogue.visible_count)} stars used")
-
-        self._update_after_masking()
+        errors: np.ndarray = self.matcher.position_errors_sky(self.projection,
+                                                              axis=0, mask_catalogue=False, mask_sensor=True)
+        limit: float = self.dsb_catalogue_limit_dist.value()
+        self._mask_catalogue(errors < np.radians(limit), f"errors < {c.num(f'{limit:.3f}°')}")
 
     def mask_catalogue_mag(self):
-        limit = self.dsb_catalogue_limit_mag.value()
-        self.matcher.mask_catalogue(self.matcher.vmag(masked=False) < limit)
-        log.info(f"Masked the catalogue to magnitude <{c.num(f'{limit:.1f}')}m: "
-                 f"{c.num(self.matcher.catalogue.visible_count)} stars used")
-
-        self._update_after_masking()
+        limit: float = self.dsb_catalogue_limit_mag.value()
+        self._mask_catalogue(self.matcher.vmag(masked=False) < limit, f"magnitude <{c.num(f'{limit:.1f}m')}")
 
     def mask_catalogue_alt(self):
-        limit = self.dsb_catalogue_limit_alt.value()
-        self.matcher.mask_catalogue(
-            (self.matcher.altaz(masked=False)[..., 0]) > np.radians(limit)
-        )
-        log.info(f"Masked the catalogue to altitude >{c.num(f'{limit:.1f}')}m: "
-                 f"{c.num(self.matcher.catalogue.visible_count)} stars used")
-
-        self._update_after_masking()
+        limit: float = self.dsb_catalogue_limit_alt.value()
+        self._mask_catalogue(self.matcher.altaz(masked=False)[..., 0] > np.radians(limit),
+                             f"altitude >{c.num(f'{limit:.1f}°')}")
 
     def reset_catalogue_mask(self):
         log.debug("Reset the catalogue mask")
@@ -614,14 +594,14 @@ class MainWindow(MainWindowPlots):
         self.matcher.update_position_smoother(self.projection, bandwidth=self.bandwidth())
         self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=self.bandwidth())
 
-        self.positionSkyPlot.invalidate_dots()
-        self.positionSkyPlot.invalidate_stars()
-        self.magnitudeSkyPlot.invalidate_dots()
-        self.magnitudeSkyPlot.invalidate_stars()
-        self.positionErrorPlot.invalidate()
-        self.magnitudeErrorPlot.invalidate()
-        self.positionCorrectionPlot.invalidate()
-        self.magnitudeCorrectionPlot.invalidate()
+        self.position_sky_plot.invalidate_dots()
+        self.position_sky_plot.invalidate_stars()
+        self.magnitude_sky_plot.invalidate_dots()
+        self.magnitude_sky_plot.invalidate_stars()
+        self.position_error_plot.invalidate()
+        self.magnitude_error_plot.invalidate()
+        self.position_correction_plot.invalidate()
+        self.magnitude_correction_plot.invalidate()
         self.show_counts()
         self.update_plots()
 

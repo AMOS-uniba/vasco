@@ -12,7 +12,7 @@ from .counsellor import Counsellor
 
 from photometry import Calibration
 from models import SensorData
-from utilities import spherical, spherical_distance
+from utilities import spherical, spherical_distance, hash_numpy
 
 log = logging.getLogger('vasco')
 
@@ -30,6 +30,9 @@ class Matchmaker(Matcher):
                  projection_cls: type[Projection] = BorovickaProjection,
                  **kwargs):
         super().__init__(location, time, projection_cls, **kwargs)
+        self._cached_distances = None
+        self._hash_observed = None
+        self._hash_catalogue = None
 
     def load_sensor(self, filename: str):
         self.sensor_data = SensorData.load_YAML(filename)
@@ -106,8 +109,7 @@ class Matchmaker(Matcher):
             self.altaz(masked=mask_catalogue),
         )
 
-    @staticmethod
-    def _compute_distances_sky(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
+    def _compute_distances_sky(self, observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
         """
         Compute distance matrix for observed points projected to the sky and catalogue stars
 
@@ -120,11 +122,21 @@ class Matchmaker(Matcher):
         -------
         np.ndarray(M, N)
         """
-        log.debug(f"Computing sky distance for {observed.shape} × {catalogue.shape}")
-        observed = np.expand_dims(observed, 1)
-        observed[..., 0] = np.pi / 2 - observed[..., 0]
-        catalogue = np.expand_dims(catalogue, 0)
-        return spherical_distance(observed, catalogue)
+
+        hash_observed = hash_numpy(observed)
+        hash_catalogue = hash_numpy(catalogue)
+
+        if hash_observed == self._hash_observed and hash_catalogue == self._hash_catalogue:
+            log.debug(f"Returning cached")
+        else:
+            self._hash_catalogue = hash_catalogue
+            self._hash_observed = hash_observed
+            observed = np.expand_dims(observed, 1)
+            observed[..., 0] = np.pi / 2 - observed[..., 0]
+            catalogue = np.expand_dims(catalogue, 0)
+            self._cached_distances = spherical_distance(observed, catalogue)
+            log.debug(f"Computing sky distance for {observed.shape} × {catalogue.shape}: {np.sum(self._cached_distances)}")
+        return self._cached_distances
 
     @staticmethod
     def _compute_distances_sensor(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:

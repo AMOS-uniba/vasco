@@ -55,7 +55,7 @@ class QCatalogueModel(QAbstractTableModel):
                     case 5:
                         return f"{self._data.az[row]:.6f}°"
                     case 6:
-                        return f"{'\u2714' if self._data.mask[row] else '\u274C'}"
+                        return '\u2714' if self._data.mask[row] else '\u274C'
                     case _:
                         return None
             case Qt.ItemDataRole.TextAlignmentRole:

@@ -7,9 +7,12 @@ import numpy as np
 import yaml
 from pathlib import Path
 
-from models import Catalogue, SensorData
+from models import SensorData
 from matchers import Matchmaker, Counsellor
-from projections import BorovickaProjection
+
+from amosutils.projections import BorovickaProjection
+from amosutils.catalogue import Catalogue
+
 import colour as c
 
 log = logger.setupLog('vasco')
@@ -37,7 +40,8 @@ class VascoCLI:
         self.argparser.add_argument('-p', '--parameters', type=argparse.FileType('r'), required=True,
                                     help="file with projection parameters (YAML)")
         self.argparser.add_argument('-u', '--pre-optimize', action='store_true', default=False,
-                                    help="attempt to optimize the projection parameters before pairing")
+                                    help="attempt to optimize the projection parameters"
+                                         "before pairing (might take a long time)")
 
         self.argparser.add_argument('-m', '--method', type=str, choices=['raw', 'kernel'], default='raw',
                                     help="selects a correction method\n"
@@ -48,7 +52,9 @@ class VascoCLI:
         self.argparser.add_argument('-i', '--iterations', type=int, default=250,
                                     help="number of optimization iterations, default 250")
         self.argparser.add_argument('-k', '--mask-distant', nargs='?', type=float, const=0.5,
-                                    help="mask catalogue stars that are more distant than this limit first")
+                                    help="mask catalogue stars that are too far from any dot [degrees]")
+        self.argparser.add_argument('-l', '--mask-low', nargs='?', type=float, const=10,
+                                    help="mask catalogue stars whose altitude is below limit [degrees]")
         self.argparser.add_argument('-d', '--debug', action='store_true', default=False,
                                     help="enable debugging output")
 
@@ -65,7 +71,7 @@ class VascoCLI:
         log.info(f"Projection parameters loaded: {self.projection}")
 
     def load_catalogue(self, filename):
-        self.catalogue = Catalogue.load(filename)
+        self.catalogue = Catalogue(filename)
 
     def process_files(self, files):
         for file in files:

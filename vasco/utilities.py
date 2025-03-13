@@ -104,3 +104,11 @@ def proj_to_disk(obs: np.ndarray) -> np.ndarray:
         x = z * np.sin(a) / math.tau * 4
         y = -z * np.cos(a) / math.tau * 4
         return np.stack((x, y), axis=1)
+
+def hash_numpy(array: np.ndarray):
+    old = array.flags.writeable
+    array.flags.writeable = False
+    h = hash(array.tobytes())
+    array.flags.writeable = old
+    return h
+

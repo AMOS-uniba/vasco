@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1279</width>
-    <height>932</height>
+    <width>1147</width>
+    <height>814</height>
    </rect>
   </property>
   <property name="font">
@@ -649,7 +649,7 @@
                 <number>10</number>
                </property>
                <property name="stepType">
-                <enum>QAbstractSpinBox::StepType::AdaptiveDecimalStepType</enum>
+                <enum>QAbstractSpinBox::StepType::DefaultStepType</enum>
                </property>
                <property name="value">
                 <number>100</number>
@@ -1247,23 +1247,17 @@
           </item>
           <item row="5" column="2">
            <widget class="QPushButton" name="pb_sensor_mask_alt">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
+            <property name="maximumSize">
              <size>
-              <width>96</width>
-              <height>0</height>
+              <width>48</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="toolTip">
              <string>Mask starts that are not close to any dot</string>
             </property>
             <property name="text">
-             <string>Mask low</string>
+             <string>Mask</string>
             </property>
            </widget>
           </item>
@@ -1344,20 +1338,14 @@
           </item>
           <item row="4" column="2">
            <widget class="QPushButton" name="pb_sensor_mask_dist">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
+            <property name="maximumSize">
              <size>
-              <width>96</width>
-              <height>0</height>
+              <width>48</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="text">
-             <string>Mask distant</string>
+             <string>Mask</string>
             </property>
            </widget>
           </item>
@@ -1392,6 +1380,9 @@
           </item>
           <item row="6" column="0" colspan="4">
            <widget class="QPushButton" name="pb_sensor_mask_reset">
+            <property name="toolTip">
+             <string>Reset the sensor mask</string>
+            </property>
             <property name="text">
              <string>Reset sensor mask</string>
             </property>
@@ -1406,7 +1397,7 @@
        <item>
         <widget class="QGroupBox" name="gb_catalogue">
          <property name="title">
-          <string>Sky catalogue</string>
+          <string>Catalogue</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_8">
           <property name="leftMargin">
@@ -1510,23 +1501,17 @@
           </item>
           <item row="7" column="2">
            <widget class="QPushButton" name="pb_catalogue_mask_dist">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
+            <property name="maximumSize">
              <size>
-              <width>96</width>
-              <height>0</height>
+              <width>48</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="toolTip">
              <string>Mask starts that are not close to any dot</string>
             </property>
             <property name="text">
-             <string>Mask distant</string>
+             <string>Mask</string>
             </property>
            </widget>
           </item>
@@ -1608,20 +1593,14 @@
           </item>
           <item row="9" column="2">
            <widget class="QPushButton" name="pb_catalogue_mask_mag">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
+            <property name="maximumSize">
              <size>
-              <width>96</width>
-              <height>0</height>
+              <width>48</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="text">
-             <string>Mask faint</string>
+             <string>Mask</string>
             </property>
            </widget>
           </item>
@@ -1687,6 +1666,9 @@
           </item>
           <item row="17" column="0" colspan="4">
            <widget class="QPushButton" name="pb_catalogue_mask_reset">
+            <property name="toolTip">
+             <string>Reset the catalogue mask</string>
+            </property>
             <property name="text">
              <string>Reset catalogue mask</string>
             </property>
@@ -1697,23 +1679,17 @@
           </item>
           <item row="8" column="2">
            <widget class="QPushButton" name="pb_catalogue_mask_alt">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
+            <property name="maximumSize">
              <size>
-              <width>96</width>
-              <height>0</height>
+              <width>48</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="toolTip">
              <string>Mask starts that are not close to any dot</string>
             </property>
             <property name="text">
-             <string>Mask low</string>
+             <string>Mask</string>
             </property>
            </widget>
           </item>
@@ -1795,6 +1771,9 @@
           </item>
           <item row="10" column="4" colspan="2">
            <widget class="QComboBox" name="cb_interpolation">
+            <property name="toolTip">
+             <string>Smoothing of magnitude field (visualization only, does not affect the actual data)</string>
+            </property>
             <property name="currentIndex">
              <number>1</number>
             </property>
@@ -1817,6 +1796,9 @@
           </item>
           <item row="4" column="4" colspan="2">
            <widget class="QSpinBox" name="sb_resolution">
+            <property name="toolTip">
+             <string>Number of arrows (visualization only, does not affect the actual data)</string>
+            </property>
             <property name="alignment">
              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
             </property>
@@ -1836,6 +1818,9 @@
           </item>
           <item row="3" column="4" colspan="2">
            <widget class="QSpinBox" name="sb_arrow_scale">
+            <property name="toolTip">
+             <string>Arrow scale (visualization only, does not change actual data)</string>
+            </property>
             <property name="alignment">
              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
             </property>
@@ -1935,7 +1920,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1279</width>
+     <width>1147</width>
      <height>21</height>
     </rect>
    </property>
