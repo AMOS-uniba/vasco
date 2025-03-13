@@ -54,6 +54,8 @@ class MainWindow(MainWindowPlots):
             self._load_sighting(args.sighting.name)
         if args.projection:
             self._import_projection_parameters(args.projection.name)
+        else:
+            self.update_projection()
 
         self.connect_signal_slots()
         self.on_location_changed()
@@ -492,7 +494,7 @@ class MainWindow(MainWindowPlots):
     def _mask_sensor(self, mask: np.ndarray, message: str):
         self.matcher.mask_sensor_data(mask)
         log.info(f"Masked reference dots: {message}: "
-                 f"{c.num(self.matcher.sensor_data.stars.count_valid)} are valid")
+                 f"{c.num(self.matcher.sensor_data.stars.count_visible)} are valid")
         self._update_catalogue_mask()
 
     def mask_sensor_dist(self):
@@ -525,7 +527,7 @@ class MainWindow(MainWindowPlots):
     def _mask_catalogue(self, mask: np.ndarray, message: str):
         self.matcher.mask_catalogue(mask)
         log.info(f"Masked the catalogue: {message}: "
-                 f"{c.num(self.matcher.catalogue.visible_count)} stars visible")
+                 f"{c.num(self.matcher.catalogue.count_visible)} stars visible")
         self._update_catalogue_mask()
 
     def mask_catalogue_dist(self):
@@ -560,9 +562,9 @@ class MainWindow(MainWindowPlots):
             self.tab_correction_magnitudes_enabled.setEnabled(False)
 
         self.lb_catalogue_total.setText(f'{self.matcher.catalogue.count}')
-        self.lb_catalogue_used.setText(f'{self.matcher.catalogue.visible_count}')
+        self.lb_catalogue_used.setText(f'{self.matcher.catalogue.count_visible}')
         self.lb_sensor_total.setText(f'{self.matcher.sensor_data.stars.count}')
-        self.lb_sensor_used.setText(f'{self.matcher.sensor_data.stars.count_valid}')
+        self.lb_sensor_used.setText(f'{self.matcher.sensor_data.stars.count_visible}')
 
     def export_corrected_meteor(self):
         if not self.paired:

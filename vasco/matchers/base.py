@@ -16,6 +16,7 @@ from amosutils.projections import Projection, BorovickaProjection
 
 from photometry import Calibration
 from models import SensorData
+from utilities import hash_numpy, spherical_distance
 
 log = logging.getLogger('vasco')
 
@@ -35,6 +36,10 @@ class Matcher(metaclass=ABCMeta):
         self._altaz: Optional[AltAz] = None
         self._altaz_numpy: Optional[np.ndarray] = None
         self._altaz_masked: Optional[np.ndarray] = None
+
+        self._cached_distances = None
+        self._hash_observed = None
+        self._hash_catalogue = None
 
         self.projection_cls: type[Projection] = projection_cls
         self.location: Optional[EarthLocation] = None
@@ -61,10 +66,6 @@ class Matcher(metaclass=ABCMeta):
     @abstractmethod
     def mask_sensor_data(self, mask):
         """ Apply a mask to the sensor data """
-
-    @abstractmethod
-    def pair(self, projection):
-        """ Assign the nearest catalogue star to every dot """
 
     def reset_mask(self):
         self.catalogue.mask = None
@@ -109,18 +110,51 @@ class Matcher(metaclass=ABCMeta):
         vmag = self.catalogue.vmag(self.location, self.time, masked=masked)
         return vmag
 
-    @abstractmethod
-    def distance_sky(self, projection: Projection, *, mask_catalogue: bool, mask_sensor: bool):
-        pass
+    def _compute_distances_sky_cart(self, observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
+        """
+        Compute distances in the sky of `observed` and `catalogue` objects
+        from the full Cartesian product
 
-    @abstractmethod
+        Parameters
+        ----------
+        observed:   np.ndarray(M, 2)
+        catalogue:  np.ndarray(N, 2)
+
+        Returns
+        -------
+        np.ndarray(M, N)
+        """
+
+        hash_observed = hash_numpy(observed)
+        hash_catalogue = hash_numpy(catalogue)
+
+        if hash_observed == self._hash_observed and hash_catalogue == self._hash_catalogue:
+            log.debug(f"Returning cached")
+        else:
+            self._hash_catalogue = hash_catalogue
+            self._hash_observed = hash_observed
+            observed = np.expand_dims(observed, 1)
+            observed[..., 0] = math.tau / 4 - observed[..., 0]
+            catalogue = np.expand_dims(catalogue, 0)
+            self._cached_distances = spherical_distance(observed, catalogue)
+            log.debug(f"Computing sky distance for {observed.shape} × {catalogue.shape}: {np.sum(self._cached_distances)}")
+        return self._cached_distances
+
+
+    def distance_sky(self, projection: Projection, *, mask_catalogue: bool, mask_sensor: bool):
+        return self._compute_distances_sky_cart(
+            self.sensor_data.stars.project(projection, masked=mask_sensor),
+            self.altaz(masked=mask_catalogue),
+        )
+
     def position_errors_sky(self,
                             projection: Projection,
                             axis: int,
                             *,
                             mask_catalogue: bool,
                             mask_sensor: bool) -> np.ndarray[float]:
-        """ Find position error for each dot """
+        return np.min(self.distance_sky(projection, mask_catalogue=mask_catalogue, mask_sensor=mask_sensor),
+                      axis=axis, initial=np.pi / 2)
 
     def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
         pass
@@ -148,6 +182,31 @@ class Matcher(metaclass=ABCMeta):
     @staticmethod
     def max_error(errors: np.ndarray[float]) -> float:
         return np.max(errors, initial=0)
+
+    @staticmethod
+    def find_nearest_value(dist, *, axis: int) -> np.ndarray:
+        """
+        Find the nearest dot to star or vice versa
+
+        axis: int
+            0 for the nearest star to every dot
+            1 for the nearest dot to every star
+        """
+        return np.min(dist, axis=axis, initial=np.pi)
+
+    @staticmethod
+    def find_nearest_index(dist, *, axis: int) -> np.ndarray:
+        """
+        Find the index of the nearest dot to star or vice versa
+
+        axis: int
+            0 for the nearest star to every dot
+            1 for the nearest dot to every star
+        """
+        if dist.size > 0:
+            return np.argmin(dist, axis=axis)
+        else:
+            return np.empty(shape=(dist.shape[axis], 0), dtype=int)
 
     @abstractmethod
     def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:

@@ -117,5 +117,5 @@ class SensorData:
         )
 
     def __str__(self):
-        return f"<Sensor data with {c.num(self.stars.count_valid)} / {c.num(self.stars.count)} " \
-               f"reference stars and {c.num(self.meteor.count)} meteor snapshots>"
+        return f"<Sensor data with {self.stars.count_visible} / {self.stars.count} " \
+               f"reference objects and {self.meteor.count} meteor snapshots>"

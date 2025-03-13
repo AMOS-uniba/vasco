@@ -27,21 +27,30 @@ class Counsellor(Matcher):
     with the catalogue *after* the stars were paired to sensor dots.
     """
 
-    def __init__(self, location, time, projection_cls, *,
+    def __init__(self, location, time, projection, *,
                  catalogue: Catalogue,
                  sensor_data: SensorData):
-        super().__init__(location, time, projection_cls)
-        # a Counsellor has fixed pairs: they have to be set on creation
-        assert sensor_data.stars.count == catalogue.count, \
-            f"Sensor data count ({sensor_data.stars.count}) does not match the catalogue data count ({catalogue.count})"
+        super().__init__(location, time, projection.__class__)
         self.catalogue = catalogue
         self.sensor_data = sensor_data
         self.position_smoother = None
         self.magnitude_smoother = None
 
-        log.info(f"Counselor created with {self.catalogue.count} pairs:")
+        log.info(f"Counselor created from")
         log.info(" - " + self.catalogue.__str__())
         log.info(" - " + self.sensor_data.__str__())
+
+        errors = self.distance_sky(projection, mask_catalogue=False, mask_sensor=True)
+        nearest = self.find_nearest_index(errors, axis=1)
+
+        self.catalogue.mask = np.zeros(catalogue.count, dtype=bool)
+        self.catalogue.mask[nearest] = True
+
+        errors = self.distance_sky(projection, mask_catalogue=True, mask_sensor=True)
+        nearest = self.find_nearest_index(errors, axis=0)
+
+        self.sensor_data._stars._mask = np.zeros(self.sensor_data.stars.count, dtype=bool)
+        self.sensor_data._stars.mask[nearest] = True
 
     @property
     def count(self):
@@ -49,15 +58,16 @@ class Counsellor(Matcher):
 
     def mask_catalogue(self, mask):
         """ Here both methods mask_catalogue and mask_sensor_data must do both things """
-        self.catalogue.mask = mask
-        self.sensor_data.mask = mask
+        self.catalogue.mask &= mask
+        self.sensor_data.stars.mask &= mask
+        self.invalidate_altaz()
 
     def mask_sensor_data(self, mask):
         """ Here both methods are the same, so just call the other one. """
         self.mask_catalogue(mask)
 
     @staticmethod
-    def compute_distances(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
+    def _compute_distances_sky(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
         """
         Compute distance matrix for observed points projected to the sky and catalogue stars
         observed:   np.ndarray(N, 2)
@@ -69,6 +79,11 @@ class Counsellor(Matcher):
         """
         observed[..., 0] = math.tau / 4 - observed[..., 0]   # Convert observed co-altitude to altitude
         return spherical_distance(observed, catalogue)
+
+    @staticmethod
+    def _compute_distances_sensor(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
+        # ToDo finish this
+        pass
 
     @staticmethod
     def compute_vector_errors(observed, catalogue):
@@ -98,14 +113,6 @@ class Counsellor(Matcher):
             f"The shape of the dot collection and the catalogue must be the same, got {obs.shape} and {cat.shape}"
         return obs - cat
 
-    def position_errors_inverse(self, projection: Projection, *, masked: bool):
-        return self.position_errors(projection, masked=masked)
-
-    def pair(self, projection):
-        self.catalogue.cull()
-        self.sensor_data.stars_pixels.cull()
-        return self
-
     def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
         obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=True))
         cat = altaz_to_disk(self.catalogue.altaz(self.location, self.time, masked=True))
@@ -117,7 +124,7 @@ class Counsellor(Matcher):
 
     def update_magnitude_smoother(self, projection: Projection, calibration: Calibration, *, bandwidth: float = 0.1):
         obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=True))
-        mcat = self.catalogue.vmag(masked=True)
+        mcat = self.catalogue.vmag(self.location, self.time, masked=True)
         mobs = calibration(self.sensor_data.stars.intensities(masked=True))
         self.magnitude_smoother = KernelSmoother(
             obs, np.expand_dims(mobs - mcat, 1),

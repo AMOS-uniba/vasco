@@ -1,4 +1,6 @@
 import logging
+import math
+
 import dotmap
 import numpy as np
 
@@ -12,7 +14,7 @@ from .counsellor import Counsellor
 
 from photometry import Calibration
 from models import SensorData
-from utilities import spherical, spherical_distance, hash_numpy
+from utilities import spherical_distance
 
 log = logging.getLogger('vasco')
 
@@ -30,9 +32,6 @@ class Matchmaker(Matcher):
                  projection_cls: type[Projection] = BorovickaProjection,
                  **kwargs):
         super().__init__(location, time, projection_cls, **kwargs)
-        self._cached_distances = None
-        self._hash_observed = None
-        self._hash_catalogue = None
 
     def load_sensor(self, filename: str):
         self.sensor_data = SensorData.load_YAML(filename)
@@ -45,7 +44,7 @@ class Matchmaker(Matcher):
         self.invalidate_altaz()
 
     def mask_sensor_data(self, mask):
-        self.sensor_data.stars.mask &= mask
+        self.sensor_data._stars.mask &= mask
 
     def position_errors_sensor_star_to_dot(self,
                                            projection: Projection,
@@ -64,15 +63,6 @@ class Matchmaker(Matcher):
         Find errors from every dot to the nearest star, on sensor
         Return a numpy array (N): distance [µm]
         """
-
-    def position_errors_sky(self,
-                            projection: Projection,
-                            axis: int,
-                            *,
-                            mask_catalogue: bool,
-                            mask_sensor: bool) -> np.ndarray[float]:
-        return np.min(self.distance_sky(projection, mask_catalogue=mask_catalogue, mask_sensor=mask_sensor),
-                      axis=axis, initial=np.pi / 2)
 
     def magnitude_errors_sky(self,
                              projection: Projection,
@@ -103,40 +93,8 @@ class Matchmaker(Matcher):
     def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
         raise NotImplementedError("Matchmaker cannot print corrected meteors, use a Counsellor instead")
 
-    def distance_sky(self, projection: Projection, *, mask_catalogue: bool, mask_sensor: bool):
-        return self._compute_distances_sky(
-            self.sensor_data.stars.project(projection, masked=mask_sensor),
-            self.altaz(masked=mask_catalogue),
-        )
-
     def _compute_distances_sky(self, observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
-        """
-        Compute distance matrix for observed points projected to the sky and catalogue stars
-
-        Parameters
-        ----------
-        observed:   np.ndarray(M, 2)
-        catalogue:  np.ndarray(N, 2)
-
-        Returns
-        -------
-        np.ndarray(M, N)
-        """
-
-        hash_observed = hash_numpy(observed)
-        hash_catalogue = hash_numpy(catalogue)
-
-        if hash_observed == self._hash_observed and hash_catalogue == self._hash_catalogue:
-            log.debug(f"Returning cached")
-        else:
-            self._hash_catalogue = hash_catalogue
-            self._hash_observed = hash_observed
-            observed = np.expand_dims(observed, 1)
-            observed[..., 0] = np.pi / 2 - observed[..., 0]
-            catalogue = np.expand_dims(catalogue, 0)
-            self._cached_distances = spherical_distance(observed, catalogue)
-            log.debug(f"Computing sky distance for {observed.shape} × {catalogue.shape}: {np.sum(self._cached_distances)}")
-        return self._cached_distances
+        self._compute_distances_sky_cart(observed, catalogue)
 
     @staticmethod
     def _compute_distances_sensor(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
@@ -154,40 +112,6 @@ class Matchmaker(Matcher):
         """
         raise NotImplementedError
 
-    @staticmethod
-    def find_nearest_value(dist, *, axis):
-        """
-        Find the nearest dot to star or vice versa
-
-        axis: int
-            0 for the nearest star to every dot
-            1 for the nearest dot to every star
-        """
-        return np.min(dist, axis=axis, initial=np.pi)
-
-    @staticmethod
-    def find_nearest_index(dist, *, axis):
-        """
-        Find the index of the nearest dot to star or vice versa
-
-        axis: int
-            0 for the nearest star to every dot
-            1 for the nearest dot to every star
-        """
-        if dist.size > 0:
-            return np.argmin(dist, axis=axis)
-        else:
-            return np.empty(shape=(dist.shape[axis], 0), dtype=int)
-
     def pair(self, projection: Projection) -> Counsellor:
-        # Find which star is the nearest for every dot
-
-        errors = self.distance_sky(projection, mask_catalogue=False, mask_sensor=True)
-        nearest = Matchmaker.find_nearest_index(errors, axis=1)
-        print(nearest)
-
-        # Filter the catalogue by that index
-
-        sensor_data = self.sensor_data.culled_copy()
-        return Counsellor(self.location, self.time, self.projection_cls,
-                          catalogue=self.catalogue, sensor_data=sensor_data)
+        return Counsellor(self.location, self.time, projection,
+                          catalogue=self.catalogue, sensor_data=self.sensor_data)

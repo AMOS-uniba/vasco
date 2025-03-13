@@ -1,10 +1,8 @@
-import copy
 import numpy as np
 import logging
 
 from amosutils.projections import Projection
 from photometry import Calibration
-import colour as c
 
 log = logging.getLogger('vasco')
 
@@ -14,7 +12,7 @@ class DotCollection:
         self._xy = np.empty(shape=(0, 2), dtype=float) if xy is None else xy
         self._i = np.empty(shape=(0,), dtype=float) if i is None else i
         self._fnos = np.zeros_like(self.i, dtype=int) if fnos is None else fnos
-        self.mask = np.ones_like(self.x, dtype=bool) if mask is None else mask
+        self._mask = np.ones_like(self.x, dtype=bool) if mask is None else mask
         assert (xy is None) == (i is None), "Both or neither of xy and i must be set"
         assert self._xy.shape[0] == self._i.shape[0], "xy must be of shape (N, 2) and m of shape (N,)"
         assert self._xy.shape[0] == self._mask.shape[0], \
@@ -56,7 +54,7 @@ class DotCollection:
         return self._xy.shape[0]
 
     @property
-    def count_valid(self):
+    def count_visible(self):
         return np.count_nonzero(self.mask)
 
     def xs(self, masked):
@@ -78,19 +76,8 @@ class DotCollection:
     @mask.setter
     def mask(self, m=None):
         self._mask = np.ones_like(self.x, dtype=bool) if m is None else m
-        assert self.mask.shape == self.x.shape,\
+        assert self.mask.shape == self.x.shape, \
             f"Mask shape does not match data shape: expected {self.x.shape}, got {self.mask.shape}"
-
-    def culled_copy(self):
-        out = copy.deepcopy(self)
-        return out.cull()
-
-    def cull(self):
-        self._xy = self._xy[self.mask]
-        self._i = self.i[self.mask]
-        self.mask = None
-        log.debug(f"DotCollection mask reset: {c.num(self.count_valid)} / {c.num(self.count)} dots are valid")
-        return self
 
     def project(self, projection: Projection, *, masked: bool) -> np.ndarray[float]:
         """ Project the dot collection from sensor to sky """

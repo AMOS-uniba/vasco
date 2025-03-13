@@ -51,7 +51,7 @@ class QCatalogueModel(QAbstractTableModel):
                     case 3:
                         return f"{self._data.y[row]:.6f}"
                     case 4:
-                        return f"{self._data.alt[row]:.6f}°"
+                        return f"{90 - self._data.alt[row]:.6f}°"
                     case 5:
                         return f"{self._data.az[row]:.6f}°"
                     case 6:
