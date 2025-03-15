@@ -21,6 +21,7 @@ from matchers import Matchmaker, Counsellor
 from amosutils.projections import BorovickaProjection
 
 from models.qcataloguemodel import QCatalogueModel
+from models.qstarmodel import QStarModel
 from plotting import MainWindowPlots
 from models import SensorData, QMeteorModel
 from export import XMLExporter
@@ -63,6 +64,10 @@ class MainWindow(MainWindowPlots):
         self.show_counts()
 
         self.tw_charts.setCurrentIndex(2)
+
+        #self.mask_catalogue_alt()
+        #self.mask_sensor_alt()
+        #self.pair()
 
     def setup_parameters(self):
         self.pw_x0.setup(title="H shift", symbol="x<sub>0</sub>", unit="mm",
@@ -463,12 +468,13 @@ class MainWindow(MainWindowPlots):
             py=shifted[1],
             alt=np.degrees(positions[..., 0]),
             az=np.degrees(positions[..., 1]),
+            star=self.matcher.pairing,
             mask=self.matcher.sensor_data.stars.mask,
             count=self.matcher.sensor_data.stars.count,
             _dynamic=False,
         )
 
-        model = QCatalogueModel(data)
+        model = QStarModel(data)
         self.tv_sensor.setModel(model)
 
         for i, width in enumerate([120, 120, 160, 160, 120, 120, 80]):
@@ -592,7 +598,7 @@ class MainWindow(MainWindowPlots):
         self.pair()
 
     def pair(self):
-        self.matcher = self.matcher.pair(self.projection)
+        self.matcher.pair(self.projection)
         self.matcher.update_position_smoother(self.projection, bandwidth=self.bandwidth())
         self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=self.bandwidth())
 

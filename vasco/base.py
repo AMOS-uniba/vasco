@@ -77,7 +77,7 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         self.lb_rms_error.setText(f'{np.degrees(rms_error):.6f}°')
         self.lb_max_error.setText(f'{np.degrees(max_error):.6f}°')
 
-        errors = self.matcher.distance_sky(self.projection, mask_catalogue=True, mask_sensor=True)
+        errors = self.matcher.distance_sky(self.projection, mask_catalogue=True, mask_sensor=True, paired=self.paired)
 
         self._update_maskable_count(self.dsb_sensor_limit_dist, self.lb_sensor_dist,
                                     np.min(errors, axis=1, initial=np.inf),

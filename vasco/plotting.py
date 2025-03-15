@@ -167,10 +167,10 @@ class MainWindowPlots(MainWindowBase):
             plot.update_dots(
                 self.matcher.catalogue.altaz(self.location, self.time, masked=True),
                 self.matcher.sensor_data.stars.project(self.projection, masked=True),
-                self.matcher.catalogue.vmag(masked=True),
+                self.matcher.catalogue.vmag(self.location, self.time, masked=True),
                 self.matcher.sensor_data.stars.calibrate(self.calibration, masked=True),
                 limit=np.radians(self.dsb_sensor_limit_dist.value()),
-                scale=1 / self.sb_arrow_scale.value(),
+                scale=1000 / self.sb_arrow_scale.value(),
             )
         else:
             plot.clear_errors()

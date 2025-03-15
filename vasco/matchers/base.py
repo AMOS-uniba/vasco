@@ -14,9 +14,10 @@ from astropy.time import Time
 from amosutils.catalogue import Catalogue
 from amosutils.projections import Projection, BorovickaProjection
 
+from correctors import KernelSmoother, kernels
 from photometry import Calibration
 from models import SensorData
-from utilities import hash_numpy, spherical_distance
+from utilities import hash_numpy, spherical_distance, proj_to_disk, altaz_to_disk
 
 log = logging.getLogger('vasco')
 
@@ -35,11 +36,15 @@ class Matcher(metaclass=ABCMeta):
                  sensor_data: Optional[SensorData] = None):
         self._altaz: Optional[AltAz] = None
         self._altaz_numpy: Optional[np.ndarray] = None
-        self._altaz_masked: Optional[np.ndarray] = None
 
         self._cached_distances = None
         self._hash_observed = None
         self._hash_catalogue = None
+
+        self.pairing: Optional[np.ndarray] = None
+
+        self.position_smoother = None
+        self.magnitude_smoother = None
 
         self.projection_cls: type[Projection] = projection_cls
         self.location: Optional[EarthLocation] = None
@@ -59,13 +64,21 @@ class Matcher(metaclass=ABCMeta):
     def valid(self) -> bool:
         return self.catalogue is not None and self.sensor_data is not None
 
-    @abstractmethod
-    def mask_catalogue(self, mask):
-        """ Apply a mask to the catalogue data """
+    @property
+    def paired(self) -> bool:
+        return self.pairing is not None
 
-    @abstractmethod
+    def pair(self, projection: Projection):
+        distances = self.distance_sky(projection, mask_sensor=False, mask_catalogue=False, paired=False)
+        self.pairing = self.find_nearest_index(distances, axis=1)
+        print(self.pairing)
+
+    def mask_catalogue(self, mask):
+        self.catalogue.mask &= mask
+        self.invalidate_altaz()
+
     def mask_sensor_data(self, mask):
-        """ Apply a mask to the sensor data """
+        self.sensor_data._stars.mask &= mask
 
     def reset_mask(self):
         self.catalogue.mask = None
@@ -85,14 +98,13 @@ class Matcher(metaclass=ABCMeta):
         log.debug("Invalidating the cached altaz")
         self._altaz = None
 
-    def altaz(self, *, masked: bool):
+    def altaz(self, *, masked: bool) -> np.ndarray:
         """
         Return the current masked catalogue altaz as a numpy array
         """
         if self._altaz is None:
             log.debug(f"Requesting catalogue for {self.location}, {self.time}, {masked}")
             self._altaz = self.catalogue.altaz(self.location, self.time, masked=False)
-            self._altaz_masked = self._altaz[self.catalogue.mask]
         else:
             log.debug(f"Requesting catalogue for {self.location}, {self.time}, {masked} (using cached)")
 
@@ -110,7 +122,52 @@ class Matcher(metaclass=ABCMeta):
         vmag = self.catalogue.vmag(self.location, self.time, masked=masked)
         return vmag
 
-    def _compute_distances_sky_cart(self, observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
+    def find_nearest_star_sky(self, projection: Projection, *, mask_sensor: bool) -> np.ndarray:
+        """
+        Project the sensor data onto the sky and find the nearest star for every dot.
+
+        Returns
+            array(M): index of the star nearest to each dot, or NaN if not applicable
+        """
+        obs = self.sensor_data.stars.project(projection, masked=mask_sensor)
+        cat = self.catalogue.altaz(self.location, self.time, masked=mask_sensor)
+
+        # Now add an extra axis to compute the Cartesian product
+        obs = np.expand_dims(obs, 1)
+        cat = np.expand_dims(cat, 0)
+
+        # Convert colatitude to latitude
+        obs[..., 0] = math.tau / 4 - obs[..., 0]
+
+        dist = spherical_distance(obs, cat)
+
+        if dist.size > 0:
+            return np.argmin(dist, axis=0)
+        else:
+            empty = np.empty(shape=(dist.shape[0]), dtype=int)
+            empty[...] = np.nan
+            return empty
+
+
+    def compute_distances_sky(self, projection: Projection) -> np.ndarray:
+        obs = self.sensor_data.stars.project(projection, masked=mask_sensor)
+
+        if self.paired:
+            cat = self.altaz(masked=False)[self.pairing[self.sensor_data.stars.mask]]
+        else:
+            cat = self.altaz(masked=False)
+            obs = np.expand_dims(obs, 1)
+            cat = np.expand_dims(cat, 0)
+
+        obs[..., 0] = math.tau / 4 - obs[..., 0]
+        return spherical_distance(obs, cat)
+
+
+    def _compute_distances_sky(self,
+                               observed: np.ndarray[float],
+                               catalogue: np.ndarray[float],
+                               *,
+                               paired: bool) -> np.ndarray[float]:
         """
         Compute distances in the sky of `observed` and `catalogue` objects
         from the full Cartesian product
@@ -124,27 +181,31 @@ class Matcher(metaclass=ABCMeta):
         -------
         np.ndarray(M, N)
         """
+        # Convert colatitudes to latitudes
+        observed[..., 0] = math.tau / 4 - observed[..., 0]
 
-        hash_observed = hash_numpy(observed)
-        hash_catalogue = hash_numpy(catalogue)
-
-        if hash_observed == self._hash_observed and hash_catalogue == self._hash_catalogue:
-            log.debug(f"Returning cached")
+        if paired:
+            return spherical_distance(observed, catalogue[self.pairing[self.sensor_data.stars.mask]])
         else:
-            self._hash_catalogue = hash_catalogue
-            self._hash_observed = hash_observed
-            observed = np.expand_dims(observed, 1)
-            observed[..., 0] = math.tau / 4 - observed[..., 0]
-            catalogue = np.expand_dims(catalogue, 0)
-            self._cached_distances = spherical_distance(observed, catalogue)
-            log.debug(f"Computing sky distance for {observed.shape} × {catalogue.shape}: {np.sum(self._cached_distances)}")
-        return self._cached_distances
+            # Binary and is here to *prevent* short circuit, otherwise it can fail!
+            if (((hash_observed := hash_numpy(observed)) == self._hash_observed) &
+                ((hash_catalogue := hash_numpy(catalogue)) == self._hash_catalogue)):
+                log.debug(f"Returning cached")
+            else:
+                self._hash_observed = hash_observed
+                self._hash_catalogue = hash_catalogue
 
+                observed = np.expand_dims(observed, 1)
+                catalogue = np.expand_dims(catalogue, 0)
+                self._cached_distances = spherical_distance(observed, catalogue)
+                log.debug(f"Computing sky distance for {observed.shape} × {catalogue.shape}")
+            return self._cached_distances
 
-    def distance_sky(self, projection: Projection, *, mask_catalogue: bool, mask_sensor: bool):
-        return self._compute_distances_sky_cart(
+    def distance_sky(self, projection: Projection, *, mask_catalogue: bool, mask_sensor: bool, paired: bool):
+        return self._compute_distances_sky(
             self.sensor_data.stars.project(projection, masked=mask_sensor),
-            self.altaz(masked=mask_catalogue),
+            self.altaz(masked=mask_catalogue or not paired),
+            paired=paired,
         )
 
     def position_errors_sky(self,
@@ -153,16 +214,14 @@ class Matcher(metaclass=ABCMeta):
                             *,
                             mask_catalogue: bool,
                             mask_sensor: bool) -> np.ndarray[float]:
-        return np.min(self.distance_sky(projection, mask_catalogue=mask_catalogue, mask_sensor=mask_sensor),
-                      axis=axis, initial=np.pi / 2)
+        if self.paired:
+            return self.distance_sky(projection, mask_catalogue=mask_catalogue, mask_sensor=mask_sensor, paired=False)
+        else:
+            return np.min(
+                self.distance_sky(projection, mask_catalogue=mask_catalogue, mask_sensor=mask_sensor, paired=False),
+                axis=axis, initial=np.pi / 2
+            )
 
-    def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
-        pass
-
-    def update_magnitude_smoother(self, projection: Projection, calibration: Calibration, *, bandwidth: float = 0.1):
-        pass
-
-    @abstractmethod
     def magnitude_errors_sky(self,
                              projection: Projection,
                              calibration: Calibration,
@@ -170,7 +229,47 @@ class Matcher(metaclass=ABCMeta):
                              *,
                              mask_catalogue: bool,
                              mask_sensor: bool) -> np.ndarray:
-        """ Find magnitude error for each dot """
+        obs = calibration(self.sensor_data.stars.intensities(masked=mask_sensor))
+
+        if self.paired:
+            cat = self.catalogue.vmag(self.location, self.time)[self.pairing]
+        else:
+            # Find which star is the nearest for every dot
+            nearest = self.find_nearest_index(
+                self.distance_sky(projection, mask_catalogue=mask_catalogue, mask_sensor=mask_sensor, paired=self.paired),
+                axis=axis
+            )
+            # Filter the catalogue by that index
+            cat = self.catalogue.vmag(self.location, self.time, masked=mask_catalogue)[nearest]
+
+            if cat.size == 0:
+                cat = np.tile(np.nan, obs.shape)
+            if obs.size == 0:
+                obs = np.tile(np.nan, cat.shape)
+
+        return obs - cat
+
+    def update_position_smoother(self, projection: Projection, *, bandwidth: float = 0.1):
+        return
+        obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=True))
+        cat = altaz_to_disk(self.catalogue.altaz(self.location, self.time, masked=True))
+        self.position_smoother = KernelSmoother(
+            obs, obs - cat,
+            kernel=kernels.nexp,
+            bandwidth=bandwidth
+        )
+
+    def update_magnitude_smoother(self, projection: Projection, calibration: Calibration, *, bandwidth: float = 0.1):
+        return
+        obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=True))
+        mcat = self.catalogue.vmag(self.location, self.time, masked=True)
+        mobs = calibration(self.sensor_data.stars.intensities(masked=True))
+        self.magnitude_smoother = KernelSmoother(
+            obs, np.expand_dims(mobs - mcat, 1),
+            kernel=kernels.nexp,
+            bandwidth=bandwidth
+        )
+
 
     @staticmethod
     def rms_error(errors: np.ndarray[float]) -> float:

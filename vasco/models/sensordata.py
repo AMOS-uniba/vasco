@@ -1,10 +1,9 @@
 import copy
 import datetime
-import numpy as np
+import logging
 import dotmap
 import yaml
-
-import colour as c
+import numpy as np
 
 from typing import Optional
 from astropy.coordinates import EarthLocation
@@ -13,6 +12,8 @@ import astropy.units as u
 from amosutils.projections.shifters import ScalingShifter
 from .dotcollection import DotCollection
 from .rect import Rect
+
+log = logging.getLogger('vasco')
 
 
 class SensorData:
@@ -68,6 +69,7 @@ class SensorData:
         )
 
     def set_shifter_scales(self, xs, ys):
+        log.debug(f"Set shifter scales to xs = {xs}, ys = {ys}")
         self.shifter.xs = xs
         self.shifter.ys = ys
 

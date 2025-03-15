@@ -33,18 +33,9 @@ class Matchmaker(Matcher):
                  **kwargs):
         super().__init__(location, time, projection_cls, **kwargs)
 
-    def load_sensor(self, filename: str):
-        self.sensor_data = SensorData.load_YAML(filename)
-
     def update_position_smoother(self, projection, **kwargs):
         """ There is no position smoother in Matchmaker, can be implemented by child classes """
 
-    def mask_catalogue(self, mask):
-        self.catalogue.mask &= mask
-        self.invalidate_altaz()
-
-    def mask_sensor_data(self, mask):
-        self.sensor_data._stars.mask &= mask
 
     def position_errors_sensor_star_to_dot(self,
                                            projection: Projection,
@@ -63,38 +54,11 @@ class Matchmaker(Matcher):
         Find errors from every dot to the nearest star, on sensor
         Return a numpy array (N): distance [µm]
         """
-
-    def magnitude_errors_sky(self,
-                             projection: Projection,
-                             calibration: Calibration,
-                             axis: int,
-                             *,
-                             mask_catalogue: bool,
-                             mask_sensor: bool) -> np.ndarray:
-        # Find which star is the nearest for every dot
-        nearest = self.find_nearest_index(
-            self.distance_sky(projection, mask_catalogue=mask_catalogue, mask_sensor=mask_sensor),
-            axis=axis
-        )
-        obs = calibration(self.sensor_data.stars.intensities(masked=mask_sensor))
-        # Filter the catalogue by that index
-        cat = self.catalogue.vmag(self.location, self.time, masked=mask_catalogue)[nearest]
-
-        if cat.size == 0:
-            cat = np.tile(np.nan, obs.shape)
-        if obs.size == 0:
-            obs = np.tile(np.nan, cat.shape)
-
-        return obs - cat
-
     def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
         raise NotImplementedError("Matchmaker cannot correct a meteor, use a Counsellor instead")
 
     def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
         raise NotImplementedError("Matchmaker cannot print corrected meteors, use a Counsellor instead")
-
-    def _compute_distances_sky(self, observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
-        self._compute_distances_sky_cart(observed, catalogue)
 
     @staticmethod
     def _compute_distances_sensor(observed: np.ndarray[float], catalogue: np.ndarray[float]) -> np.ndarray[float]:
@@ -111,7 +75,3 @@ class Matchmaker(Matcher):
         np.ndarray(M, N, 2)
         """
         raise NotImplementedError
-
-    def pair(self, projection: Projection) -> Counsellor:
-        return Counsellor(self.location, self.time, projection,
-                          catalogue=self.catalogue, sensor_data=self.sensor_data)
