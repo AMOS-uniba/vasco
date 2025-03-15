@@ -4,7 +4,6 @@ import dotmap
 import numpy as np
 import scipy as sp
 
-from abc import ABCMeta, abstractmethod
 from typing import Callable, Optional
 from pathlib import Path
 
@@ -13,16 +12,18 @@ from astropy.time import Time
 
 from amosutils.catalogue import Catalogue
 from amosutils.projections import Projection, BorovickaProjection
+from numpy.typing import NDArray
 
 from correctors import KernelSmoother, kernels
+from correctors.metric import spherical, euclidean
 from photometry import Calibration
 from models import SensorData
-from utilities import hash_numpy, spherical_distance, proj_to_disk, altaz_to_disk
+from utilities import hash_numpy, proj_to_disk, altaz_to_disk, disk_to_altaz, unit_grid
 
 log = logging.getLogger('vasco')
 
 
-class Matcher(metaclass=ABCMeta):
+class Matcher:
     """
     The base class for matching sensor data to the catalogue.
     """
@@ -43,8 +44,10 @@ class Matcher(metaclass=ABCMeta):
 
         self.pairing: Optional[np.ndarray] = None
 
-        self.position_smoother = None
-        self.magnitude_smoother = None
+        self.position_smoother = KernelSmoother(np.zeros(shape=(1, 2), dtype=float),
+                                                np.zeros(shape=(1, 2), dtype=float))
+        self.magnitude_smoother = KernelSmoother(np.zeros(shape=(1, 2), dtype=float),
+                                                 np.ndarray(shape=(1,), dtype=float))
 
         self.projection_cls: type[Projection] = projection_cls
         self.location: Optional[EarthLocation] = None
@@ -139,7 +142,7 @@ class Matcher(metaclass=ABCMeta):
         # Convert colatitude to latitude
         obs[..., 0] = math.tau / 4 - obs[..., 0]
 
-        dist = spherical_distance(obs, cat)
+        dist = spherical(obs, cat)
 
         if dist.size > 0:
             return np.argmin(dist, axis=0)
@@ -160,7 +163,7 @@ class Matcher(metaclass=ABCMeta):
             cat = np.expand_dims(cat, 0)
 
         obs[..., 0] = math.tau / 4 - obs[..., 0]
-        return spherical_distance(obs, cat)
+        return spherical(obs, cat)
 
 
     def _compute_distances_sky(self,
@@ -185,7 +188,7 @@ class Matcher(metaclass=ABCMeta):
         observed[..., 0] = math.tau / 4 - observed[..., 0]
 
         if paired:
-            return spherical_distance(observed, catalogue[self.pairing[self.sensor_data.stars.mask]])
+            return spherical(observed, catalogue[self.pairing[self.sensor_data.stars.mask]])
         else:
             # Binary and is here to *prevent* short circuit, otherwise it can fail!
             if (((hash_observed := hash_numpy(observed)) == self._hash_observed) &
@@ -197,7 +200,7 @@ class Matcher(metaclass=ABCMeta):
 
                 observed = np.expand_dims(observed, 1)
                 catalogue = np.expand_dims(catalogue, 0)
-                self._cached_distances = spherical_distance(observed, catalogue)
+                self._cached_distances = spherical(observed, catalogue)
                 log.debug(f"Computing sky distance for {observed.shape} × {catalogue.shape}")
             return self._cached_distances
 
@@ -205,7 +208,7 @@ class Matcher(metaclass=ABCMeta):
         return self._compute_distances_sky(
             self.sensor_data.stars.project(projection, masked=mask_sensor),
             self.altaz(masked=mask_catalogue or not paired),
-            paired=paired,
+            paired=self.paired,
         )
 
     def position_errors_sky(self,
@@ -307,9 +310,62 @@ class Matcher(metaclass=ABCMeta):
         else:
             return np.empty(shape=(dist.shape[axis], 0), dtype=int)
 
-    @abstractmethod
     def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
-        pass
+        log.debug("Computing vector correction for the meteor")
+        positions_raw = self.project_meteor(projection)
+        positions_corrected = self.correct_meteor_position(projection)
+        positions_correction_angle = positions_raw.separation(positions_corrected)
+        positions_correction_xy = self.correction_meteor_xy(projection)
+
+        intensities_raw = self.sensor_data.meteor.intensities(masked=False)
+        intensities_corrected = self.correct_meteor_magnitude(projection, calibration)
+        magnitudes_raw = calibration(intensities_raw)
+        magnitudes_corrected = intensities_corrected
+        magnitudes_correction = self.correction_meteor_mag(projection)
+
+        return dotmap.DotMap(
+            position_raw=positions_raw,
+            position_corrected=positions_corrected,
+            magnitudes_raw=magnitudes_raw,
+            magnitudes_corrected=magnitudes_corrected,
+            positions_correction_xy=positions_correction_xy,
+            positions_correction_angle=positions_correction_angle,
+            magnitudes_correction=magnitudes_correction,
+            count=self.sensor_data.meteor.count,
+            fnos=self.sensor_data.meteor.fnos(masked=False),
+            _dynamic=False,
+        )
+
+    def _meteor_xy(self, projection):
+        """ Return on-disk xy coordinates for the meteor after applying the projection """
+        return proj_to_disk(self.sensor_data.meteor.project(projection, masked=False))
+
+    def project_meteor(self, projection: Projection):
+        return disk_to_altaz(self._meteor_xy(projection))
+
+    def correction_meteor_xy(self, projection: Projection):
+        return self.position_smoother(self._meteor_xy(projection))
+
+    def correction_meteor_mag(self, projection: Projection) -> NDArray:
+        return np.ravel(self.magnitude_smoother(self._meteor_xy(projection)))
+
+    def correct_meteor_position(self, projection: Projection) -> AltAz:
+        return disk_to_altaz(self._meteor_xy(projection) - self.correction_meteor_xy(projection))
+
+    def correct_meteor_magnitude(self, projection: Projection, calibration: Calibration) -> np.ndarray[float]:
+        return calibration(self.sensor_data.meteor.intensities(masked=False)) - self.correction_meteor_mag(projection)
+
+    @staticmethod
+    def _grid(smoother, resolution=21, *, masked: bool):
+        xx, yy = unit_grid(resolution, masked=masked)
+        nodes = np.ma.stack((xx.ravel(), yy.ravel()), axis=1)
+        return smoother(nodes).reshape(resolution, resolution, -1)
+
+    def position_grid(self, resolution=21):
+        return self._grid(self.position_smoother, resolution, masked=True)
+
+    def magnitude_grid(self, resolution=21):
+        return self._grid(self.magnitude_smoother, resolution, masked=False)
 
 #    @abstractmethod
 #    def print_meteor(self, projection: Projection, calibration: Calibration) -> str:

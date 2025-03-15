@@ -34,26 +34,8 @@ def unit_grid(res, *, masked: bool):
         return x, y
 
 
-def spherical(x: AltAz, y: AltAz) -> u.Quantity:
+def spherical_altaz(x: AltAz, y: AltAz) -> u.Quantity:
     return x.separation(y)
-
-def spherical_distance(a: np.ndarray[float], b: np.ndarray[float]) -> np.ndarray[float]:
-    """
-    Compute spherical distance between a and b, each are vectors of points in D dimensions
-    a: np.ndarray(A, D)
-    b: np.ndarray(B, D)
-
-    Returns
-    -------
-    np.ndarray(A, B)
-    """
-    return 2 * np.arcsin(
-        np.sqrt(
-            np.sin(0.5 * (b[..., 0] - a[..., 0]))**2 +
-            np.cos(a[..., 0]) * np.cos(b[..., 0]) * np.sin(0.5 * (b[..., 1] - a[..., 1]))**2
-        )
-    )
-
 
 def spherical_difference(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
@@ -105,10 +87,10 @@ def proj_to_disk(obs: np.ndarray) -> np.ndarray:
         y = -z * np.cos(a) / math.tau * 4
         return np.stack((x, y), axis=1)
 
+
 def hash_numpy(array: np.ndarray):
     old = array.flags.writeable
     array.flags.writeable = False
     h = hash(array.tobytes())
     array.flags.writeable = old
     return h
-

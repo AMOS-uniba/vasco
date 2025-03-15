@@ -17,7 +17,7 @@ from pathlib import Path
 import matplotlib as mpl
 from astropy.time import Time
 
-from matchers import Matchmaker, Counsellor
+from matchers import Matcher
 from amosutils.projections import BorovickaProjection
 
 from models.qcataloguemodel import QCatalogueModel
@@ -306,7 +306,7 @@ class MainWindow(MainWindowPlots):
         return 10**(-self.hs_bandwidth.value() / 100)
 
     def reset_matcher(self):
-        self.matcher = Matchmaker(self.location, self.time)
+        self.matcher = Matcher(self.location, self.time)
 
     def compute_position_errors(self):
         self.position_errors = self.matcher.position_errors_sky(self.projection, 1,
@@ -322,8 +322,6 @@ class MainWindow(MainWindowPlots):
         if filename == '':
             log.warning("No file provided, loading aborted")
         else:
-            if self.paired:
-                self.reset_matcher()
             self.matcher.load_catalogue(filename)
             self.position_sky_plot.invalidate_stars()
             self.magnitude_sky_plot.invalidate_stars()
@@ -381,8 +379,6 @@ class MainWindow(MainWindowPlots):
         self.update_time()
         self.sensor_plot.invalidate()
 
-        if self.paired:
-            self.reset_matcher()
         self.matcher.sensor_data = SensorData.load_YAML(file)
 
         log.info(f"Loaded a sighting from {file}: "
@@ -455,7 +451,7 @@ class MainWindow(MainWindowPlots):
         self.w_input.repaint()
         self.on_projection_parameters_changed()
 
-    def update_sensor_table(self):
+    def update_stars_table(self):
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=False)
         x = self.matcher.sensor_data.stars.xs(masked=False)
         y = self.matcher.sensor_data.stars.ys(masked=False)
@@ -477,19 +473,34 @@ class MainWindow(MainWindowPlots):
         model = QStarModel(data)
         self.tv_sensor.setModel(model)
 
-        for i, width in enumerate([120, 120, 160, 160, 120, 120, 80]):
+        for i, width in enumerate([120, 120, 120, 120, 120, 120, 80]):
             self.tv_sensor.setColumnWidth(i, width)
 
     def update_meteor_table(self):
-        if self.paired:
-            self.tabs_table.setCurrentIndex(1)
-            data = self.matcher.correct_meteor(self.projection, self.calibration)
-            model = QMeteorModel(data)
-            self.tv_meteor.setModel(model)
-            for i, width in enumerate([40, 160, 160, 160, 160, 160, 160, 160, 160, 160]):
-                self.tv_meteor.setColumnWidth(i, width)
-        else:
-            self.tabs_table.setCurrentIndex(0)
+        data = self.matcher.correct_meteor(self.projection, self.calibration)
+        model = QMeteorModel(data)
+        self.tv_meteor.setModel(model)
+        for i, width in enumerate([40, 120, 120, 120, 120, 120, 120, 120, 120, 120]):
+            self.tv_meteor.setColumnWidth(i, width)
+
+    def update_catalogue_table(self):
+        radec = self.matcher.catalogue.radec(self.location, self.time, masked=False)
+        altaz = self.matcher.catalogue.altaz(self.location, self.time, masked=False)
+        data = dotmap.DotMap(
+            dec=radec.dec.degree,
+            ra=radec.ra.degree,
+            alt=altaz.alt.degree,
+            az=altaz.az.degree,
+            mask=self.matcher.catalogue.mask,
+            count=self.matcher.catalogue.count,
+            _dynamic=False,
+        )
+
+        model = QCatalogueModel(data)
+        self.tv_catalogue.setModel(model)
+
+        for i, width in enumerate([40, 120, 120, 120, 120, 80]):
+            self.tv_catalogue.setColumnWidth(i, width)
 
     def reset_sensor_mask(self):
         log.debug("Reset the sensor mask")
@@ -497,24 +508,21 @@ class MainWindow(MainWindowPlots):
         self.on_projection_parameters_changed()
         self.show_counts()
 
-    def _mask_sensor(self, mask: np.ndarray, message: str):
-        self.matcher.mask_sensor_data(mask)
-        log.info(f"Masked reference dots: {message}: "
-                 f"{c.num(self.matcher.sensor_data.stars.count_visible)} are valid")
-        self._update_catalogue_mask()
-
     def mask_sensor_dist(self):
         errors = self.matcher.position_errors_sky(self.projection, axis=1, mask_catalogue=True, mask_sensor=False)
         limit = self.dsb_sensor_limit_dist.value()
         self._mask_sensor(errors < np.radians(limit), f"position errors < {c.num(f'{limit:.3f}°')}")
 
-        #self.on_projection_parameters_changed()
-        #self.show_counts()
-
     def mask_sensor_alt(self):
         positions = self.matcher.sensor_data.stars.project(self.projection, masked=False)
         limit = self.dsb_sensor_limit_alt.value()
         self._mask_sensor(positions[..., 0] < np.radians(90 - limit), f"altitude < {c.num(f'{limit:.1f}°')}")
+
+    def _mask_sensor(self, mask: np.ndarray, message: str):
+        self.matcher.mask_sensor_data(mask)
+        log.info(f"Masked reference dots: {message}: "
+                 f"{c.num(self.matcher.sensor_data.stars.count_visible)} are valid")
+        self._update_catalogue_mask()
 
     def _update_catalogue_mask(self):
         """
@@ -524,6 +532,8 @@ class MainWindow(MainWindowPlots):
         self.position_sky_plot.invalidate_dots()
         self.magnitude_sky_plot.invalidate_stars()
         self.magnitude_sky_plot.invalidate_dots()
+        self.position_error_plot.invalidate()
+        self.magnitude_error_plot.invalidate()
 
         self.compute_position_errors()
         self.compute_magnitude_errors()
@@ -540,11 +550,13 @@ class MainWindow(MainWindowPlots):
         errors: np.ndarray = self.matcher.position_errors_sky(self.projection,
                                                               axis=0, mask_catalogue=False, mask_sensor=True)
         limit: float = self.dsb_catalogue_limit_dist.value()
-        self._mask_catalogue(errors < np.radians(limit), f"errors < {c.num(f'{limit:.3f}°')}")
+        self._mask_catalogue(errors < np.radians(limit),
+                             f"errors < {c.num(f'{limit:.3f}°')}")
 
     def mask_catalogue_mag(self):
         limit: float = self.dsb_catalogue_limit_mag.value()
-        self._mask_catalogue(self.matcher.vmag(masked=False) < limit, f"magnitude <{c.num(f'{limit:.1f}m')}")
+        self._mask_catalogue(self.matcher.vmag(masked=False) < limit,
+                             f"magnitude <{c.num(f'{limit:.1f}m')}")
 
     def mask_catalogue_alt(self):
         limit: float = self.dsb_catalogue_limit_alt.value()
@@ -560,12 +572,9 @@ class MainWindow(MainWindowPlots):
 
     @QtCore.pyqtSlot()
     def show_counts(self) -> None:
-        if isinstance(self.matcher, Counsellor):
-            self.lb_mode.setText("paired")
-            self.tab_correction_magnitudes_enabled.setEnabled(True)
-        else:
-            self.lb_mode.setText("unpaired")
-            self.tab_correction_magnitudes_enabled.setEnabled(False)
+        # FixMe make this depend on pairing
+        paired = False
+        self.lb_mode.setText(f"{'' if paired else 'un'}paired")
 
         self.lb_catalogue_total.setText(f'{self.matcher.catalogue.count}')
         self.lb_catalogue_used.setText(f'{self.matcher.catalogue.count_visible}')
@@ -573,10 +582,6 @@ class MainWindow(MainWindowPlots):
         self.lb_sensor_used.setText(f'{self.matcher.sensor_data.stars.count_visible}')
 
     def export_corrected_meteor(self):
-        if not self.paired:
-            log.warning("Cannot export a meteor before pairing dots to the catalogue")
-            return None
-
         filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", "../output/",
                                                   "XML files (*.xml)")
         if filename is not None and filename != '':

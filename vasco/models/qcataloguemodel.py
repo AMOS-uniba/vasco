@@ -3,7 +3,7 @@ from PyQt6.QtGui import QColor
 
 
 class QCatalogueModel(QAbstractTableModel):
-    COLUMNS = ["id", "dec", "ra", "alt", "az"]
+    COLUMNS = ["id", "dec", "ra", "alt", "az", "visible"]
 
     def __init__(self, data=None, parent=None):
         super().__init__(parent)
@@ -19,7 +19,7 @@ class QCatalogueModel(QAbstractTableModel):
 
 
     def columnCount(self, parent=None):
-        return 5
+        return 6
 
     def rowCount(self, parent=None):
         return self._data.count
@@ -30,18 +30,23 @@ class QCatalogueModel(QAbstractTableModel):
                 row = index.row()
                 match index.column():
                     case 0:
-                        return f"{self._data.id[row]}"
+                        return f"{row}"
                     case 1:
-                        return f"{self._data.px[row]:.3f}"
+                        return f"{self._data.dec[row]:.6f}°"
                     case 2:
-                        return f"{self._data.py[row]:.3f}"
+                        return f"{self._data.ra[row]:.6f}°"
                     case 3:
-                        return f"{self._data.x[row]:.6f}"
+                        return f"{self._data.alt[row]:.6f}°"
                     case 4:
-                        return f"{self._data.y[row]:.6f}"
+                        return f"{self._data.az[row]:.6f}°"
+                    case 5:
+                        return '\u2714' if self._data.mask[row] else '\u274C'
                     case _:
                         return None
             case Qt.ItemDataRole.TextAlignmentRole:
+                match index.column():
+                    case 5:
+                        return Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
             case Qt.ItemDataRole.ForegroundRole:
                 if index.column() == 6:

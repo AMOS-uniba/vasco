@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1188</width>
-    <height>826</height>
+    <width>2118</width>
+    <height>1282</height>
    </rect>
   </property>
   <property name="font">
@@ -696,11 +696,8 @@
       <property name="enabled">
        <bool>true</bool>
       </property>
-      <property name="tabPosition">
-       <enum>QTabWidget::TabPosition::North</enum>
-      </property>
       <property name="currentIndex">
-       <number>7</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab_sensor_plot">
        <attribute name="title">
@@ -756,254 +753,101 @@
        <attribute name="title">
         <string>[&amp;7] Position correction</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QStackedWidget" name="tabs_positions">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="currentIndex">
-           <number>0</number>
-          </property>
-          <widget class="QWidget" name="tab_correction_positions_disabled">
-           <layout class="QHBoxLayout" name="horizontalLayout_5">
-            <property name="spacing">
-             <number>0</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="lx_correction_positions_disabled">
-              <property name="font">
-               <font>
-                <pointsize>24</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Only available in paired mode</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignmentFlag::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-          <widget class="QWidget" name="tab_correction_positions_enabled">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_6">
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-           </layout>
-          </widget>
-         </widget>
-        </item>
-       </layout>
+       <layout class="QHBoxLayout" name="horizontalLayout_3"/>
       </widget>
       <widget class="QWidget" name="tab_correction_magnitudes">
        <attribute name="title">
         <string>[&amp;8] Magnitude correction</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_11">
-        <item>
-         <widget class="QStackedWidget" name="tabs_magnitudes">
-          <property name="enabled">
-           <bool>true</bool>
+       <layout class="QHBoxLayout" name="horizontalLayout_11"/>
+      </widget>
+      <widget class="QWidget" name="tab_meteor">
+       <attribute name="title">
+        <string>[&amp;9] Meteor table</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_11">
+        <item row="0" column="0">
+         <widget class="QTableView" name="tv_meteor">
+          <property name="font">
+           <font>
+            <family>Noto Mono</family>
+            <pointsize>10</pointsize>
+           </font>
           </property>
-          <property name="currentIndex">
-           <number>0</number>
-          </property>
-          <widget class="QWidget" name="tab_correction_magnitudes_disabled">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_9">
-            <property name="spacing">
-             <number>0</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="lx_correction_magnitudes_disabled">
-              <property name="font">
-               <font>
-                <pointsize>24</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Only available in paired mode</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignmentFlag::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-          <widget class="QWidget" name="tab_correction_magnitudes_enabled">
-           <layout class="QHBoxLayout" name="horizontalLayout_10">
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-           </layout>
-          </widget>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QWidget" name="widget" native="true">
+          <layout class="QHBoxLayout" name="horizontalLayout_13">
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pb_export_xml">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>Ctrl+E</string>
+             </property>
+             <property name="text">
+              <string>Export as XML</string>
+             </property>
+             <property name="icon">
+              <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pb_export_csv">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Export as CSV</string>
+             </property>
+             <property name="icon">
+              <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="tab_catalogue">
        <attribute name="title">
-        <string>[&amp;9] Correction table</string>
+        <string>[&amp;0] Catalogue</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
+       <layout class="QHBoxLayout" name="horizontalLayout_16">
         <item>
-         <widget class="QStackedWidget" name="tabs_table">
-          <property name="enabled">
-           <bool>true</bool>
+         <widget class="QTableView" name="tv_catalogue">
+          <property name="font">
+           <font>
+            <family>Noto Mono</family>
+            <pointsize>10</pointsize>
+           </font>
           </property>
-          <property name="currentIndex">
-           <number>0</number>
-          </property>
-          <widget class="QWidget" name="tab_table_disabled">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_14">
-            <property name="spacing">
-             <number>0</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="lx_table_disabled">
-              <property name="font">
-               <font>
-                <pointsize>24</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Only available in paired mode</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignmentFlag::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-          <widget class="QWidget" name="tab_table_enabled">
-           <layout class="QVBoxLayout" name="verticalLayout_5">
-            <item>
-             <widget class="QTableView" name="tv_meteor">
-              <property name="font">
-               <font>
-                <family>Noto Mono</family>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QWidget" name="widget" native="true">
-              <layout class="QHBoxLayout" name="horizontalLayout_13">
-               <item>
-                <spacer name="horizontalSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pb_export_xml">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="toolTip">
-                  <string>Ctrl+E</string>
-                 </property>
-                 <property name="text">
-                  <string>Export as XML</string>
-                 </property>
-                 <property name="icon">
-                  <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pb_export_csv">
-                 <property name="enabled">
-                  <bool>false</bool>
-                 </property>
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Export as CSV</string>
-                 </property>
-                 <property name="icon">
-                  <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-           </layout>
-          </widget>
          </widget>
         </item>
        </layout>
@@ -1254,7 +1098,7 @@
              </size>
             </property>
             <property name="toolTip">
-             <string>Mask starts that are not close to any dot</string>
+             <string>Mask stars that are lower</string>
             </property>
             <property name="text">
              <string>Mask</string>
@@ -1343,6 +1187,9 @@
               <width>48</width>
               <height>16777215</height>
              </size>
+            </property>
+            <property name="toolTip">
+             <string>Mask starts that are further from all dots</string>
             </property>
             <property name="text">
              <string>Mask</string>
@@ -1920,7 +1767,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1188</width>
+     <width>2118</width>
      <height>21</height>
     </rect>
    </property>

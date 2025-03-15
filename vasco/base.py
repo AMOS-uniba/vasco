@@ -11,7 +11,7 @@ from main_ui import Ui_MainWindow
 
 
 from photometry import LogCalibration
-from matchers import Counsellor
+from matchers import Matcher
 
 
 class MainWindowBase(QMainWindow, Ui_MainWindow):
@@ -49,10 +49,6 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
 
         self.calibration = LogCalibration(4000)
 
-    @property
-    def paired(self) -> bool:
-        return isinstance(self.matcher, Counsellor)
-
     def _update_maskable_count(self,
                                dsb_in: QDoubleSpinBox,
                                lb_out: QLabel,
@@ -77,7 +73,7 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         self.lb_rms_error.setText(f'{np.degrees(rms_error):.6f}°')
         self.lb_max_error.setText(f'{np.degrees(max_error):.6f}°')
 
-        errors = self.matcher.distance_sky(self.projection, mask_catalogue=True, mask_sensor=True, paired=self.paired)
+        errors = self.matcher.distance_sky(self.projection, mask_catalogue=True, mask_sensor=True, paired=False)
 
         self._update_maskable_count(self.dsb_sensor_limit_dist, self.lb_sensor_dist,
                                     np.min(errors, axis=1, initial=np.inf),

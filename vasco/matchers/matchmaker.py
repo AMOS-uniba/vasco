@@ -10,16 +10,13 @@ from astropy.time import Time
 from amosutils.projections import Projection, BorovickaProjection
 
 from .base import Matcher
-from .counsellor import Counsellor
 
 from photometry import Calibration
-from models import SensorData
-from utilities import spherical_distance
 
 log = logging.getLogger('vasco')
 
 
-class Matchmaker(Matcher):
+class Mataschmaker(Matcher):
     """
     Initial star matcher: loads a catalogue (dec/ra) and a set of points (x/y)
     and tries to find the best possible global match at location (lat/lon) and time (t)
@@ -54,8 +51,6 @@ class Matchmaker(Matcher):
         Find errors from every dot to the nearest star, on sensor
         Return a numpy array (N): distance [µm]
         """
-    def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
-        raise NotImplementedError("Matchmaker cannot correct a meteor, use a Counsellor instead")
 
     def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
         raise NotImplementedError("Matchmaker cannot print corrected meteors, use a Counsellor instead")

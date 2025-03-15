@@ -4,16 +4,17 @@ import pandas as pd
 
 from abc import ABCMeta, abstractmethod
 
-from matchers import Counsellor
 from amosutils.projections import BorovickaProjection
+
+from matchers import Matcher
 from photometry import Calibration
 from astropy.coordinates import EarthLocation
 
 
 class Exporter(metaclass=ABCMeta):
-    def __init__(self, matcher: Counsellor, location: EarthLocation, time: datetime.datetime,
+    def __init__(self, matcher: Matcher, location: EarthLocation, time: datetime.datetime,
                  projection: BorovickaProjection, calibration: Calibration):
-        self._matcher: Counsellor = matcher
+        self._matcher: Matcher = matcher
         self._location: EarthLocation = location
         self._time: datetime.datetime = time
         self._projection: BorovickaProjection = projection
@@ -24,7 +25,7 @@ class Exporter(metaclass=ABCMeta):
         pass
 
     @property
-    def matcher(self) -> Counsellor:
+    def matcher(self) -> Matcher:
         return self._matcher
 
     def _get_meteor(self):

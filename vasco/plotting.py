@@ -27,8 +27,8 @@ class MainWindowPlots(MainWindowBase):
         self.magnitude_sky_plot = MagnitudeSkyPlot(self.tab_sky_magnitudes)
         self.position_error_plot = PositionErrorPlot(self.tab_errors_positions)
         self.magnitude_error_plot = MagnitudeErrorPlot(self.tab_errors_magnitudes)
-        self.position_correction_plot = PositionCorrectionPlot(self.tab_correction_positions_enabled)
-        self.magnitude_correction_plot = MagnitudeCorrectionPlot(self.tab_correction_magnitudes_enabled)
+        self.position_correction_plot = PositionCorrectionPlot(self.tab_correction_positions)
+        self.magnitude_correction_plot = MagnitudeCorrectionPlot(self.tab_correction_magnitudes)
 
     def update_plots(self):
         """
@@ -67,14 +67,16 @@ class MainWindowPlots(MainWindowBase):
                 (self.magnitude_correction_plot.valid_grid, self.plot_magnitude_correction_grid),
             ],
             [],
+            [],
         ][self.tw_charts.currentIndex()]
 
         for valid, function in links:
             if not valid:
                 function()
 
-        self.update_sensor_table()
+        self.update_stars_table()
         self.update_meteor_table()
+        self.update_catalogue_table()
 
     """ Methods for plotting sensor data """
 
@@ -140,14 +142,12 @@ class MainWindowPlots(MainWindowBase):
         plot.update_meteor(positions, magnitudes, errors, limit=0.1)
 
     def plot_position_errors_meteor(self):
-        if self.paired:
-            xy = self.matcher.correction_meteor_xy(self.projection)
-            correction = np.degrees(np.sqrt(xy[..., 0]**2 + xy[..., 1]**2))
-            self._plot_errors_meteor(self.position_error_plot, correction)
+        xy = self.matcher.correction_meteor_xy(self.projection)
+        correction = np.degrees(np.sqrt(xy[..., 0]**2 + xy[..., 1]**2))
+        self._plot_errors_meteor(self.position_error_plot, correction)
 
     def plot_magnitude_errors_meteor(self):
-        if self.paired:
-            self._plot_errors_meteor(self.magnitude_error_plot, self.matcher.correction_meteor_mag(self.projection))
+        self._plot_errors_meteor(self.magnitude_error_plot, self.matcher.correction_meteor_mag(self.projection))
 
     """ Methods for updating correction plots """
 
