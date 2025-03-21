@@ -57,15 +57,20 @@ class MainWindow(MainWindowPlots):
         if args.projection:
             self._import_projection_parameters(args.projection.name)
 
+        self.update_time()
+        self.update_location()
+        self.update_scaling()
         self.update_projection()
-        self.matcher.update_pairing()
+        self.update_matcher()
 
-        self.connect_signal_slots()
-        self.on_location_changed()
-        self.on_scaling_changed()
+        self.compute_position_errors()
+        self.compute_magnitude_errors()
+
+        self.update_plots()
+        self.on_projection_parameters_changed()
         self.show_counts()
 
-        self.matcher.update_pairing()
+        self.connect_signal_slots()
         self.tw_charts.setCurrentIndex(2)
 
     def setup_parameters(self):
@@ -113,7 +118,6 @@ class MainWindow(MainWindowPlots):
         self.ac_about.triggered.connect(self.display_about)
 
         self.cb_stations.currentIndexChanged.connect(self.select_station)
-        self.dt_time.dateTimeChanged.connect(self.update_time)
         self.dt_time.dateTimeChanged.connect(self.on_time_changed)
 
         self.dsb_lat.valueChanged.connect(self.on_location_changed)
@@ -183,7 +187,7 @@ class MainWindow(MainWindowPlots):
         self.dsb_alt.setValue(station.altitude)
 
         self.update_matcher()
-        self.on_location_time_changed()
+        self.on_location_changed()
 
     def on_time_changed(self):
         self.update_time()
@@ -211,12 +215,16 @@ class MainWindow(MainWindowPlots):
 
     def update_time(self):
         self.time = Time(self.dt_time.dateTime().toPyDateTime())
+        log.debug(f"Updated the time to {self.time}")
 
-    def on_scaling_changed(self):
+    def update_scaling(self):
         self.matcher.sensor_data.set_shifter_scales(
             self.dsb_xs.value() / 1000,
             self.dsb_ys.value() / 1000
         )
+
+    def on_scaling_changed(self):
+        self.update_scaling()
         self.on_projection_parameters_changed()
 
     def update_matcher(self):
@@ -227,7 +235,7 @@ class MainWindow(MainWindowPlots):
     def update_projection(self):
         log.info(f"Projection parameters changed: {self.get_projection_parameters()}")
         self.projection = BorovickaProjection(*self.get_projection_parameters())
-        self.matcher.projection = self.projection
+        self.matcher.update_projection(self.projection)
 
     def on_projection_parameters_changed(self):
         self.update_projection()
@@ -378,7 +386,6 @@ class MainWindow(MainWindowPlots):
         self._block_parameter_signals(False)
         self._block_location_time_signals(False)
         self._block_pixel_scales_signals(False)
-        print("FUCK")
         self.on_location_time_changed()
         self.on_projection_parameters_changed()
         self.sensor_plot.invalidate()
@@ -387,9 +394,7 @@ class MainWindow(MainWindowPlots):
     def _load_sighting(self, file):
         data = dotmap.DotMap(yaml.safe_load(open(file, 'r')), _dynamic=False)
         self.set_location(data.Latitude, data.Longitude, data.Altitude)
-        self.update_location()
         self.set_time(pytz.UTC.localize(datetime.datetime.strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f")))
-        self.update_time()
         self.sensor_plot.invalidate()
 
         self.matcher.sensor_data = SensorData.load_YAML(file)
@@ -547,7 +552,7 @@ class MainWindow(MainWindowPlots):
         self.matcher.mask_sensor_data(mask)
         log.info(f"Masked reference dots: {message}: "
                  f"{c.num(self.matcher.sensor_data.stars.count_visible)} are valid")
-        self.matcher.compute_pairing()
+        self.matcher.update_pairing()
         self._update_catalogue_mask()
 
     def _update_catalogue_mask(self):
@@ -571,7 +576,7 @@ class MainWindow(MainWindowPlots):
         log.info(f"Masked the catalogue: {message}: "
                  f"{c.num(self.matcher.catalogue.count_visible)} stars visible")
         self._update_catalogue_mask()
-        self.matcher.compute_pairing()
+        self.matcher.update_pairing()
 
     def mask_catalogue_dist(self):
         errors: np.ndarray = np.min(self.matcher.distance_sky_full(), axis=0)

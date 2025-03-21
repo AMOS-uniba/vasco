@@ -51,7 +51,7 @@ class Matcher:
                                                  np.ndarray(shape=(1,), dtype=float))
 
         self.projection_cls: type[Projection] = projection_cls
-        self.projection: Optional[Projection] = None
+        self._projection: Optional[Projection] = None
 
         self.location: Optional[EarthLocation] = None
         self.time: Optional[Time] = None
@@ -91,6 +91,11 @@ class Matcher:
 
         if self.catalogue.populated:
             self.invalidate_altaz()
+
+    def update_projection(self, projection: Projection):
+        self._projection = projection
+        if not self.pairing_fixed:
+            self.update_pairing()
 
     def invalidate_altaz(self):
         log.debug("Invalidating the cached altaz")
@@ -137,7 +142,7 @@ class Matcher:
         Returns
             array(M): index of the star nearest to each dot, or NaN if not applicable
         """
-        obs = self.sensor_data.stars.project(self.projection, masked=False, flip_theta=True)
+        obs = self.sensor_data.stars.project(self._projection, masked=False, flip_theta=True)
         cat = self.catalogue_altaz_np(masked=True)
 
         # Now add an extra axis to compute the Cartesian product
@@ -152,13 +157,13 @@ class Matcher:
             empty[...] = np.nan
             pairing = empty
 
-        log.debug(f"Computed a pairing: ({pairing.shape}):")
         return pairing
 
     def update_pairing(self) -> None:
         """
         Compute the current pairing and use it from now on
         """
+        log.debug("Updating the pairing")
         idx = np.arange(0, self.catalogue.count)[self.catalogue.mask]
         self.pairing = idx[self.compute_pairing()]
 
@@ -201,7 +206,7 @@ class Matcher:
         #    return self._cached_distances
 
     def distance_sky(self, *, masked: bool = True) -> np.ndarray:
-        obs = self.sensor_data.stars.project(self.projection, masked=masked, flip_theta=True)
+        obs = self.sensor_data.stars.project(self._projection, masked=masked, flip_theta=True)
         cat = self.catalogue_altaz_paired()
         if masked:
             cat = cat[self.sensor_data.stars.mask]
@@ -209,18 +214,18 @@ class Matcher:
         return spherical(obs, cat)
 
     def distance_sky_full(self) -> np.ndarray:
-        obs = self.sensor_data.stars.project(self.projection, masked=False, flip_theta=True)
+        obs = self.sensor_data.stars.project(self._projection, masked=False, flip_theta=True)
         cat = self.catalogue_altaz_np(masked=False)
         return spherical(np.expand_dims(obs, 1), np.expand_dims(cat, 0))
 
     def vector_errors(self) -> np.ndarray:
-        obs = self.sensor_data.stars.project(self.projection, masked=True, flip_theta=True)
+        obs = self.sensor_data.stars.project(self._projection, masked=True, flip_theta=True)
         cat = self.catalogue_altaz_paired()[self.sensor_data.stars.mask]
         log.debug(f"Vector difference in the sky: {obs.shape}, {cat.shape}")
         return obs - cat
 
     def vector_errors_full(self) -> np.ndarray:
-        obs = self.sensor_data.stars.project(self.projection, masked=False, flip_theta=True)
+        obs = self.sensor_data.stars.project(self._projection, masked=False, flip_theta=True)
         cat = self.catalogue_altaz_paired()
         log.debug(f"Vector difference in the sky: {obs.shape}, {cat.shape}")
         return obs - cat
@@ -381,7 +386,7 @@ class Matcher:
             np.put(vec, ivariable, variable)
             np.put(vec, ifixed, np.array(args))
 
-            self.projection = self.projection_cls(*vec)
+            self._projection = self.projection_cls(*vec)
             return self.rms_error(self.position_errors_sky(axis=1, mask_catalogue=True, mask_sensor=True))
 
         return func
