@@ -4,12 +4,13 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
 from plots.errors.base import BaseErrorPlot
-from matchers import Matcher
+from plots.base import cmap_gyr
+from models import Matcher
 
 
 class PositionErrorPlot(BaseErrorPlot):
     y_formatter = FuncFormatter(lambda x, pos: f'{x:.3f}°')
-    cmap_dots = plt.get_cmap('autumn_r')
+    cmap_dots = cmap_gyr
 
     target: str = "star positions"
 

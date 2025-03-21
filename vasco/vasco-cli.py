@@ -89,7 +89,7 @@ class VascoCLI:
             matcher.minimize(x0=np.array(self.projection.as_tuple()), maxiter=50)
 
         # Once the best match is found, pair the dots to the catalogue stars
-        counselor = matcher.pair(self.projection)
+        counselor = matcher.update_pairing(self.projection)
         # ...and optimize the projection again (this should be very fast now)
         result = counselor.minimize(x0=np.array(self.projection.as_tuple()), maxiter=10000)
         projection = BorovickaProjection(*result)

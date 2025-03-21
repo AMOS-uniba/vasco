@@ -6,7 +6,7 @@ from abc import ABCMeta, abstractmethod
 
 from amosutils.projections import BorovickaProjection
 
-from matchers import Matcher
+from models import Matcher
 from photometry import Calibration
 from astropy.coordinates import EarthLocation
 

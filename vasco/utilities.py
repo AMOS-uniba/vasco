@@ -52,7 +52,7 @@ def spherical_difference(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     return np.stack((dz, da * np.cos(a[..., 0])), axis=1)
 
 
-def altaz_to_disk(altaz: Optional[AltAz]) -> np.ndarray[float]:
+def altaz_to_disk(altaz: Optional[AltAz]) -> np.ndarray:
     if altaz is None:
         return np.empty(shape=(0, 2))
     else:
@@ -62,6 +62,15 @@ def altaz_to_disk(altaz: Optional[AltAz]) -> np.ndarray[float]:
                 -np.cos(altaz.az.radian) * (QuarterTau - altaz.alt.radian) / QuarterTau,
             ), axis=1,
         )
+
+
+def numpy_to_disk(altaz: np.ndarray) -> np.ndarray:
+    return np.stack(
+        (
+            np.sin(np.radians(altaz[..., 1])) * (QuarterTau - np.radians(altaz[..., 0])) / QuarterTau,
+            -np.cos(np.radians(altaz[..., 1])) * (QuarterTau - np.radians(altaz[..., 0])) / QuarterTau,
+        ), axis=1,
+    )
 
 
 def disk_to_numpy(xy: np.ndarray) -> np.ndarray:

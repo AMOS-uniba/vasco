@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
 from plots.errors.base import BaseErrorPlot
-from matchers import Matcher
+from models import Matcher
 
 
 class MagnitudeErrorPlot(BaseErrorPlot):

@@ -4,7 +4,7 @@ import matplotlib as mpl
 from abc import abstractmethod
 
 from plots.base import BasePlot
-from utilities import altaz_to_disk, proj_to_disk
+from utilities import altaz_to_disk, proj_to_disk, numpy_to_disk
 
 
 class BaseCorrectionPlot(BasePlot):
@@ -56,7 +56,7 @@ class BaseCorrectionPlot(BasePlot):
         self.invalidate_meteor()
 
     def update_dots(self, pos_cat, pos_obs, mag_cat, mag_obs, *, limit=1, scale=0.05):
-        pos_cat = altaz_to_disk(pos_cat)
+        pos_cat = numpy_to_disk(pos_cat)
         pos_obs = proj_to_disk(pos_obs)
 
         self._update_dots(pos_cat, pos_obs, mag_cat, mag_obs, limit=limit, scale=scale)

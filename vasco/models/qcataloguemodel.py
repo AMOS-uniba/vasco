@@ -3,7 +3,7 @@ from PyQt6.QtGui import QColor
 
 
 class QCatalogueModel(QAbstractTableModel):
-    COLUMNS = ["id", "dec", "ra", "alt", "az", "visible"]
+    COLUMNS = ["id", "dec", "ra", "alt", "az", "vmag", "visible"]
 
     def __init__(self, data=None, parent=None):
         super().__init__(parent)
@@ -19,7 +19,7 @@ class QCatalogueModel(QAbstractTableModel):
 
 
     def columnCount(self, parent=None):
-        return 6
+        return 7
 
     def rowCount(self, parent=None):
         return self._data.count
@@ -40,12 +40,14 @@ class QCatalogueModel(QAbstractTableModel):
                     case 4:
                         return f"{self._data.az[row]:.6f}°"
                     case 5:
+                        return f"{self._data.vmag[row]:.3f}m"
+                    case 6:
                         return '\u2714' if self._data.mask[row] else '\u274C'
                     case _:
                         return None
             case Qt.ItemDataRole.TextAlignmentRole:
                 match index.column():
-                    case 5:
+                    case 6:
                         return Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
             case Qt.ItemDataRole.ForegroundRole:

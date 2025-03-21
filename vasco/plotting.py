@@ -4,7 +4,6 @@ import numpy as np
 
 from typing import Callable
 
-from PyQt6.QtWidgets import QStackedWidget
 from astropy.time import Time
 
 from plots import SensorPlot
@@ -22,6 +21,7 @@ log = logging.getLogger('vasco')
 class MainWindowPlots(MainWindowBase):
     def __init__(self, parent=None):
         super().__init__(parent)
+
         self.sensor_plot = SensorPlot(self.tab_sensor_plot)
         self.position_sky_plot = PositionSkyPlot(self.tab_sky_positions)
         self.magnitude_sky_plot = MagnitudeSkyPlot(self.tab_sky_magnitudes)
@@ -30,16 +30,16 @@ class MainWindowPlots(MainWindowBase):
         self.position_correction_plot = PositionCorrectionPlot(self.tab_correction_positions)
         self.magnitude_correction_plot = MagnitudeCorrectionPlot(self.tab_correction_magnitudes)
 
-    def update_plots(self):
-        """
-        Iterate over all plots and update all that are no longer valid
-        """
-        self.show_errors()
-        links = [
+        # List of links: when the i-th tab is active and update_plots is called,
+        # iterate over the i-th element here anmd for every pair (condition, action)
+        # do action if condition is true
+        self.updateable: [(Callable, Callable)] = [
             [
                 (self.sensor_plot.valid, self.plot_sensor_data),
             ],
-            [],
+            [
+                (False, self.update_stars_table),
+            ],
             [
                 (self.position_sky_plot.valid_dots, self.plot_observed_stars_positions),
                 (self.position_sky_plot.valid_stars, self.plot_catalogue_stars_positions),
@@ -66,24 +66,30 @@ class MainWindowPlots(MainWindowBase):
                 (self.magnitude_correction_plot.valid_meteor, self.plot_magnitude_correction_meteor),
                 (self.magnitude_correction_plot.valid_grid, self.plot_magnitude_correction_grid),
             ],
-            [],
-            [],
-        ][self.tw_charts.currentIndex()]
+            [
+                (False, self.update_meteor_table),
+            ],
+            [
+                (False, self.update_catalogue_table),
+            ],
+        ]
 
-        for valid, function in links:
+    def update_plots(self):
+        """
+        Iterate over active plots and update those that are no longer valid
+        """
+        self.show_errors()
+
+        for valid, function in self.updateable[self.tw_charts.currentIndex()]:
             if not valid:
                 function()
 
-        self.update_stars_table()
-        self.update_meteor_table()
-        self.update_catalogue_table()
-
-    """ Methods for plotting sensor data """
+# Methods for plotting sensor data
 
     def plot_sensor_data(self):
         self.sensor_plot.update(self.matcher.sensor_data)
 
-    """ Methods for plotting sky charts """
+# Methods for plotting sky charts
 
     def _plot_observed_stars(self, plot, errors, *, limit=None):
         plot.update_dots(
@@ -109,8 +115,8 @@ class MainWindowPlots(MainWindowBase):
 
     def _plot_catalogue_stars(self, plot):
         plot.update_stars(
-            self.matcher.altaz(masked=True),
-            self.matcher.catalogue.vmag(self.location, Time(self.time), masked=True)
+            self.matcher.catalogue_altaz_np(masked=True),
+            self.matcher.catalogue_vmag(masked=True)
         )
 
     def plot_catalogue_stars_positions(self):
@@ -151,23 +157,13 @@ class MainWindowPlots(MainWindowBase):
 
     """ Methods for updating correction plots """
 
-    def _switch_tabs(self,
-                     tabs: QStackedWidget,
-                     func: Callable[[BaseCorrectionPlot, ...], None],
-                     *args, **kwargs) -> None:
-        if self.paired:
-            tabs.setCurrentIndex(1)
-            func(*args, **kwargs)
-        else:
-            tabs.setCurrentIndex(0)
-
     def _plot_correction_errors(self, plot: BaseCorrectionPlot) -> None:
         if self.cb_show_errors.isChecked():
             log.debug(f"Plotting {plot.intent} for {plot.target}")
             plot.update_dots(
-                self.matcher.catalogue.altaz(self.location, self.time, masked=True),
+                self.matcher.catalogue_altaz_paired(),
                 self.matcher.sensor_data.stars.project(self.projection, masked=True),
-                self.matcher.catalogue.vmag(self.location, self.time, masked=True),
+                self.matcher.catalogue_vmag_paired(),
                 self.matcher.sensor_data.stars.calibrate(self.calibration, masked=True),
                 limit=np.radians(self.dsb_sensor_limit_dist.value()),
                 scale=1000 / self.sb_arrow_scale.value(),
@@ -176,10 +172,10 @@ class MainWindowPlots(MainWindowBase):
             plot.clear_errors()
 
     def plot_position_correction_errors(self) -> None:
-        self._switch_tabs(self.tabs_positions, self._plot_correction_errors, self.position_correction_plot)
+        self._plot_correction_errors(self.position_correction_plot)
 
     def plot_magnitude_correction_errors(self) -> None:
-        self._switch_tabs(self.tabs_magnitudes, self._plot_correction_errors, self.magnitude_correction_plot)
+        self._plot_correction_errors(self.magnitude_correction_plot)
 
     def _plot_correction_meteor(self, plot) -> None:
         plot.update_meteor(
@@ -191,10 +187,10 @@ class MainWindowPlots(MainWindowBase):
         )
 
     def plot_position_correction_meteor(self) -> None:
-        self._switch_tabs(self.tabs_positions, self._plot_correction_meteor, self.position_correction_plot)
+        self._plot_correction_meteor(self.position_correction_plot)
 
     def plot_magnitude_correction_meteor(self) -> None:
-        self._switch_tabs(self.tabs_magnitudes, self._plot_correction_meteor, self.magnitude_correction_plot)
+        self._plot_correction_meteor(self.magnitude_correction_plot)
 
     def _plot_correction_grid(self, plot, grid, *, masked: bool, **kwargs):
         if self.cb_show_grid.isChecked():
@@ -204,16 +200,8 @@ class MainWindowPlots(MainWindowBase):
             plot.clear_grid()
 
     def plot_position_correction_grid(self):
-        self._switch_tabs(
-            self.tabs_positions,
-            lambda plot: self._plot_correction_grid(plot, self.matcher.position_grid, masked=True),
-            self.position_correction_plot,
-        )
+        self._plot_correction_grid(self.position_correction_plot, self.matcher.position_grid, masked=True)
 
     def plot_magnitude_correction_grid(self):
-        self._switch_tabs(
-            self.tabs_magnitudes,
-            lambda plot: self._plot_correction_grid(plot, self.matcher.magnitude_grid, masked=False,
-                                                    interpolation=self.cb_interpolation.currentText()),
-            self.magnitude_correction_plot,
-        )
+        self._plot_correction_grid(self.magnitude_correction_plot, self.matcher.magnitude_grid, masked=False,
+                                   interpolation=self.cb_interpolation.currentText())

@@ -1,5 +1,6 @@
 import logging
 
+import math
 import yaml
 import pytz
 import datetime
@@ -9,7 +10,7 @@ import dotmap
 from PyQt6 import QtCore
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
-from PyQt6.QtCore import QDateTime, Qt
+from PyQt6.QtCore import QDateTime, Qt, QSignalBlocker
 
 from astropy import units as u
 from astropy.coordinates import EarthLocation
@@ -17,9 +18,9 @@ from pathlib import Path
 import matplotlib as mpl
 from astropy.time import Time
 
-from matchers import Matcher
 from amosutils.projections import BorovickaProjection
 
+from models import Matcher
 from models.qcataloguemodel import QCatalogueModel
 from models.qstarmodel import QStarModel
 from plotting import MainWindowPlots
@@ -36,7 +37,7 @@ log = logging.getLogger('vasco')
 VERSION = "0.9.1"
 DATE = "2025-03-12"
 
-np.set_printoptions(edgeitems=10, linewidth=100000, formatter=dict(float=lambda x: f"{x:.6f}"))
+np.set_printoptions(edgeitems=5, linewidth=256, formatter=dict(float=lambda x: f"{x:.6f}"))
 
 
 class MainWindow(MainWindowPlots):
@@ -55,19 +56,17 @@ class MainWindow(MainWindowPlots):
             self._load_sighting(args.sighting.name)
         if args.projection:
             self._import_projection_parameters(args.projection.name)
-        else:
-            self.update_projection()
+
+        self.update_projection()
+        self.matcher.update_pairing()
 
         self.connect_signal_slots()
         self.on_location_changed()
         self.on_scaling_changed()
         self.show_counts()
 
+        self.matcher.update_pairing()
         self.tw_charts.setCurrentIndex(2)
-
-        #self.mask_catalogue_alt()
-        #self.mask_sensor_alt()
-        #self.pair()
 
     def setup_parameters(self):
         self.pw_x0.setup(title="H shift", symbol="x<sub>0</sub>", unit="mm",
@@ -223,11 +222,12 @@ class MainWindow(MainWindowPlots):
     def update_matcher(self):
         log.info(f"Time / location changed: {self.time}, {self.location}")
         self.matcher.update_location_time(self.location, Time(self.time))
-        self.matcher.update_position_smoother(self.projection)
+        self.matcher.update_position_smoother()
 
     def update_projection(self):
         log.info(f"Projection parameters changed: {self.get_projection_parameters()}")
         self.projection = BorovickaProjection(*self.get_projection_parameters())
+        self.matcher.projection = self.projection
 
     def on_projection_parameters_changed(self):
         self.update_projection()
@@ -240,7 +240,7 @@ class MainWindow(MainWindowPlots):
         self.magnitude_error_plot.invalidate()
         self.position_correction_plot.invalidate()
         self.magnitude_correction_plot.invalidate()
-        self.matcher.update_position_smoother(self.projection, bandwidth=self.bandwidth())
+        self.matcher.update_position_smoother(bandwidth=self.bandwidth())
 
         self.compute_position_errors()
         self.compute_magnitude_errors()
@@ -256,8 +256,8 @@ class MainWindow(MainWindowPlots):
         self.magnitude_error_plot.invalidate()
 
         bandwidth = self.bandwidth()
-        self.matcher.update_position_smoother(self.projection, bandwidth=bandwidth)
-        self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=bandwidth)
+        self.matcher.update_position_smoother(bandwidth=bandwidth)
+        self.matcher.update_magnitude_smoother(self.calibration, bandwidth=bandwidth)
         self.position_correction_plot.invalidate()
         self.magnitude_correction_plot.invalidate()
 
@@ -280,8 +280,8 @@ class MainWindow(MainWindowPlots):
             return
 
         bandwidth = self.bandwidth()
-        self.matcher.update_position_smoother(self.projection, bandwidth=bandwidth)
-        self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=bandwidth)
+        self.matcher.update_position_smoother(bandwidth=bandwidth)
+        self.matcher.update_magnitude_smoother(self.calibration, bandwidth=bandwidth)
         self.position_correction_plot.invalidate_grid()
         self.position_correction_plot.invalidate_meteor()
         self.magnitude_correction_plot.invalidate_grid()
@@ -309,20 +309,24 @@ class MainWindow(MainWindowPlots):
         self.matcher = Matcher(self.location, self.time)
 
     def compute_position_errors(self):
-        self.position_errors = self.matcher.position_errors_sky(self.projection, 1,
-                                                                mask_catalogue=True, mask_sensor=True)
+        log.debug("Recomputing position errors...")
+        self.position_errors = self.matcher.position_errors_sky(1, mask_catalogue=True, mask_sensor=True)
 
     def compute_magnitude_errors(self):
-        self.magnitude_errors = self.matcher.magnitude_errors_sky(self.projection, self.calibration, 1,
-                                                                  mask_catalogue=True, mask_sensor=True)
+        log.debug("Recomputing magnitude errors...")
+        self.magnitude_errors = self.matcher.magnitude_errors_sky(self.calibration)
 
     def load_catalogue(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "catalogues",
                                                   "Tab-separated values (*.tsv)")
+        filename = Path(filename)
         if filename == '':
             log.warning("No file provided, loading aborted")
         else:
-            self.matcher.load_catalogue(filename)
+            try:
+                self.matcher.load_catalogue(filename)
+            except:
+                log.error(f"Could not load catalogue: {filename}")
             self.position_sky_plot.invalidate_stars()
             self.magnitude_sky_plot.invalidate_stars()
             self.on_projection_parameters_changed()
@@ -347,8 +351,13 @@ class MainWindow(MainWindowPlots):
             log.error(f"Could not export projection parameters: {exc}")
 
     def load_sighting(self):
+        self._block_parameter_signals(True)
+        self._block_location_time_signals(True)
+        self._block_pixel_scales_signals(True)
+
         filename, _ = QFileDialog.getOpenFileName(self, "Load Kvant YAML file", "data",
                                                   "YAML files (*.yml *.yaml)")
+
         if filename == '':
             log.warning("No file provided, loading aborted")
         else:
@@ -366,6 +375,10 @@ class MainWindow(MainWindowPlots):
             log.warning(f"Station not found in the database, marking as custom coordinates")
             self.cb_stations.setCurrentIndex(0)
 
+        self._block_parameter_signals(False)
+        self._block_location_time_signals(False)
+        self._block_pixel_scales_signals(False)
+        print("FUCK")
         self.on_location_time_changed()
         self.on_projection_parameters_changed()
         self.sensor_plot.invalidate()
@@ -410,11 +423,18 @@ class MainWindow(MainWindowPlots):
             log.error(f"Could not import projection parameters: {exc}")
         finally:
             self._block_parameter_signals(False)
-            self.update_projection()
 
     def _block_parameter_signals(self, block: bool) -> None:
         for widget in self.param_widgets.values():
             widget.dsb_value.blockSignals(block)
+
+    def _block_location_time_signals(self, block: bool) -> None:
+        for widget in self.location_time_widgets.values():
+            widget.blockSignals(block)
+
+    def _block_pixel_scales_signals(self, block: bool) -> None:
+        for widget in self.pixel_scale_widgets.values():
+            widget.blockSignals(block)
 
     def get_projection_parameters(self):
         return np.array([widget.true_value for widget in self.param_widgets.values()], dtype=float)
@@ -467,6 +487,8 @@ class MainWindow(MainWindowPlots):
             star=self.matcher.pairing,
             mask=self.matcher.sensor_data.stars.mask,
             count=self.matcher.sensor_data.stars.count,
+            scalar_errors=np.degrees(self.matcher.distance_sky(masked=False)),
+            vector_errors=np.degrees(self.matcher.vector_errors_full()),
             _dynamic=False,
         )
 
@@ -486,11 +508,13 @@ class MainWindow(MainWindowPlots):
     def update_catalogue_table(self):
         radec = self.matcher.catalogue.radec(self.location, self.time, masked=False)
         altaz = self.matcher.catalogue.altaz(self.location, self.time, masked=False)
+        vmag = self.matcher.catalogue.vmag(self.location, self.time, masked=False)
         data = dotmap.DotMap(
             dec=radec.dec.degree,
             ra=radec.ra.degree,
             alt=altaz.alt.degree,
             az=altaz.az.degree,
+            vmag=vmag,
             mask=self.matcher.catalogue.mask,
             count=self.matcher.catalogue.count,
             _dynamic=False,
@@ -509,19 +533,21 @@ class MainWindow(MainWindowPlots):
         self.show_counts()
 
     def mask_sensor_dist(self):
-        errors = self.matcher.position_errors_sky(self.projection, axis=1, mask_catalogue=True, mask_sensor=False)
+        errors = self.matcher.distance_sky_full()
+        errors = np.min(errors, axis=1, initial=math.tau / 2)
         limit = self.dsb_sensor_limit_dist.value()
         self._mask_sensor(errors < np.radians(limit), f"position errors < {c.num(f'{limit:.3f}°')}")
 
     def mask_sensor_alt(self):
-        positions = self.matcher.sensor_data.stars.project(self.projection, masked=False)
+        positions = self.matcher.sensor_data.stars.project(self.projection, masked=False, flip_theta=True)
         limit = self.dsb_sensor_limit_alt.value()
-        self._mask_sensor(positions[..., 0] < np.radians(90 - limit), f"altitude < {c.num(f'{limit:.1f}°')}")
+        self._mask_sensor(positions[..., 0] > np.radians(limit), f"altitude < {c.num(f'{limit:.1f}°')}")
 
     def _mask_sensor(self, mask: np.ndarray, message: str):
         self.matcher.mask_sensor_data(mask)
         log.info(f"Masked reference dots: {message}: "
                  f"{c.num(self.matcher.sensor_data.stars.count_visible)} are valid")
+        self.matcher.compute_pairing()
         self._update_catalogue_mask()
 
     def _update_catalogue_mask(self):
@@ -545,22 +571,22 @@ class MainWindow(MainWindowPlots):
         log.info(f"Masked the catalogue: {message}: "
                  f"{c.num(self.matcher.catalogue.count_visible)} stars visible")
         self._update_catalogue_mask()
+        self.matcher.compute_pairing()
 
     def mask_catalogue_dist(self):
-        errors: np.ndarray = self.matcher.position_errors_sky(self.projection,
-                                                              axis=0, mask_catalogue=False, mask_sensor=True)
+        errors: np.ndarray = np.min(self.matcher.distance_sky_full(), axis=0)
         limit: float = self.dsb_catalogue_limit_dist.value()
         self._mask_catalogue(errors < np.radians(limit),
                              f"errors < {c.num(f'{limit:.3f}°')}")
 
     def mask_catalogue_mag(self):
         limit: float = self.dsb_catalogue_limit_mag.value()
-        self._mask_catalogue(self.matcher.vmag(masked=False) < limit,
+        self._mask_catalogue(self.matcher.catalogue_vmag(masked=False) < limit,
                              f"magnitude <{c.num(f'{limit:.1f}m')}")
 
     def mask_catalogue_alt(self):
         limit: float = self.dsb_catalogue_limit_alt.value()
-        self._mask_catalogue(self.matcher.altaz(masked=False)[..., 0] > np.radians(limit),
+        self._mask_catalogue(self.matcher.catalogue_altaz_np(masked=False)[..., 0] > np.radians(limit),
                              f"altitude >{c.num(f'{limit:.1f}°')}")
 
     def reset_catalogue_mask(self):
@@ -593,30 +619,8 @@ class MainWindow(MainWindowPlots):
         return self.sb_resolution.value()
 
     def on_pair_clicked(self):
-        if (rms_error := np.degrees(self.matcher.rms_error(self.position_errors))) > 0.5:
-            reply = QMessageBox.warning(self, "Mean position error limit exceeded!",
-                                        f"Mean position error is currently {rms_error:.6f}°.\n"
-                                        f"Are you sure your approximate solution is correct?",
-                                        QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
-            if reply == QMessageBox.StandardButton.Ok:
-                return False
-        self.pair()
-
-    def pair(self):
-        self.matcher.pair(self.projection)
-        self.matcher.update_position_smoother(self.projection, bandwidth=self.bandwidth())
-        self.matcher.update_magnitude_smoother(self.projection, self.calibration, bandwidth=self.bandwidth())
-
-        self.position_sky_plot.invalidate_dots()
-        self.position_sky_plot.invalidate_stars()
-        self.magnitude_sky_plot.invalidate_dots()
-        self.magnitude_sky_plot.invalidate_stars()
-        self.position_error_plot.invalidate()
-        self.magnitude_error_plot.invalidate()
-        self.position_correction_plot.invalidate()
-        self.magnitude_correction_plot.invalidate()
-        self.show_counts()
-        self.update_plots()
+        self.matcher.fix_pairing(not self.matcher.pairing_fixed)
+        self.lb_mode.setText(f"{'' if self.matcher.pairing_fixed else 'un'}paired")
 
     def display_about(self):
         msg = QMessageBox(self, text="VASCO Virtual All-Sky CorrectOr plate")

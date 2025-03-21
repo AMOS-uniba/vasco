@@ -30,15 +30,18 @@ class SensorData:
                  bounds: Optional[Rect] = None,
                  fps: int = 1):
         self.rect = Rect(-1, 1, -1, 1) if bounds is None else bounds
-        self._stars = DotCollection() if stars is None else stars
-        self._meteor = DotCollection() if meteor is None else meteor
+        self.shifter = ScalingShifter(x0=800, y0=600, xs=0.0044, ys=0.0044)
+
+        self._stars_raw = DotCollection() if stars is None else stars
+        self._stars_scaled = DotCollection() if stars is None else stars
+        self._meteor_raw = DotCollection() if meteor is None else meteor
+        self._meteor_scaled = DotCollection() if meteor is None else meteor
         self.name = "(unknown)" if name is None else name,
         self.fps = fps
         self.station = "(unknown station)" if station is None else station
 
         self.location = location
         self.timestamp = datetime.datetime.now() if timestamp is None else timestamp
-        self.shifter = ScalingShifter(x0=800, y0=600, xs=0.0044, ys=0.0044)
 
     @staticmethod
     def load_YAML(file):
@@ -69,9 +72,27 @@ class SensorData:
         )
 
     def set_shifter_scales(self, xs, ys):
-        log.debug(f"Set shifter scales to xs = {xs}, ys = {ys}")
         self.shifter.xs = xs
         self.shifter.ys = ys
+
+        self.rescale_stars()
+        self.rescale_meteor()
+        log.debug(f"Set shifter scales to xs = {xs:.6f}, ys = {ys:.6f}")
+
+    def rescale_stars(self):
+        self._stars_scaled = DotCollection(
+            np.stack(self.shifter(self._stars_raw.xs(masked=False), self._stars_raw.ys(masked=False)), axis=1),
+            self._stars_raw.intensities(masked=False),
+            mask=self._stars_raw.mask,
+        )
+
+    def rescale_meteor(self):
+        self._meteor_scaled = DotCollection(
+            np.stack(self.shifter(self._meteor_raw.xs(masked=False), self._meteor_raw.ys(masked=False)), axis=1),
+            self._meteor_raw.intensities(masked=False),
+            fnos=self._meteor_raw.fnos(masked=False),
+            mask=self._meteor_raw.mask,
+        )
 
     def _collection_to_disk(self, collection, masked):
         return np.stack(self.shifter(collection.xs(masked), collection.ys(masked)), axis=1)
@@ -82,41 +103,28 @@ class SensorData:
     def meteor_to_disk(self, masked):
         return self._collection_to_disk(self.meteor, masked)
 
-    def set_mask(self, mask):
-        self._stars.mask = mask
-
     def reset_mask(self):
-        self._stars.mask = None
-
-    def culled_copy(self):
-        out = copy.deepcopy(self)
-        out._stars.cull()
-        return out
+        self._stars_scaled.mask = None
 
     @property
-    def stars_pixels(self):
-        return self._stars
+    def stars_raw(self):
+        """ Stars in raw (pixel) coordinates, as detected """
+        return self._stars_raw
 
     @property
     def stars(self):
-        return DotCollection(
-            np.stack(self.shifter(self._stars.xs(masked=False), self._stars.ys(masked=False)), axis=1),
-            self._stars.intensities(masked=False),
-            mask=self._stars.mask,
-        )
+        """ Stars in scaled (mm) coordinates """
+        return self._stars_scaled
 
     @property
-    def meteor_pixels(self):
-        return self._meteor
+    def meteor_raw(self):
+        """ Meteor in raw (pixel) coordinates, as detected """
+        return self._meteor_raw
 
     @property
     def meteor(self):
-        return DotCollection(
-            np.stack(self.shifter(self._meteor.xs(masked=False), self._meteor.ys(masked=False)), axis=1),
-            self._meteor.intensities(masked=False),
-            fnos=self._meteor.fnos(masked=False),
-            mask=self._meteor.mask,
-        )
+        """ Meteor in scaled (mm) coordinates """
+        return self._meteor_scaled
 
     def __str__(self):
         return f"<Sensor data with {self.stars.count_visible} / {self.stars.count} " \

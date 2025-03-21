@@ -2,6 +2,20 @@ from abc import abstractmethod
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
+from matplotlib.colors import LinearSegmentedColormap
+
+
+cmap_gyr = LinearSegmentedColormap('gyr',
+                                    segmentdata={
+                                        'red': [(0.0, 0.0, 0.0),
+                                                (0.5, 1.0, 1.0),
+                                                (1.0, 1.0, 1.0)],
+                                        'green': [(0.0, 1.0, 1.0),
+                                                  (0.5, 1.0, 1.0),
+                                                  (1.0, 0.0, 0.0)],
+                                        'blue': [(0.0, 0.0, 0.0),
+                                                 (1.0, 0.0, 0.0)]
+                                    }, N=256)
 
 
 class BasePlot:

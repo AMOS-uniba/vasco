@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import logging
 
@@ -79,9 +81,12 @@ class DotCollection:
         assert self.mask.shape == self.x.shape, \
             f"Mask shape does not match data shape: expected {self.x.shape}, got {self.mask.shape}"
 
-    def project(self, projection: Projection, *, masked: bool) -> np.ndarray[float]:
+    def project(self, projection: Projection, *, masked: bool, flip_theta: bool = False) -> np.ndarray:
         """ Project the dot collection from sensor to sky """
-        return np.stack(projection(self.xs(masked), self.ys(masked)), axis=1)
+        result = np.stack(projection(self.xs(masked), self.ys(masked)), axis=1)
+        if flip_theta:
+            result[..., 0] = math.tau / 4 - result[..., 0]
+        return result
 
     def calibrate(self, calibration: Calibration, *, masked: bool) -> np.ndarray[float]:
         return calibration(self.intensities(masked))

@@ -9,9 +9,8 @@ from collections import OrderedDict
 from PyQt6.QtWidgets import QMainWindow, QDoubleSpinBox, QLabel
 from main_ui import Ui_MainWindow
 
-
 from photometry import LogCalibration
-from matchers import Matcher
+from models import Matcher
 
 
 class MainWindowBase(QMainWindow, Ui_MainWindow):
@@ -41,6 +40,18 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
             Q=self.pw_Q,
             epsilon=self.pw_epsilon,
             E=self.pw_E,
+        )
+
+        self.location_time_widgets = OrderedDict(
+            lat=self.dsb_lat,
+            lon=self.dsb_lon,
+            alt=self.dsb_alt,
+            time=self.dt_time,
+        )
+
+        self.pixel_scale_widgets = OrderedDict(
+            xs=self.dsb_xs,
+            ys=self.dsb_ys,
         )
 
         self.settings = dotmap.DotMap(dict(
@@ -73,21 +84,25 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         self.lb_rms_error.setText(f'{np.degrees(rms_error):.6f}°')
         self.lb_max_error.setText(f'{np.degrees(max_error):.6f}°')
 
-        errors = self.matcher.distance_sky(self.projection, mask_catalogue=True, mask_sensor=True, paired=False)
+        errors = self.matcher.distance_sky_full()
+
+        sensor_dist_errors = np.min(errors, axis=1, initial=np.inf)[self.matcher.sensor_data.stars.mask]
+        catalogue_dist_errors = np.min(errors, axis=0, initial=np.inf)[self.matcher.catalogue.mask]
 
         self._update_maskable_count(self.dsb_sensor_limit_dist, self.lb_sensor_dist,
-                                    np.min(errors, axis=1, initial=np.inf),
+                                    sensor_dist_errors,
                                     func=lambda x: np.radians(x))
         self._update_maskable_count(self.dsb_sensor_limit_alt, self.lb_sensor_alt,
-                                    self.matcher.sensor_data.stars.project(self.projection, masked=True)[..., 0],
-                                    func=lambda x: np.radians(90 - x))
+                                    self.matcher.sensor_data.stars.project(self.projection, masked=True, flip_theta=True)[..., 0],
+                                    func=lambda x: np.radians(x),
+                                    invert_mask=True)
 
         self._update_maskable_count(self.dsb_catalogue_limit_dist, self.lb_catalogue_dist,
-                                    np.min(errors, axis=0, initial=np.inf),
+                                    catalogue_dist_errors,
                                     func=lambda x: np.radians(x))
         self._update_maskable_count(self.dsb_catalogue_limit_alt, self.lb_catalogue_alt,
-                                    self.matcher.altaz(masked=True)[..., 0],
+                                    self.matcher.catalogue_altaz_np(masked=True)[..., 0],
                                     func=lambda x: np.radians(x),
                                     invert_mask=True)
         self._update_maskable_count(self.dsb_catalogue_limit_mag, self.lb_catalogue_mag,
-                                    self.matcher.vmag(masked=True))
+                                    self.matcher.catalogue_vmag(masked=True))
