@@ -245,33 +245,35 @@ class Matcher:
         return obs - cat
 
     def update_position_smoother(self, *, bandwidth: float = 0.1):
-        obs = proj_to_disk(self.sensor_data.stars.project(self._projection, masked=True, flip_theta=True))
+        log.debug(f"Updating position smoother (bandwidth = {bandwidth}")
         cat = numpy_to_disk(self.catalogue_altaz_paired())[self.sensor_data.stars.mask]
+        obs = proj_to_disk(self.sensor_data.stars.project(self._projection, masked=True))
         self.position_smoother = KernelSmoother(
             obs, obs - cat,
             kernel=kernels.nexp,
-            bandwidth=bandwidth
+            bandwidth=bandwidth,
         )
 
     def update_magnitude_smoother(self, calibration: Calibration, *, bandwidth: float = 0.1):
+        log.debug(f"Updating magnitude smoother (bandwidth = {bandwidth}")
         mcat = self.catalogue_vmag_paired()[self.sensor_data.stars.mask]
-        obs = proj_to_disk(self.sensor_data.stars.project(self._projection, masked=True, flip_theta=True))
+        obs = proj_to_disk(self.sensor_data.stars.project(self._projection, masked=True))
         mobs = calibration(self.sensor_data.stars.intensities(masked=True))
         self.magnitude_smoother = KernelSmoother(
             obs, np.expand_dims(mobs - mcat, 1),
             kernel=kernels.nexp,
-            bandwidth=bandwidth
+            bandwidth=bandwidth,
         )
 
     @staticmethod
-    def rms_error(errors: np.ndarray[float]) -> float:
+    def rms_error(errors: np.ndarray) -> float:
         if errors.size == 0:
             return np.nan
         else:
             return np.sqrt(np.sum(np.square(errors)) / errors.size)
 
     @staticmethod
-    def max_error(errors: np.ndarray[float]) -> float:
+    def max_error(errors: np.ndarray) -> float:
         return np.max(errors, initial=0)
 
     @staticmethod
@@ -341,7 +343,7 @@ class Matcher:
     def correct_meteor_position(self, projection: Projection) -> AltAz:
         return disk_to_altaz(self._meteor_xy(projection) - self.correction_meteor_xy(projection))
 
-    def correct_meteor_magnitude(self, projection: Projection, calibration: Calibration) -> np.ndarray[float]:
+    def correct_meteor_magnitude(self, projection: Projection, calibration: Calibration) -> np.ndarray:
         return calibration(self.sensor_data.meteor.intensities(masked=False)) - self.correction_meteor_mag(projection)
 
     @staticmethod
@@ -355,17 +357,6 @@ class Matcher:
 
     def magnitude_grid(self, resolution=21):
         return self._grid(self.magnitude_smoother, resolution, masked=False)
-
-#    @abstractmethod
-#    def print_meteor(self, projection: Projection, calibration: Calibration) -> str:
-#        """ Correct a meteor and return an XML fragment """
-
-    def func(self, x):
-        return self.rms_error(self.position_errors_sky(self.projection_cls(*x), masked=True))
-
-    @staticmethod
-    def _get_optimization_parameters(x0, mask):
-        return x0[~mask]
 
     def _build_optimization_function(self,
                                      mask: np.ndarray[float]) -> Callable[[np.ndarray[float], ...], float]:
@@ -399,7 +390,7 @@ class Matcher:
                  mask=np.ones(shape=(12,), dtype=bool),
                  callback: Callable = lambda x: log.debug(x)):
         func = self._build_optimization_function(mask)
-        args = self._get_optimization_parameters(np.array(x0), mask)
+        args = np.array(x0)[~mask]
 
         if np.count_nonzero(mask) == 0:
             log.warning("At least one parameter must be allowed to vary")

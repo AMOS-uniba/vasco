@@ -249,6 +249,7 @@ class MainWindow(MainWindowPlots):
         self.position_correction_plot.invalidate()
         self.magnitude_correction_plot.invalidate()
         self.matcher.update_position_smoother(bandwidth=self.bandwidth())
+        self.matcher.update_magnitude_smoother(self.calibration, bandwidth=self.bandwidth())
 
         self.compute_position_errors()
         self.compute_magnitude_errors()
