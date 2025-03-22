@@ -18,7 +18,7 @@ from numpy.typing import NDArray
 from correctors import KernelSmoother, kernels
 from photometry import Calibration
 from models.sensordata import SensorData
-from utilities import hash_numpy, proj_to_disk, altaz_to_disk, disk_to_altaz, unit_grid
+from utilities import hash_numpy, proj_to_disk, altaz_to_disk, disk_to_altaz, unit_grid, numpy_to_disk
 
 log = logging.getLogger('vasco')
 
@@ -245,9 +245,8 @@ class Matcher:
         return obs - cat
 
     def update_position_smoother(self, *, bandwidth: float = 0.1):
-        return
-        obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=True, flip_theta=True))
-        cat = altaz_to_disk(self.catalogue.catalogue_altaz_np(self.location, self.time, masked=True))
+        obs = proj_to_disk(self.sensor_data.stars.project(self._projection, masked=True, flip_theta=True))
+        cat = numpy_to_disk(self.catalogue_altaz_paired())[self.sensor_data.stars.mask]
         self.position_smoother = KernelSmoother(
             obs, obs - cat,
             kernel=kernels.nexp,
@@ -255,9 +254,8 @@ class Matcher:
         )
 
     def update_magnitude_smoother(self, calibration: Calibration, *, bandwidth: float = 0.1):
-        return
-        obs = proj_to_disk(self.sensor_data.stars.project(projection, masked=True, flip_theta=True))
-        mcat = self.catalogue.catalogue_vmag(self.location, self.time, masked=True)
+        mcat = self.catalogue_vmag_paired()[self.sensor_data.stars.mask]
+        obs = proj_to_disk(self.sensor_data.stars.project(self._projection, masked=True, flip_theta=True))
         mobs = calibration(self.sensor_data.stars.intensities(masked=True))
         self.magnitude_smoother = KernelSmoother(
             obs, np.expand_dims(mobs - mcat, 1),

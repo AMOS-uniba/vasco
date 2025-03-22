@@ -41,7 +41,7 @@ class PositionCorrectionPlot(BaseCorrectionPlot):
             pos_cat[:, 0], pos_cat[:, 1],
             mag_obs,
             cmap=self.cmap_meteor,
-            scale=scale / 1000,
+            scale=scale * 30,
             width=0.002,
         )
 
@@ -54,5 +54,4 @@ class PositionCorrectionPlot(BaseCorrectionPlot):
             x, y, u, v, np.sqrt(u**2 + v**2),
             cmap=self.cmap_grid,
             width=0.0014,
-            scale=0.001,
         )

@@ -37,7 +37,7 @@ log = logging.getLogger('vasco')
 VERSION = "0.9.1"
 DATE = "2025-03-12"
 
-np.set_printoptions(edgeitems=5, linewidth=256, formatter=dict(float=lambda x: f"{x:.6f}"))
+np.set_printoptions(edgeitems=50, linewidth=256, formatter=dict(float=lambda x: f"{x:.6f}"))
 
 
 class MainWindow(MainWindowPlots):
@@ -553,6 +553,7 @@ class MainWindow(MainWindowPlots):
         log.info(f"Masked reference dots: {message}: "
                  f"{c.num(self.matcher.sensor_data.stars.count_visible)} are valid")
         self.matcher.update_pairing()
+        self.matcher.update_position_smoother(bandwidth=self.bandwidth())
         self._update_catalogue_mask()
 
     def _update_catalogue_mask(self):
@@ -577,6 +578,7 @@ class MainWindow(MainWindowPlots):
                  f"{c.num(self.matcher.catalogue.count_visible)} stars visible")
         self._update_catalogue_mask()
         self.matcher.update_pairing()
+        self.matcher.update_position_smoother(bandwidth=self.bandwidth())
 
     def mask_catalogue_dist(self):
         errors: np.ndarray = np.min(self.matcher.distance_sky_full(), axis=0)

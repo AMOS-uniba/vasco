@@ -200,8 +200,10 @@ class MainWindowPlots(MainWindowBase):
             plot.clear_grid()
 
     def plot_position_correction_grid(self):
+        log.debug("Plotting position correction grid")
         self._plot_correction_grid(self.position_correction_plot, self.matcher.position_grid, masked=True)
 
     def plot_magnitude_correction_grid(self):
+        log.debug("Plotting magnitude correction grid")
         self._plot_correction_grid(self.magnitude_correction_plot, self.matcher.magnitude_grid, masked=False,
                                    interpolation=self.cb_interpolation.currentText())

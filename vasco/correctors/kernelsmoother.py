@@ -14,8 +14,8 @@ class KernelSmoother(BaseCorrector):
                  values: NDArray,
                  *,
                  metric: Callable[[NDArray, NDArray], NDArray] = euclidean,
-                 kernel=kernels.nexp,
-                 bandwidth=1.0):
+                 kernel: Callable = kernels.nexp,
+                 bandwidth: float = 1.0):
         super().__init__(points, values, metric=metric)
         self.kernel = kernel
         self.bandwidth = bandwidth
