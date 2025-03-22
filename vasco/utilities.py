@@ -67,8 +67,8 @@ def altaz_to_disk(altaz: Optional[AltAz]) -> np.ndarray:
 def numpy_to_disk(altaz: np.ndarray) -> np.ndarray:
     return np.stack(
         (
-            np.sin(np.radians(altaz[..., 1])) * (QuarterTau - np.radians(altaz[..., 0])) / QuarterTau,
-            -np.cos(np.radians(altaz[..., 1])) * (QuarterTau - np.radians(altaz[..., 0])) / QuarterTau,
+            np.sin(altaz[..., 1]) * (QuarterTau - altaz[..., 0]) / QuarterTau,
+            -np.cos(altaz[..., 1]) * (QuarterTau - altaz[..., 0]) / QuarterTau,
         ), axis=1,
     )
 

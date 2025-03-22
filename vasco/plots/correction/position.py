@@ -26,7 +26,7 @@ class PositionCorrectionPlot(BaseCorrectionPlot):
             pos_cat[:, 0] - pos_obs[:, 0], pos_cat[:, 1] - pos_obs[:, 1],
             norm(np.sqrt((pos_cat[:, 0] - pos_obs[:, 0]) ** 2 + (pos_cat[:, 1] - pos_obs[:, 1]) ** 2)),
             cmap=self.cmap_dots,
-            scale=scale,
+            scale=scale / 1000,
         )
 
     def _update_meteor(self, pos_obs, pos_cat, mag_obs, mag_cat, scale=0.05):
@@ -41,7 +41,7 @@ class PositionCorrectionPlot(BaseCorrectionPlot):
             pos_cat[:, 0], pos_cat[:, 1],
             mag_obs,
             cmap=self.cmap_meteor,
-            scale=scale,
+            scale=scale / 1000,
             width=0.002,
         )
 
@@ -54,4 +54,5 @@ class PositionCorrectionPlot(BaseCorrectionPlot):
             x, y, u, v, np.sqrt(u**2 + v**2),
             cmap=self.cmap_grid,
             width=0.0014,
+            scale=0.001,
         )

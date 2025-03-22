@@ -161,9 +161,9 @@ class MainWindowPlots(MainWindowBase):
         if self.cb_show_errors.isChecked():
             log.debug(f"Plotting {plot.intent} for {plot.target}")
             plot.update_dots(
-                self.matcher.catalogue_altaz_paired(),
+                self.matcher.catalogue_altaz_paired()[self.matcher.sensor_data.stars.mask],
                 self.matcher.sensor_data.stars.project(self.projection, masked=True),
-                self.matcher.catalogue_vmag_paired(),
+                self.matcher.catalogue_vmag_paired()[self.matcher.sensor_data.stars.mask],
                 self.matcher.sensor_data.stars.calibrate(self.calibration, masked=True),
                 limit=np.radians(self.dsb_sensor_limit_dist.value()),
                 scale=1000 / self.sb_arrow_scale.value(),

@@ -54,13 +54,13 @@ class MainWindow(MainWindowPlots):
             self.matcher.load_catalogue(args.catalogue.name)
         if args.sighting:
             self._load_sighting(args.sighting.name)
+            self.update_time()
+            self.update_location()
         if args.projection:
             self._import_projection_parameters(args.projection.name)
+            self.update_scaling()
+            self.update_projection()
 
-        self.update_time()
-        self.update_location()
-        self.update_scaling()
-        self.update_projection()
         self.update_matcher()
 
         self.compute_position_errors()
