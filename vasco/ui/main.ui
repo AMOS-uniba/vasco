@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>2118</width>
-    <height>1282</height>
+    <width>2105</width>
+    <height>1304</height>
    </rect>
   </property>
   <property name="font">
@@ -670,6 +670,32 @@
               </widget>
              </item>
             </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="gb_calibration">
+         <property name="title">
+          <string>Magnitude calibration</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_13">
+          <item row="1" column="0">
+           <widget class="QSlider" name="hs_zero_mag">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="lb_zero_mag">
+            <property name="text">
+             <string>0.100</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
            </widget>
           </item>
          </layout>
@@ -1767,7 +1793,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>2118</width>
+     <width>2105</width>
      <height>21</height>
     </rect>
    </property>

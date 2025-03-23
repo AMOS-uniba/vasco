@@ -319,7 +319,7 @@ class MainWindow(MainWindowPlots):
 
     def compute_position_errors(self):
         log.debug("Recomputing position errors...")
-        self.position_errors = self.matcher.position_errors_sky(1, mask_catalogue=True, mask_sensor=True)
+        self.position_errors = self.matcher.position_errors_sky()
 
     def compute_magnitude_errors(self):
         log.debug("Recomputing magnitude errors...")
@@ -329,6 +329,7 @@ class MainWindow(MainWindowPlots):
         filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "catalogues",
                                                   "Tab-separated values (*.tsv)")
         filename = Path(filename)
+
         if filename == '':
             log.warning("No file provided, loading aborted")
         else:
@@ -501,7 +502,7 @@ class MainWindow(MainWindowPlots):
         model = QStarModel(data)
         self.tv_sensor.setModel(model)
 
-        for i, width in enumerate([120, 120, 120, 120, 120, 120, 80]):
+        for i, width in enumerate([40, 120, 120, 120, 120, 120, 120, 40, 40, 120, 120, 120]):
             self.tv_sensor.setColumnWidth(i, width)
 
     def update_meteor_table(self):

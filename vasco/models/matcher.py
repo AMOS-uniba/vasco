@@ -230,18 +230,14 @@ class Matcher:
         log.debug(f"Vector difference in the sky: {obs.shape}, {cat.shape}")
         return obs - cat
 
-    def position_errors_sky(self,
-                            axis: int,
-                            *,
-                            mask_catalogue: bool,
-                            mask_sensor: bool) -> np.ndarray:
+    def position_errors_sky(self) -> np.ndarray:
         return self.distance_sky()
 
     def magnitude_errors_sky(self,
                              calibration: Calibration,  # ToDo: also move calibration out
                              ) -> np.ndarray:
-        obs = calibration(self.sensor_data.stars.intensities(masked=False))
-        cat = self.catalogue_vmag_paired()
+        obs = calibration(self.sensor_data.stars.intensities(masked=True))
+        cat = self.catalogue_vmag_paired()[self.sensor_data.stars.mask]
         return obs - cat
 
     def update_position_smoother(self, *, bandwidth: float = 0.1):
