@@ -1,10 +1,9 @@
 from .base import Exporter
 
 
-class CSVExporter(Exporter):
+class DSVExporter(Exporter):
     """
-    CSV based meteor exporter.
-    Currently a semi-hardcoded mess but works for typical use cases.
+    DSV based meteor exporter.
     """
 
     def export(self, filename):
@@ -13,4 +12,4 @@ class CSVExporter(Exporter):
 
     def print_meteor(self, data):
         df = super()._get_meteor()
-        return None # mockup, finish
+        return df.to_csv()

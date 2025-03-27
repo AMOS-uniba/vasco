@@ -723,7 +723,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>8</number>
       </property>
       <widget class="QWidget" name="tab_sensor_plot">
        <attribute name="title">
@@ -838,10 +838,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="pb_export_csv">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
+            <widget class="QPushButton" name="pb_export_dsv">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
                <horstretch>0</horstretch>
@@ -849,7 +846,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Export as CSV</string>
+              <string>Export as DSV</string>
              </property>
              <property name="icon">
               <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
@@ -1803,8 +1800,9 @@
     </property>
     <addaction name="ac_load_sighting"/>
     <addaction name="ac_create_pairing"/>
-    <addaction name="ac_export_meteor"/>
+    <addaction name="ac_export_meteor_xml"/>
     <addaction name="ac_mask_unmatched"/>
+    <addaction name="ac_export_meteor_dsv"/>
    </widget>
    <widget class="QMenu" name="menuCatalogue">
     <property name="title">
@@ -1840,7 +1838,7 @@
     <string>Ctrl+I</string>
    </property>
   </action>
-  <action name="ac_export_meteor">
+  <action name="ac_export_meteor_xml">
    <property name="text">
     <string>Export meteor XML</string>
    </property>
@@ -1879,7 +1877,10 @@
   </action>
   <action name="ac_create_pairing">
    <property name="text">
-    <string>Create pairing</string>
+    <string>Fix pairing</string>
+   </property>
+   <property name="iconText">
+    <string>Fix pairing</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+P</string>
@@ -1907,6 +1908,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="ac_export_meteor_dsv">
+   <property name="text">
+    <string>Export meteor DSV</string>
    </property>
   </action>
  </widget>

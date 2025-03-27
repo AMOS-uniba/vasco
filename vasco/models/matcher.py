@@ -5,6 +5,7 @@ import numpy as np
 import scipy as sp
 
 from typing import Callable, Optional
+from numpy.typing import NDArray
 from pathlib import Path
 
 from astropy.coordinates import EarthLocation, AltAz
@@ -16,7 +17,7 @@ from amosutils.metrics import spherical, euclidean
 from numpy.typing import NDArray
 
 from correctors import KernelSmoother, kernels
-from photometry import Calibration
+from photometry import Calibration, LogCalibration
 from models.sensordata import SensorData
 from utilities import hash_numpy, proj_to_disk, altaz_to_disk, disk_to_altaz, unit_grid, numpy_to_disk
 
@@ -36,22 +37,23 @@ class Matcher:
                  catalogue: Optional[Catalogue] = None,
                  sensor_data: Optional[SensorData] = None):
         self._altaz: Optional[AltAz] = None
-        self._altaz_numpy: Optional[np.ndarray] = None
+        self._altaz_numpy: Optional[NDArray] = None
 
         self._cached_distances = None
         self._hash_observed = None
         self._hash_catalogue = None
 
-        self.pairing: Optional[np.ndarray] = None
+        self.pairing: Optional[NDArray] = None
         self.pairing_fixed: bool = False
 
         self.position_smoother = KernelSmoother(np.zeros(shape=(1, 2), dtype=float),
                                                 np.zeros(shape=(1, 2), dtype=float))
         self.magnitude_smoother = KernelSmoother(np.zeros(shape=(1, 2), dtype=float),
-                                                 np.ndarray(shape=(1,), dtype=float))
+                                                 NDArray(shape=(1,), dtype=float))
 
         self.projection_cls: type[Projection] = projection_cls
         self._projection: Optional[Projection] = None
+        self._calibration: Optional[Calibration] = LogCalibration(zero=8000)
 
         self.location: Optional[EarthLocation] = None
         self.time: Optional[Time] = None
@@ -105,15 +107,13 @@ class Matcher:
         if self._altaz is None:
             log.debug(f"Requesting catalogue for {self.location}, {self.time}, {masked}")
             self._altaz = self.catalogue.altaz(self.location, self.time, masked=False)
-        else:
-            log.debug(f"Requesting catalogue for {self.location}, {self.time}, {masked} (using cached)")
 
         if masked:
             return self._altaz[self.catalogue.mask]
         else:
             return self._altaz
 
-    def catalogue_altaz_np(self, *, masked: bool) -> np.ndarray:
+    def catalogue_altaz_np(self, *, masked: bool) -> NDArray:
         """
         Return the current masked catalogue altaz as a numpy array
         """
@@ -121,7 +121,7 @@ class Matcher:
         altaz = self.catalogue_altaz(masked=masked)
         return np.array([altaz.alt.radian, altaz.az.radian], dtype=float).T
 
-    def catalogue_altaz_paired(self) -> np.ndarray:
+    def catalogue_altaz_paired(self) -> NDArray:
         return self.catalogue_altaz_np(masked=False)[self.pairing]
 
     def catalogue_vmag(self, *, masked: bool):
@@ -132,10 +132,10 @@ class Matcher:
         vmag = self.catalogue.vmag(self.location, self.time, masked=masked)
         return vmag
 
-    def catalogue_vmag_paired(self) -> np.ndarray:
+    def catalogue_vmag_paired(self) -> NDArray:
         return self.catalogue_vmag(masked=False)[self.pairing]
 
-    def compute_pairing(self) -> np.ndarray:
+    def compute_pairing(self) -> NDArray:
         """
         Project the sensor data onto the sky and find the nearest star for every dot.
 
@@ -163,49 +163,35 @@ class Matcher:
         """
         Compute the current pairing and use it from now on
         """
-        log.debug("Updating the pairing")
         idx = np.arange(0, self.catalogue.count)[self.catalogue.mask]
         self.pairing = idx[self.compute_pairing()]
+        log.debug(f"Updated the pairing {self.pairing.shape}")
 
     def fix_pairing(self, fix: bool) -> None:
         self.pairing_fixed = fix
 
     def _compute_distances_sky(self,
-                               observed: np.ndarray[float],
-                               catalogue: np.ndarray[float],
+                               observed: NDArray[float],
+                               catalogue: NDArray[float],
                                *,
-                               paired: bool) -> np.ndarray:
+                               paired: bool) -> NDArray:
         """
         Compute distances in the sky of `observed` and `catalogue` objects
         from the full Cartesian product
 
         Parameters
         ----------
-        observed:   np.ndarray(M, 2)
-        catalogue:  np.ndarray(N, 2)
+        observed:   NDArray(M, 2)
+        catalogue:  NDArray(N, 2)
 
         Returns
         -------
-        np.ndarray(M, N)
+        NDArray(M, N)
         """
 
         return spherical(observed, catalogue[self.pairing[self.sensor_data.stars.mask]])
-        #else:
-        #    # Binary and is here to *prevent* short circuit, otherwise it can fail!
-        #    if (((hash_observed := hash_numpy(observed)) == self._hash_observed) &
-        #        ((hash_catalogue := hash_numpy(catalogue)) == self._hash_catalogue)):
-        #        log.debug(f"Returning cached")
-        #    else:
-        #        self._hash_observed = hash_observed
-        #        self._hash_catalogue = hash_catalogue
 
-        #        observed = np.expand_dims(observed, 1)
-        #        catalogue = np.expand_dims(catalogue, 0)
-        #        self._cached_distances = spherical(observed, catalogue)
-        #        log.debug(f"Computing sky distance for {observed.shape} × {catalogue.shape}")
-        #    return self._cached_distances
-
-    def distance_sky(self, *, masked: bool = True) -> np.ndarray:
+    def distance_sky(self, *, masked: bool = True) -> NDArray:
         obs = self.sensor_data.stars.project(self._projection, masked=masked, flip_theta=True)
         cat = self.catalogue_altaz_paired()
         if masked:
@@ -213,35 +199,33 @@ class Matcher:
         log.debug(f"Distance in the sky: {obs.shape}, {cat.shape}")
         return spherical(obs, cat)
 
-    def distance_sky_full(self) -> np.ndarray:
+    def distance_sky_full(self) -> NDArray:
         obs = self.sensor_data.stars.project(self._projection, masked=False, flip_theta=True)
         cat = self.catalogue_altaz_np(masked=False)
         return spherical(np.expand_dims(obs, 1), np.expand_dims(cat, 0))
 
-    def vector_errors(self) -> np.ndarray:
+    def vector_errors(self) -> NDArray:
         obs = self.sensor_data.stars.project(self._projection, masked=True, flip_theta=True)
         cat = self.catalogue_altaz_paired()[self.sensor_data.stars.mask]
         log.debug(f"Vector difference in the sky: {obs.shape}, {cat.shape}")
         return obs - cat
 
-    def vector_errors_full(self) -> np.ndarray:
+    def vector_errors_full(self) -> NDArray:
         obs = self.sensor_data.stars.project(self._projection, masked=False, flip_theta=True)
         cat = self.catalogue_altaz_paired()
         log.debug(f"Vector difference in the sky: {obs.shape}, {cat.shape}")
         return obs - cat
 
-    def position_errors_sky(self) -> np.ndarray:
+    def position_errors_sky(self) -> NDArray:
         return self.distance_sky()
 
-    def magnitude_errors_sky(self,
-                             calibration: Calibration,  # ToDo: also move calibration out
-                             ) -> np.ndarray:
-        obs = calibration(self.sensor_data.stars.intensities(masked=True))
+    def magnitude_errors_sky(self) -> NDArray:
+        obs = self._calibration(self.sensor_data.stars.intensities(masked=True))
         cat = self.catalogue_vmag_paired()[self.sensor_data.stars.mask]
         return obs - cat
 
     def update_position_smoother(self, *, bandwidth: float = 0.1):
-        log.debug(f"Updating position smoother (bandwidth = {bandwidth}")
+        log.debug(f"Updating position smoother (bandwidth = {bandwidth})")
         cat = numpy_to_disk(self.catalogue_altaz_paired())[self.sensor_data.stars.mask]
         obs = proj_to_disk(self.sensor_data.stars.project(self._projection, masked=True))
         self.position_smoother = KernelSmoother(
@@ -250,11 +234,11 @@ class Matcher:
             bandwidth=bandwidth,
         )
 
-    def update_magnitude_smoother(self, calibration: Calibration, *, bandwidth: float = 0.1):
-        log.debug(f"Updating magnitude smoother (bandwidth = {bandwidth}")
+    def update_magnitude_smoother(self, *, bandwidth: float = 0.1):
+        log.debug(f"Updating magnitude smoother (bandwidth = {bandwidth})")
         mcat = self.catalogue_vmag_paired()[self.sensor_data.stars.mask]
         obs = proj_to_disk(self.sensor_data.stars.project(self._projection, masked=True))
-        mobs = calibration(self.sensor_data.stars.intensities(masked=True))
+        mobs = self._calibration(self.sensor_data.stars.intensities(masked=True))
         self.magnitude_smoother = KernelSmoother(
             obs, np.expand_dims(mobs - mcat, 1),
             kernel=kernels.nexp,
@@ -262,40 +246,15 @@ class Matcher:
         )
 
     @staticmethod
-    def rms_error(errors: np.ndarray) -> float:
+    def rms_error(errors: NDArray) -> float:
         if errors.size == 0:
             return np.nan
         else:
             return np.sqrt(np.sum(np.square(errors)) / errors.size)
 
     @staticmethod
-    def max_error(errors: np.ndarray) -> float:
+    def max_error(errors: NDArray) -> float:
         return np.max(errors, initial=0)
-
-    @staticmethod
-    def find_nearest_value(dist, *, axis: int) -> np.ndarray:
-        """
-        Find the nearest dot to star or vice versa
-
-        axis: int
-            0 for the nearest star to every dot
-            1 for the nearest dot to every star
-        """
-        return np.min(dist, axis=axis, initial=np.pi)
-
-    @staticmethod
-    def find_nearest_index(dist, *, axis: int) -> np.ndarray:
-        """
-        Find the index of the nearest dot to star or vice versa
-
-        axis: int
-            0 for the nearest star to every dot
-            1 for the nearest dot to every star
-        """
-        if dist.size > 0:
-            return np.argmin(dist, axis=axis)
-        else:
-            return np.empty(shape=(dist.shape[axis], 0), dtype=int)
 
     def correct_meteor(self, projection: Projection, calibration: Calibration) -> dotmap.DotMap:
         log.debug("Computing vector correction for the meteor")
@@ -323,9 +282,9 @@ class Matcher:
             _dynamic=False,
         )
 
-    def _meteor_xy(self, projection):
+    def _meteor_xy(self, projection: Projection):
         """ Return on-disk xy coordinates for the meteor after applying the projection """
-        return proj_to_disk(self.sensor_data.meteor.project(projection, masked=False, flip_theta=True))
+        return proj_to_disk(self.sensor_data.meteor.project(projection, masked=False, flip_theta=False))
 
     def project_meteor(self, projection: Projection):
         return disk_to_altaz(self._meteor_xy(projection))
@@ -339,7 +298,7 @@ class Matcher:
     def correct_meteor_position(self, projection: Projection) -> AltAz:
         return disk_to_altaz(self._meteor_xy(projection) - self.correction_meteor_xy(projection))
 
-    def correct_meteor_magnitude(self, projection: Projection, calibration: Calibration) -> np.ndarray:
+    def correct_meteor_magnitude(self, projection: Projection, calibration: Calibration) -> NDArray:
         return calibration(self.sensor_data.meteor.intensities(masked=False)) - self.correction_meteor_mag(projection)
 
     @staticmethod
@@ -355,7 +314,7 @@ class Matcher:
         return self._grid(self.magnitude_smoother, resolution, masked=False)
 
     def _build_optimization_function(self,
-                                     mask: np.ndarray[float]) -> Callable[[np.ndarray[float], ...], float]:
+                                     mask: NDArray[float]) -> Callable[[NDArray[float], ...], float]:
         """
         Split the parameter vector into immutable and variable part depending on mask.
         Return a loss function in which only variable parameters are to be optimized
@@ -364,7 +323,7 @@ class Matcher:
         ifixed = np.where(~mask)
         ivariable = np.where(mask)
 
-        def func(x: np.ndarray[float], *args) -> float:
+        def func(x: NDArray[float], *args) -> float:
             variable = np.array(x)
 
             vec = np.zeros(shape=(12,))
@@ -372,7 +331,7 @@ class Matcher:
             np.put(vec, ifixed, np.array(args))
 
             self._projection = self.projection_cls(*vec)
-            return self.rms_error(self.position_errors_sky(axis=1, mask_catalogue=True, mask_sensor=True))
+            return self.rms_error(self.position_errors_sky())
 
         return func
 

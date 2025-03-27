@@ -20,6 +20,8 @@ from astropy.time import Time
 
 from amosutils.projections import BorovickaProjection
 
+from export.base import Exporter
+from export.csv import DSVExporter
 from models import Matcher
 from models.qcataloguemodel import QCatalogueModel
 from models.qstarmodel import QStarModel
@@ -109,7 +111,8 @@ class MainWindow(MainWindowPlots):
     def connect_signal_slots(self):
         self.ac_load_sighting.triggered.connect(self.load_sighting)
         self.ac_load_catalogue.triggered.connect(self.load_catalogue)
-        self.ac_export_meteor.triggered.connect(self.export_corrected_meteor)
+        self.ac_export_meteor_xml.triggered.connect(self.export_corrected_meteor_xml)
+        self.ac_export_meteor_dsv.triggered.connect(self.export_corrected_meteor_dsv)
         self.ac_mask_unmatched.triggered.connect(self.mask_sensor_dist)
         self.ac_create_pairing.triggered.connect(self.on_pair_clicked)
         self.ac_load_parameters.triggered.connect(self.import_projection_parameters)
@@ -165,7 +168,8 @@ class MainWindow(MainWindowPlots):
         self.cb_show_grid.clicked.connect(self.plot_position_correction_grid)
         self.cb_interpolation.currentIndexChanged.connect(self.plot_magnitude_correction_grid)
 
-        self.pb_export_xml.clicked.connect(self.ac_export_meteor.trigger)
+        self.pb_export_xml.clicked.connect(self.ac_export_meteor_xml.trigger)
+        self.pb_export_dsv.clicked.connect(self.ac_export_meteor_dsv.trigger)
 
         self.tw_charts.currentChanged.connect(self.update_plots)
         log.debug(f"Signals and slots connected")
@@ -249,7 +253,7 @@ class MainWindow(MainWindowPlots):
         self.position_correction_plot.invalidate()
         self.magnitude_correction_plot.invalidate()
         self.matcher.update_position_smoother(bandwidth=self.bandwidth())
-        self.matcher.update_magnitude_smoother(self.calibration, bandwidth=self.bandwidth())
+        self.matcher.update_magnitude_smoother(bandwidth=self.bandwidth())
 
         self.compute_position_errors()
         self.compute_magnitude_errors()
@@ -266,7 +270,7 @@ class MainWindow(MainWindowPlots):
 
         bandwidth = self.bandwidth()
         self.matcher.update_position_smoother(bandwidth=bandwidth)
-        self.matcher.update_magnitude_smoother(self.calibration, bandwidth=bandwidth)
+        self.matcher.update_magnitude_smoother(bandwidth=bandwidth)
         self.position_correction_plot.invalidate()
         self.magnitude_correction_plot.invalidate()
 
@@ -289,8 +293,9 @@ class MainWindow(MainWindowPlots):
             return
 
         bandwidth = self.bandwidth()
+        self.lb_bandwidth.setText(f"{bandwidth:.03f}")
         self.matcher.update_position_smoother(bandwidth=bandwidth)
-        self.matcher.update_magnitude_smoother(self.calibration, bandwidth=bandwidth)
+        self.matcher.update_magnitude_smoother(bandwidth=bandwidth)
         self.position_correction_plot.invalidate_grid()
         self.position_correction_plot.invalidate_meteor()
         self.magnitude_correction_plot.invalidate_grid()
@@ -323,7 +328,7 @@ class MainWindow(MainWindowPlots):
 
     def compute_magnitude_errors(self):
         log.debug("Recomputing magnitude errors...")
-        self.magnitude_errors = self.matcher.magnitude_errors_sky(self.calibration)
+        self.magnitude_errors = self.matcher.magnitude_errors_sky()
 
     def load_catalogue(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Load catalogue file", "catalogues",
@@ -581,6 +586,7 @@ class MainWindow(MainWindowPlots):
         self._update_catalogue_mask()
         self.matcher.update_pairing()
         self.matcher.update_position_smoother(bandwidth=self.bandwidth())
+        self.matcher.update_magnitude_smoother(bandwidth=self.bandwidth())
 
     def mask_catalogue_dist(self):
         errors: np.ndarray = np.min(self.matcher.distance_sky_full(), axis=0)
@@ -616,12 +622,18 @@ class MainWindow(MainWindowPlots):
         self.lb_sensor_total.setText(f'{self.matcher.sensor_data.stars.count}')
         self.lb_sensor_used.setText(f'{self.matcher.sensor_data.stars.count_visible}')
 
-    def export_corrected_meteor(self):
+    def _export_corrected_meteor(self, cls: type[Exporter], filetype: str):
         filename, _ = QFileDialog.getSaveFileName(self, "Export corrected meteor to file", "../output/",
-                                                  "XML files (*.xml)")
+                                                  f"{filetype.upper()} files (*.{filetype})")
         if filename is not None and filename != '':
-            exporter = XMLExporter(self.matcher, self.location, self.time, self.projection, self.calibration)
+            exporter = cls(self.matcher, self.location, self.time, self.projection, self.calibration)
             exporter.export(filename)
+
+    def export_corrected_meteor_xml(self):
+        self._export_corrected_meteor(XMLExporter, 'xml')
+
+    def export_corrected_meteor_dsv(self):
+        self._export_corrected_meteor(DSVExporter, 'dsv')
 
     @property
     def grid_resolution(self):

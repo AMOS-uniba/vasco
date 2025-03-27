@@ -4,8 +4,6 @@ import numpy as np
 
 from typing import Callable
 
-from astropy.time import Time
-
 from plots import SensorPlot
 from plots.sky import PositionSkyPlot, MagnitudeSkyPlot
 from plots.errors import PositionErrorPlot, MagnitudeErrorPlot
