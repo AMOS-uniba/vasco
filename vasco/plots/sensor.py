@@ -11,7 +11,8 @@ class SensorPlot(BasePlot):
     def __init__(self, widget, **kwargs):
         self.scatter_meteor = None
         self.scatter_stars = None
-        self.valid = False
+
+        self._valid: bool = False
         super().__init__(widget, **kwargs)
         self.figure.tight_layout(rect=(0.05, 0, 1, 1))
 
@@ -41,8 +42,11 @@ class SensorPlot(BasePlot):
         normalized = norm(data.meteor.i) if data.meteor.i.size > 0 else []
         self.scatter_meteor.set_facecolors(self.cmap_meteors(normalized))
         self.scatter_meteor.set_sizes(data.meteor.i / 2000)
-        self.valid = True
+        self._valid = True
         self.draw()
 
+    def valid(self) -> bool:
+        return self._valid
+
     def invalidate(self):
-        self.valid = False
+        self._valid = False

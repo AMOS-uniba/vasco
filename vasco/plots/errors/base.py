@@ -22,8 +22,9 @@ class BaseErrorPlot(BasePlot):
         self.scatter_dots_az = None
         self.scatter_meteor_alt = None
         self.scatter_meteor_az = None
-        self.valid_dots = False
-        self.valid_meteor = False
+
+        self._valid_dots: bool = False
+        self._valid_meteor: bool = False
         super().__init__(widget, **kwargs)
 
     def add_axes(self):
@@ -55,15 +56,21 @@ class BaseErrorPlot(BasePlot):
         self.axis_az.set_ylim([0, None])
         self.invalidate()
 
+    def valid_dots(self) -> bool:
+        return self._valid_dots
+
+    def valid_meteor(self) -> bool:
+        return self._valid_meteor
+
     def invalidate(self):
         self.invalidate_dots()
         self.invalidate_meteor()
 
     def invalidate_dots(self):
-        self.valid_dots = False
+        self._valid_dots = False
 
     def invalidate_meteor(self):
-        self.valid_meteor = False
+        self._valid_meteor = False
 
     @abstractmethod
     def norm(self, limit):
@@ -94,14 +101,14 @@ class BaseErrorPlot(BasePlot):
             scatter_az.set_facecolors(cmap(norm(errors)))
             scatter_az.set_sizes(0.05 * magnitudes)
 
-        self.draw()
+        self._redraw = True
 
     def update_dots(self, positions, magnitudes, errors, *, limit: float = 1):
         self._update_scatter(self.scatter_dots_alt, self.scatter_dots_az, positions, magnitudes, errors,
                              cmap=self.cmap_dots, limit=limit, use_extent=True)
-        self.valid_dots = True
+        self._valid_dots = True
 
     def update_meteor(self, positions, magnitudes, errors, *, limit: float = 1):
         self._update_scatter(self.scatter_meteor_alt, self.scatter_meteor_az, positions, magnitudes, errors,
                              cmap=self.cmap_meteor, limit=limit, use_extent=False)
-        self.valid_meteor = True
+        self._valid_meteor = True

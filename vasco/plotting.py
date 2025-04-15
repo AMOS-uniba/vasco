@@ -2,9 +2,10 @@ import logging
 
 import numpy as np
 
-from typing import Callable
+from typing import Callable, Optional
 
 from plots import SensorPlot
+from plots.base import BasePlot
 from plots.sky import PositionSkyPlot, MagnitudeSkyPlot
 from plots.errors import PositionErrorPlot, MagnitudeErrorPlot
 from plots.correction import BaseCorrectionPlot, PositionCorrectionPlot, MagnitudeCorrectionPlot
@@ -28,15 +29,28 @@ class MainWindowPlots(MainWindowBase):
         self.position_correction_plot = PositionCorrectionPlot(self.tab_correction_positions)
         self.magnitude_correction_plot = MagnitudeCorrectionPlot(self.tab_correction_magnitudes)
 
+        self.plots: [Optional[BasePlot]] = [
+            self.sensor_plot,
+            None,
+            self.position_sky_plot,
+            self.magnitude_sky_plot,
+            self.position_error_plot,
+            self.magnitude_error_plot,
+            self.position_correction_plot,
+            self.magnitude_correction_plot,
+            None,
+            None,
+        ]
+
         # List of links: when the i-th tab is active and update_plots is called,
-        # iterate over the i-th element here anmd for every pair (condition, action)
-        # do action if condition is true
-        self.updateable: [(Callable, Callable)] = [
+        # iterate over the i-th element here and for every pair `(condition, action)`
+        # perform the `action` if `condition` is False
+        self.updateable: [(Callable[[], bool], Callable)] = [
             [
                 (self.sensor_plot.valid, self.plot_sensor_data),
             ],
             [
-                (False, self.update_stars_table),
+                (lambda: False, self.update_stars_table),
             ],
             [
                 (self.position_sky_plot.valid_dots, self.plot_observed_stars_positions),
@@ -65,10 +79,10 @@ class MainWindowPlots(MainWindowBase):
                 (self.magnitude_correction_plot.valid_grid, self.plot_magnitude_correction_grid),
             ],
             [
-                (False, self.update_meteor_table),
+                (lambda: False, self.update_meteor_table),
             ],
             [
-                (False, self.update_catalogue_table),
+                (lambda: False, self.update_catalogue_table),
             ],
         ]
 
@@ -76,11 +90,17 @@ class MainWindowPlots(MainWindowBase):
         """
         Iterate over active plots and update those that are no longer valid
         """
+        log.debug("Updating all invalid plots")
         self.show_errors()
 
         for valid, function in self.updateable[self.tw_charts.currentIndex()]:
-            if not valid:
+            if not valid():
                 function()
+
+        if (plot := self.plots[self.tw_charts.currentIndex()]) is not None:
+            plot.draw()
+
+        log.debug("All plots updated")
 
 # Methods for plotting sensor data
 
@@ -118,7 +138,7 @@ class MainWindowPlots(MainWindowBase):
         )
 
     def plot_catalogue_stars_positions(self):
-        log.debug(f"Plotting star positions")
+        log.debug(f"Plotting star positions: {self.position_sky_plot._valid_stars}")
         self._plot_catalogue_stars(self.position_sky_plot)
 
     def plot_catalogue_stars_magnitudes(self):

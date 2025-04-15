@@ -20,9 +20,10 @@ class BaseCorrectionPlot(BasePlot):
     def __init__(self, widget, **kwargs):
         self.scatter_dots = None
         self.scatter_meteor = None
-        self.valid_dots = False
-        self.valid_grid = False
-        self.valid_meteor = False
+
+        self._valid_dots: bool = False
+        self._valid_grid: bool = False
+        self._valid_meteor: bool = False
         super().__init__(widget, **kwargs)
 
     def add_axes(self):
@@ -41,26 +42,35 @@ class BaseCorrectionPlot(BasePlot):
                                                 s=[], marker='o', c=self.colour_meteor,
                                                 linewidth=0.2, edgecolor='black')
 
-    def invalidate_dots(self):
-        self.valid_dots = False
+    def valid_dots(self) -> bool:
+        return self._valid_dots
 
-    def invalidate_grid(self):
-        self.valid_grid = False
+    def valid_grid(self) -> bool:
+        return self._valid_grid
 
-    def invalidate_meteor(self):
-        self.valid_meteor = False
+    def valid_meteor(self) -> bool:
+        return self._valid_meteor
 
     def invalidate(self):
         self.invalidate_dots()
         self.invalidate_grid()
         self.invalidate_meteor()
 
+    def invalidate_dots(self):
+        self._valid_dots = False
+
+    def invalidate_grid(self):
+        self._valid_grid = False
+
+    def invalidate_meteor(self):
+        self._valid_meteor = False
+
     def update_dots(self, pos_cat, pos_obs, mag_cat, mag_obs, *, limit=1, scale=0.05):
         pos_cat = numpy_to_disk(pos_cat)
         pos_obs = proj_to_disk(pos_obs)
 
         self._update_dots(pos_cat, pos_obs, mag_cat, mag_obs, limit=limit, scale=scale)
-        self.valid_dots = True
+        self._valid_dots = True
         self.draw()
 
     @abstractmethod
@@ -74,7 +84,7 @@ class BaseCorrectionPlot(BasePlot):
         pos_obs = proj_to_disk(pos_obs)
 
         self._update_meteor(pos_obs, pos_corr, mag_obs, mag_corr, scale=scale)
-        self.valid_meteor = True
+        self._valid_meteor = True
         self.draw()
 
     @abstractmethod
@@ -83,7 +93,7 @@ class BaseCorrectionPlot(BasePlot):
 
     def update_grid(self, x, y, grid, *, limit: float = 1, **kwargs):
         self._update_grid(x, y, grid, limit=limit, **kwargs)
-        self.valid_grid = True
+        self._valid_grid = True
         self.draw()
 
     @abstractmethod

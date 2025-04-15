@@ -1,8 +1,12 @@
+import logging
+
 from abc import abstractmethod
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 from matplotlib.colors import LinearSegmentedColormap
+
+log = logging.getLogger('vasco')
 
 
 cmap_gyr = LinearSegmentedColormap('gyr',
@@ -29,6 +33,8 @@ class BasePlot:
         self.add_axes()
         self.figure.tight_layout()
 
+        self._redraw: bool = True
+
         # Finish setup
 
         widget.layout().addWidget(self.canvas)
@@ -38,7 +44,9 @@ class BasePlot:
         """ Add axes to this plot """
 
     def draw(self):
+        log.debug("Redrawing the canvas")
         self.canvas.draw()
+        log.debug("Done")
 
     @abstractmethod
     def invalidate(self):

@@ -38,10 +38,7 @@ class Matcher:
                  sensor_data: Optional[SensorData] = None):
         self._altaz: Optional[AltAz] = None
         self._altaz_numpy: Optional[NDArray] = None
-
-        self._cached_distances = None
-        self._hash_observed = None
-        self._hash_catalogue = None
+        self._vmag: Optional[NDArray] = None
 
         self.pairing: Optional[NDArray] = None
         self.pairing_fixed: bool = False
@@ -102,6 +99,7 @@ class Matcher:
     def invalidate_altaz(self):
         log.debug("Invalidating the cached altaz")
         self._altaz = None
+        self._vmag = None
 
     def catalogue_altaz(self, *, masked: bool) -> AltAz:
         if self._altaz is None:
@@ -128,9 +126,15 @@ class Matcher:
         """
         Return the current catalogue vmag as a numpy array
         """
-        log.debug("Requesting a new magnitude catalogue")
-        vmag = self.catalogue.vmag(self.location, self.time, masked=masked)
-        return vmag
+
+        if self._vmag is None:
+            log.debug("Requesting a new magnitude catalogue")
+            self._vmag = self.catalogue.vmag(self.location, self.time, masked=False)
+
+        if masked:
+            return self._vmag[self.catalogue.mask]
+        else:
+            return self._vmag
 
     def catalogue_vmag_paired(self) -> NDArray:
         return self.catalogue_vmag(masked=False)[self.pairing]

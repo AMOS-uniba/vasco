@@ -1,3 +1,4 @@
+import logging
 import math
 import numpy as np
 import matplotlib as mpl
@@ -6,6 +7,8 @@ from matplotlib import pyplot as plt
 from abc import abstractmethod
 
 from plots.base import BasePlot
+
+log = logging.getLogger('vasco')
 
 
 class BaseSkyPlot(BasePlot):
@@ -30,9 +33,9 @@ class BaseSkyPlot(BasePlot):
         self.scatter_stars = None
         self.scatter_dots = None
         self.scatter_meteor = None
-        self.valid_stars = False
-        self.valid_dots = False
-        self.valid_meteor = False
+        self._valid_stars: bool = False
+        self._valid_dots: bool = False
+        self._valid_meteor: bool = False
         super().__init__(widget, **kwargs)
 
     def add_axes(self):
@@ -49,42 +52,58 @@ class BaseSkyPlot(BasePlot):
         self.scatter_dots = self.axis.scatter([], [], s=[], c=self.colour_dots, marker='x')
         self.scatter_meteor = self.axis.scatter([], [], s=[], c=self.colour_meteor, marker='o')
 
+    def valid_stars(self) -> bool:
+        return self._valid_stars
+
+    def valid_dots(self) -> bool:
+        return self._valid_dots
+
+    def valid_meteor(self) -> bool:
+        return self._valid_meteor
+
     def invalidate(self):
         self.invalidate_stars()
         self.invalidate_dots()
         self.invalidate_meteor()
 
     def invalidate_stars(self):
-        self.valid_stars = False
+        log.debug("Invalidated stars")
+        self._valid_stars = False
 
     def invalidate_dots(self):
-        self.valid_dots = False
+        log.debug("Invalidated dots")
+        self._valid_dots = False
 
     def invalidate_meteor(self):
-        self.valid_meteor = False
+        log.debug("Invalidated meteor")
+        self._valid_meteor = False
 
     def update_stars(self,
                      positions: np.ndarray[float],
                      magnitudes: np.ndarray[float]):
+        log.debug("Updating star positions & magnitudes")
         sizes = 0.2 * np.exp(-0.833 * (magnitudes - 5))
         newp = np.zeros_like(positions)
         newp[:, 0] = positions[:, 1]
         newp[:, 1] = 90 - np.degrees(positions[:, 0])
         self.scatter_stars.set_offsets(newp)
         self.scatter_stars.set_sizes(sizes)
-        self.valid_stars = True
-        self.draw()
+
+        self._valid_stars = True
+        self._redraw = True
 
     def update_dots(self, positions, magnitudes, errors, *, limit=1):
+        log.debug("Updating dots")
         self.scatter_dots.set_offsets(self.to_chart(positions))
 
         self.scatter_dots.set_facecolors(self.cmap_stars(self.norm(limit)(errors)))
         self.scatter_dots.set_sizes(0.03 * magnitudes)
 
-        self.valid_dots = True
-        self.draw()
+        self._valid_dots = True
+        self._redraw = True
 
     def update_meteor(self, positions, magnitudes):
+        log.debug("Updating meteor")
         self.scatter_meteor.set_offsets(self.to_chart(positions))
 
         norm = mpl.colors.Normalize(vmin=0, vmax=None)
@@ -92,5 +111,5 @@ class BaseSkyPlot(BasePlot):
         self.scatter_meteor.set_facecolors(self.cmap_meteors(normalized))
         self.scatter_meteor.set_sizes(0.0005 * magnitudes)
 
-        self.valid_meteor = True
-        self.draw()
+        self._valid_meteor = True
+        self._redraw = True
