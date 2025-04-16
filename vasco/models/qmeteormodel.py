@@ -2,6 +2,15 @@ from PyQt6.QtCore import Qt, QVariant, QModelIndex, QAbstractTableModel
 
 
 class QMeteorModel(QAbstractTableModel):
+    header_data = ["fno",
+        "x / px", "y / px",
+        "z raw", "a raw",
+        "z corrected", "a corrected",
+        "corr x / µm", "corr y / µm",
+        "corr total",
+        "mag raw", "mag corr",
+    ]
+
     def __init__(self, data=None, parent=None):
         super().__init__(parent)
         self._data = [[]] if data is None else data
@@ -10,19 +19,12 @@ class QMeteorModel(QAbstractTableModel):
         match role:
             case Qt.ItemDataRole.DisplayRole:
                 if orientation == Qt.Orientation.Horizontal:
-                    return \
-                        ["fno",
-                         "z raw", "a raw",
-                         "z corrected", "a corrected",
-                         "corr x / µm", "corr y / µm",
-                         "corr total",
-                         "mag raw", "mag corr",
-                         ][section]
+                    return self.header_data[section]
             case _:
                 return QVariant()
 
     def columnCount(self, parent=None):
-        return 10
+        return 12
 
     def rowCount(self, parent=None):
         return self._data.count
@@ -35,22 +37,26 @@ class QMeteorModel(QAbstractTableModel):
                     case 0:
                         return f"{self._data.fnos[row]:d}"
                     case 1:
-                        return f"{self._data.position_raw.alt[row].value:.6f}°"
+                        return f"{self._data.xy[row, 0]:.3f}"
                     case 2:
-                        return f"{self._data.position_raw.az[row].value:.6f}°"
+                        return f"{self._data.xy[row, 1]:.3f}"
                     case 3:
-                        return f"{self._data.position_corrected.alt[row].value:.6f}°"
+                        return f"{self._data.position_raw.alt[row].value:.6f}°"
                     case 4:
-                        return f"{self._data.position_corrected.az[row].value:.6f}°"
+                        return f"{self._data.position_raw.az[row].value:.6f}°"
                     case 5:
-                        return f"{self._data.positions_correction_xy[row, 0]:.6f}"
+                        return f"{self._data.position_corrected.alt[row].value:.6f}°"
                     case 6:
-                        return f"{self._data.positions_correction_xy[row, 1]:.6f}"
+                        return f"{self._data.position_corrected.az[row].value:.6f}°"
                     case 7:
-                        return f"{self._data.positions_correction_angle[row].degree:.6f}°"
+                        return f"{self._data.positions_correction_xy[row, 0]:.6f}"
                     case 8:
-                        return f"{self._data.magnitudes_corrected[row]:.6f}"
+                        return f"{self._data.positions_correction_xy[row, 1]:.6f}"
                     case 9:
+                        return f"{self._data.positions_correction_angle[row].degree:.6f}°"
+                    case 10:
+                        return f"{self._data.magnitudes_corrected[row]:.6f}"
+                    case 11:
                         return f"{self._data.magnitudes_correction[row]:.6f}"
                     case _:
                         return QVariant()

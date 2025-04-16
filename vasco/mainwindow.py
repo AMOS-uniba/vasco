@@ -355,13 +355,32 @@ class MainWindow(MainWindowPlots):
     def _export_projection_parameters(self, filename):
         try:
             with open(filename, 'w+') as file:
+                stars = self.matcher.build_stars_table(self.projection)
+
                 yaml.dump(dict(
                     projection=dict(
                         name='Borovička',
                         parameters={param: widget.true_value for param, widget in self.param_widgets.items()},
                     ),
-                    pixels=dict(xs=self.dsb_xs.value(), ys=self.dsb_ys.value()),
-                ), file)
+                    pixels=dict(
+                        xs=self.dsb_xs.value(),
+                        ys=self.dsb_ys.value(),
+                    ),
+                    stars=[
+                        dict(
+                            id=int(stars.star[i]),
+                            x=float(stars.px[i]),
+                            y=float(stars.py[i]),
+                            intensity=float(stars.intensity[i]),
+                            alt=float(stars.alt[i]),
+                            az=float(stars.az[i]),
+                            err_alt=float(stars.vector_errors[i, 0]),
+                            err_az=float(stars.vector_errors[i, 1]),
+                            err_abs=float(stars.scalar_errors[i]),
+                        )
+                        for i in range(stars.mask.size) if stars.mask[i]
+                    ],
+                ), file, sort_keys=False, allow_unicode=True)
         except FileNotFoundError as exc:
             log.error(f"Could not export projection parameters: {exc}")
 
@@ -484,28 +503,7 @@ class MainWindow(MainWindowPlots):
         self.on_projection_parameters_changed()
 
     def update_stars_table(self):
-        positions = self.matcher.sensor_data.stars.project(self.projection, masked=False)
-        x = self.matcher.sensor_data.stars.xs(masked=False)
-        y = self.matcher.sensor_data.stars.ys(masked=False)
-        shifted = self.matcher.sensor_data.shifter.invert(x, y)
-
-        data = dotmap.DotMap(
-            x=x,
-            y=y,
-            px=shifted[0],
-            py=shifted[1],
-            alt=np.degrees(positions[..., 0]),
-            az=np.degrees(positions[..., 1]),
-            star=self.matcher.pairing,
-            mask=self.matcher.sensor_data.stars.mask,
-            count=self.matcher.sensor_data.stars.count,
-            scalar_errors=np.degrees(self.matcher.distance_sky(masked=False)),
-            vector_errors=np.degrees(self.matcher.vector_errors_full()),
-            _dynamic=False,
-        )
-
-        model = QStarModel(data)
-        self.tv_sensor.setModel(model)
+        self.tv_sensor.setModel(QStarModel(self.matcher.build_stars_table(self.projection)))
 
         for i, width in enumerate([40, 120, 120, 120, 120, 120, 120, 40, 40, 120, 120, 120]):
             self.tv_sensor.setColumnWidth(i, width)
@@ -518,22 +516,7 @@ class MainWindow(MainWindowPlots):
             self.tv_meteor.setColumnWidth(i, width)
 
     def update_catalogue_table(self):
-        radec = self.matcher.catalogue.radec(self.location, self.time, masked=False)
-        altaz = self.matcher.catalogue.altaz(self.location, self.time, masked=False)
-        vmag = self.matcher.catalogue.vmag(self.location, self.time, masked=False)
-        data = dotmap.DotMap(
-            dec=radec.dec.degree,
-            ra=radec.ra.degree,
-            alt=altaz.alt.degree,
-            az=altaz.az.degree,
-            vmag=vmag,
-            mask=self.matcher.catalogue.mask,
-            count=self.matcher.catalogue.count,
-            _dynamic=False,
-        )
-
-        model = QCatalogueModel(data)
-        self.tv_catalogue.setModel(model)
+        self.tv_catalogue.setModel(QCatalogueModel(self.matcher.build_catalogue_table()))
 
         for i, width in enumerate([40, 120, 120, 120, 120, 80]):
             self.tv_catalogue.setColumnWidth(i, width)
@@ -573,6 +556,8 @@ class MainWindow(MainWindowPlots):
         self.magnitude_sky_plot.invalidate_dots()
         self.position_error_plot.invalidate()
         self.magnitude_error_plot.invalidate()
+        self.position_correction_plot.invalidate()
+        self.magnitude_correction_plot.invalidate()
 
         self.compute_position_errors()
         self.compute_magnitude_errors()

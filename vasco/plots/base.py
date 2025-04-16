@@ -33,9 +33,6 @@ class BasePlot:
         self.add_axes()
         self.figure.tight_layout()
 
-        # Mark if needs to be redrawn or not
-        self._redraw: bool = True
-
         # Finish setup
         widget.layout().addWidget(self.canvas)
 

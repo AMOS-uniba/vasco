@@ -71,7 +71,6 @@ class BaseCorrectionPlot(BasePlot):
 
         self._update_dots(pos_cat, pos_obs, mag_cat, mag_obs, limit=limit, scale=scale)
         self._valid_dots = True
-        self._redraw = True
 
     @abstractmethod
     def _update_dots(self, pos_cat, pos_obs, mag_cat, mag_obs, *, limit, scale):
@@ -86,7 +85,6 @@ class BaseCorrectionPlot(BasePlot):
         self._update_meteor(pos_obs, pos_corr, mag_obs, mag_corr, scale=scale)
 
         self._valid_meteor = True
-        self._redraw = True
 
     @abstractmethod
     def _update_meteor(self, pos_obs, pos_corr, mag_obs, mag_corr, *, scale=0.05):
@@ -96,7 +94,6 @@ class BaseCorrectionPlot(BasePlot):
         self._update_grid(x, y, grid, limit=limit, **kwargs)
 
         self._valid_grid = True
-        self._redraw = True
 
     @abstractmethod
     def _update_grid(self, x, y, grid, *, limit: float = 1, **kwargs):

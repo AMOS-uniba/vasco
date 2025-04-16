@@ -274,6 +274,7 @@ class Matcher:
         magnitudes_correction = self.correction_meteor_mag(projection)
 
         return dotmap.DotMap(
+            xy=self.sensor_data.meteor_raw.xy,
             position_raw=positions_raw,
             position_corrected=positions_corrected,
             magnitudes_raw=magnitudes_raw,
@@ -316,6 +317,45 @@ class Matcher:
 
     def magnitude_grid(self, resolution=21):
         return self._grid(self.magnitude_smoother, resolution, masked=False)
+
+    def build_stars_table(self, projection: Projection) -> dotmap.DotMap:
+        positions = self.sensor_data.stars.project(projection, masked=False)
+        x = self.sensor_data.stars.xs(masked=False)
+        y = self.sensor_data.stars.ys(masked=False)
+        intensity = self.sensor_data.stars.intensities(masked=False)
+        shifted = self.sensor_data.shifter.invert(x, y)
+
+        return dotmap.DotMap(
+            x=x,
+            y=y,
+            px=shifted[0],
+            py=shifted[1],
+            alt=np.degrees(positions[..., 0]),
+            az=np.degrees(positions[..., 1]),
+            intensity=intensity,
+            star=self.pairing,
+            mask=self.sensor_data.stars.mask,
+            count=self.sensor_data.stars.count,
+            scalar_errors=np.degrees(self.distance_sky(masked=False)),
+            vector_errors=np.degrees(self.vector_errors_full()),
+            _dynamic=False,
+        )
+
+    def build_catalogue_table(self) -> dotmap.DotMap:
+        radec = self.catalogue.radec(self.location, self.time, masked=False)
+        altaz = self.catalogue.altaz(self.location, self.time, masked=False)
+        vmag = self.catalogue.vmag(self.location, self.time, masked=False)
+
+        return dotmap.DotMap(
+            dec=radec.dec.degree,
+            ra=radec.ra.degree,
+            alt=altaz.alt.degree,
+            az=altaz.az.degree,
+            vmag=vmag,
+            mask=self.catalogue.mask,
+            count=self.catalogue.count,
+            _dynamic=False,
+        )
 
     def _build_optimization_function(self,
                                      mask: NDArray[float]) -> Callable[[NDArray[float], ...], float]:

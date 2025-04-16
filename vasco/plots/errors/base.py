@@ -101,8 +101,6 @@ class BaseErrorPlot(BasePlot):
             scatter_az.set_facecolors(cmap(norm(errors)))
             scatter_az.set_sizes(0.05 * magnitudes)
 
-        self._redraw = True
-
     def update_dots(self, positions, magnitudes, errors, *, limit: float = 1):
         self._update_scatter(self.scatter_dots_alt, self.scatter_dots_az, positions, magnitudes, errors,
                              cmap=self.cmap_dots, limit=limit, use_extent=True)

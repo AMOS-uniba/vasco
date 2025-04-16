@@ -90,7 +90,6 @@ class BaseSkyPlot(BasePlot):
         self.scatter_stars.set_sizes(sizes)
 
         self._valid_stars = True
-        self._redraw = True
 
     def update_dots(self, positions, magnitudes, errors, *, limit=1):
         log.debug("Updating dots")
@@ -100,7 +99,6 @@ class BaseSkyPlot(BasePlot):
         self.scatter_dots.set_sizes(0.03 * magnitudes)
 
         self._valid_dots = True
-        self._redraw = True
 
     def update_meteor(self, positions, magnitudes):
         log.debug("Updating meteor")
@@ -112,4 +110,3 @@ class BaseSkyPlot(BasePlot):
         self.scatter_meteor.set_sizes(0.0005 * magnitudes)
 
         self._valid_meteor = True
-        self._redraw = True
