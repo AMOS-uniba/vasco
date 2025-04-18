@@ -167,7 +167,7 @@ class Matcher:
         """
         Compute the current pairing and use it from now on
         """
-        idx = np.arange(0, self.catalogue.count)[self.catalogue.mask]
+        idx = np.arange(self.catalogue.count)[self.catalogue.mask]
         self.pairing = idx[self.compute_pairing()]
         log.debug(f"Updated the pairing {self.pairing.shape}")
 
@@ -196,6 +196,7 @@ class Matcher:
         return spherical(observed, catalogue[self.pairing[self.sensor_data.stars.mask]])
 
     def distance_sky(self, *, masked: bool = True) -> NDArray:
+        """Find the distance from every dot to its assigned star, optionally masked"""
         obs = self.sensor_data.stars.project(self._projection, masked=masked, flip_theta=True)
         cat = self.catalogue_altaz_paired()
         if masked:
@@ -203,9 +204,10 @@ class Matcher:
         log.debug(f"Distance in the sky: {obs.shape}, {cat.shape}")
         return spherical(obs, cat)
 
-    def distance_sky_full(self) -> NDArray:
-        obs = self.sensor_data.stars.project(self._projection, masked=False, flip_theta=True)
-        cat = self.catalogue_altaz_np(masked=False)
+    def distance_sky_all(self, *, masked: bool = True) -> NDArray:
+        """Find the distance from every dot to every star, optionally masked"""
+        obs = self.sensor_data.stars.project(self._projection, masked=True, flip_theta=True)
+        cat = self.catalogue_altaz_np(masked=masked)
         return spherical(np.expand_dims(obs, 1), np.expand_dims(cat, 0))
 
     def vector_errors(self) -> NDArray:

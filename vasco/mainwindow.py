@@ -528,18 +528,22 @@ class MainWindow(MainWindowPlots):
         self.show_counts()
 
     def mask_sensor_dist(self):
-        errors = self.matcher.distance_sky_full()
+        errors = self.matcher.distance_sky_all()
         errors = np.min(errors, axis=1, initial=math.tau / 2)
         limit = self.dsb_sensor_limit_dist.value()
         self._mask_sensor(errors < np.radians(limit), f"position errors < {c.num(f'{limit:.3f}°')}")
 
     def mask_sensor_alt(self):
-        positions = self.matcher.sensor_data.stars.project(self.projection, masked=False, flip_theta=True)
+        positions = self.matcher.sensor_data.stars.project(self.projection, masked=True, flip_theta=True)
         limit = self.dsb_sensor_limit_alt.value()
         self._mask_sensor(positions[..., 0] > np.radians(limit), f"altitude < {c.num(f'{limit:.1f}°')}")
 
-    def _mask_sensor(self, mask: np.ndarray, message: str):
-        self.matcher.mask_sensor_data(mask)
+    def _mask_sensor(self, masked_mask: np.ndarray, message: str):
+        midx = self.matcher.sensor_data.stars.mask.nonzero()[0]
+        idx = np.zeros(self.matcher.sensor_data.stars.count, dtype=bool)
+        idx[midx[masked_mask]] = True
+        self.matcher.mask_sensor_data(idx)
+
         log.info(f"Masked reference dots: {message}: "
                  f"{c.num(self.matcher.sensor_data.stars.count_visible)} are valid")
         self.matcher.update_pairing()
@@ -564,8 +568,12 @@ class MainWindow(MainWindowPlots):
         self.update_plots()
         self.show_counts()
 
-    def _mask_catalogue(self, mask: np.ndarray, message: str):
-        self.matcher.mask_catalogue(mask)
+    def _mask_catalogue(self, masked_mask: np.ndarray, message: str):
+        midx = self.matcher.catalogue.mask.nonzero()[0]
+        idx = np.zeros(self.matcher.catalogue.count, dtype=bool)
+        idx[midx[masked_mask]] = True
+        self.matcher.mask_catalogue(idx)
+
         log.info(f"Masked the catalogue: {message}: "
                  f"{c.num(self.matcher.catalogue.count_visible)} stars visible")
         self._update_catalogue_mask()
@@ -574,19 +582,19 @@ class MainWindow(MainWindowPlots):
         self.matcher.update_magnitude_smoother(bandwidth=self.bandwidth())
 
     def mask_catalogue_dist(self):
-        errors: np.ndarray = np.min(self.matcher.distance_sky_full(), axis=0)
+        errors: np.ndarray = np.min(self.matcher.distance_sky_all(masked=True), axis=0)
         limit: float = self.dsb_catalogue_limit_dist.value()
-        self._mask_catalogue(errors < np.radians(limit),
-                             f"errors < {c.num(f'{limit:.3f}°')}")
+
+        self._mask_catalogue(errors < np.radians(limit), f"errors < {c.num(f'{limit:.3f}°')}")
 
     def mask_catalogue_mag(self):
         limit: float = self.dsb_catalogue_limit_mag.value()
-        self._mask_catalogue(self.matcher.catalogue_vmag(masked=False) < limit,
+        self._mask_catalogue(self.matcher.catalogue_vmag(masked=True) < limit,
                              f"magnitude <{c.num(f'{limit:.1f}m')}")
 
     def mask_catalogue_alt(self):
         limit: float = self.dsb_catalogue_limit_alt.value()
-        self._mask_catalogue(self.matcher.catalogue_altaz_np(masked=False)[..., 0] > np.radians(limit),
+        self._mask_catalogue(self.matcher.catalogue_altaz_np(masked=True)[..., 0] > np.radians(limit),
                              f"altitude >{c.num(f'{limit:.1f}°')}")
 
     def reset_catalogue_mask(self):

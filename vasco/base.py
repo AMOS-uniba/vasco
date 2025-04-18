@@ -10,7 +10,6 @@ from PyQt6.QtWidgets import QMainWindow, QDoubleSpinBox, QLabel
 from main_ui import Ui_MainWindow
 
 from photometry import LogCalibration
-from models import Matcher
 
 
 class MainWindowBase(QMainWindow, Ui_MainWindow):
@@ -84,16 +83,17 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
         self.lb_rms_error.setText(f'{np.degrees(rms_error):.6f}°')
         self.lb_max_error.setText(f'{np.degrees(max_error):.6f}°')
 
-        errors = self.matcher.distance_sky_full()
+        errors = self.matcher.distance_sky_all(masked=True)
 
-        sensor_dist_errors = np.min(errors, axis=1, initial=np.inf)[self.matcher.sensor_data.stars.mask]
-        catalogue_dist_errors = np.min(errors, axis=0, initial=np.inf)[self.matcher.catalogue.mask]
+        sensor_dist_errors = np.min(errors, axis=1, initial=np.inf)
+        catalogue_dist_errors = np.min(errors, axis=0, initial=np.inf)
 
         self._update_maskable_count(self.dsb_sensor_limit_dist, self.lb_sensor_dist,
                                     sensor_dist_errors,
                                     func=lambda x: np.radians(x))
         self._update_maskable_count(self.dsb_sensor_limit_alt, self.lb_sensor_alt,
-                                    self.matcher.sensor_data.stars.project(self.projection, masked=True, flip_theta=True)[..., 0],
+                                    self.matcher.sensor_data.stars.project(self.projection,
+                                                                           masked=True, flip_theta=True)[..., 0],
                                     func=lambda x: np.radians(x),
                                     invert_mask=True)
 
