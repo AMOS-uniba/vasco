@@ -101,9 +101,9 @@ class Matcher:
         self._altaz = None
         self._vmag = None
 
-    def catalogue_altaz(self, *, masked: bool) -> AltAz:
+    def catalogue_altaz(self, *, masked: bool = True) -> AltAz:
         if self._altaz is None:
-            log.debug(f"Requesting catalogue for {self.location}, {self.time}, {masked}")
+            log.debug(f"Requesting catalogue for {self.location}, {self.time}")
             self._altaz = self.catalogue.altaz(self.location, self.time, masked=False)
 
         if masked:
@@ -111,7 +111,7 @@ class Matcher:
         else:
             return self._altaz
 
-    def catalogue_altaz_np(self, *, masked: bool) -> NDArray:
+    def catalogue_altaz_np(self, *, masked: bool = True) -> NDArray:
         """
         Return the current masked catalogue altaz as a numpy array
         """
@@ -321,6 +321,7 @@ class Matcher:
         return self._grid(self.magnitude_smoother, resolution, masked=False)
 
     def build_stars_table(self, projection: Projection) -> dotmap.DotMap:
+        log.debug("Building a stars model table")
         positions = self.sensor_data.stars.project(projection, masked=False)
         x = self.sensor_data.stars.xs(masked=False)
         y = self.sensor_data.stars.ys(masked=False)
@@ -344,11 +345,13 @@ class Matcher:
         )
 
     def build_catalogue_table(self) -> dotmap.DotMap:
+        log.debug("Building a catalogue model table")
         radec = self.catalogue.radec(self.location, self.time, masked=False)
-        altaz = self.catalogue.altaz(self.location, self.time, masked=False)
+        altaz = self.catalogue_altaz(masked=False)
         vmag = self.catalogue.vmag(self.location, self.time, masked=False)
 
         return dotmap.DotMap(
+            catalogue=self.catalogue,
             dec=radec.dec.degree,
             ra=radec.ra.degree,
             alt=altaz.alt.degree,

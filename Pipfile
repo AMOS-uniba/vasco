@@ -13,7 +13,6 @@ pyyaml = "*"
 lxml = "*"
 amosutils = {file = "../amosutils", editable = true}
 colorama = "*"
-pytest = "*"
 dotmap = "*"
 
 [dev-packages]

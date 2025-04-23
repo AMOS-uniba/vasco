@@ -2,10 +2,14 @@ import math
 import numpy as np
 import matplotlib as mpl
 
+from typing import Tuple, Optional
+from numpy._typing import NDArray
+
 from astropy.coordinates import AltAz
 import astropy.units as u
 
-from typing import Tuple, Union, Optional
+from models.sensordata import SensorData
+from amosutils.catalogue import Catalogue
 
 QuarterTau = math.tau / 4
 
@@ -103,3 +107,10 @@ def hash_numpy(array: np.ndarray):
     h = hash(array.tobytes())
     array.flags.writeable = old
     return h
+
+
+def mask_sparse(array: Catalogue | SensorData, sparse_mask: NDArray) -> NDArray:
+    mask = array.mask.nonzero()[0]
+    idx = np.zeros(array.count, dtype=bool)
+    idx[mask[sparse_mask]] = True
+    return idx

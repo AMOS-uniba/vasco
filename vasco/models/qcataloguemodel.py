@@ -1,15 +1,22 @@
-from PyQt6.QtCore import Qt, QModelIndex, QAbstractTableModel
+from PyQt6.QtCore import Qt, QModelIndex, QAbstractTableModel, QSortFilterProxyModel, QVariant
 from PyQt6.QtGui import QColor
 
 
 class QCatalogueModel(QAbstractTableModel):
-    COLUMNS = ["id", "dec", "ra", "alt", "az", "vmag", "visible"]
+    COLUMNS = ["id", "dec", "ra", "alt", "az", "vmag", "use"]
+    C_ID = 0
+    C_DEC = 1
+    C_RA = 2
+    C_ALT = 3
+    C_AZ = 4
+    C_VMAG = 5
+    C_VISIBLE = 6
 
     def __init__(self, data=None, parent=None):
         super().__init__(parent)
         self._data = [[]] if data is None else data
 
-    def headerData(self, section: int, orientation: Qt.Orientation, role: int):
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...):
         match role:
             case Qt.ItemDataRole.DisplayRole:
                 if orientation == Qt.Orientation.Horizontal:
@@ -19,37 +26,83 @@ class QCatalogueModel(QAbstractTableModel):
 
 
     def columnCount(self, parent=None):
-        return 7
+        return len(self.COLUMNS)
 
     def rowCount(self, parent=None):
         return self._data.count
 
-    def data(self, index: QModelIndex, role: int):
+    def data(self, index: QModelIndex, role: int = ...):
+        row = index.row()
+        column = index.column()
         match role:
+            case Qt.ItemDataRole.EditRole:
+                # This is very hacky for now but I cannot get it to work with floats
+                # See
+                match column:
+                    case self.C_ID:
+                        return row
+                    case self.C_DEC:
+                        return self._data.dec[row]
+                    case self.C_RA:
+                        return self._data.ra[row]
+                    case self.C_ALT:
+                        return self._data.alt[row]
+                    case self.C_AZ:
+                        return self._data.az[row]
+                    case self.C_VMAG:
+                        return self._data.vmag[row]
+                    case self.C_VISIBLE:
+                        return self._data.mask[row]
+                    case _:
+                        return None
             case Qt.ItemDataRole.DisplayRole:
-                row = index.row()
-                match index.column():
-                    case 0:
-                        return f"{row}"
-                    case 1:
+                match column:
+                    case self.C_ID:
+                        return f"{row:d}"
+                    case self.C_DEC:
                         return f"{self._data.dec[row]:.6f}°"
-                    case 2:
+                    case self.C_RA:
                         return f"{self._data.ra[row]:.6f}°"
-                    case 3:
+                    case self.C_ALT:
                         return f"{self._data.alt[row]:.6f}°"
-                    case 4:
+                    case self.C_AZ:
                         return f"{self._data.az[row]:.6f}°"
-                    case 5:
+                    case self.C_VMAG:
                         return f"{self._data.vmag[row]:.3f}m"
-                    case 6:
-                        return '\u2714' if self._data.mask[row] else '\u274C'
                     case _:
                         return None
             case Qt.ItemDataRole.TextAlignmentRole:
-                match index.column():
-                    case 6:
-                        return Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            case Qt.ItemDataRole.CheckStateRole:
+                match column:
+                    case self.C_VISIBLE:
+                        return Qt.CheckState.Checked if self._data.mask[row] else Qt.CheckState.Unchecked
             case Qt.ItemDataRole.ForegroundRole:
-                if index.column() == 6:
-                    return QColor('green') if self._data.mask[index.row()] else QColor('red')
+                if column == self.C_VISIBLE:
+                    return QColor('lime') if self._data.mask[index.row()] else QColor('red')
+            case Qt.ItemDataRole.BackgroundRole:
+                if column == self.C_VISIBLE:
+                    return QColor('green') if self._data.mask[index.row()] else QColor(128, 32, 16)
+
+    def flags(self, index):
+        flags = Qt.ItemFlag.ItemIsEnabled
+        if index.column() == self.C_VISIBLE:
+            flags |= Qt.ItemFlag.ItemIsUserCheckable
+        return flags
+
+    def setData(self, index, value, role: int = ...):
+        print("Setting data for CatalogueModel...", index.row(), index.column(), value, role)
+        match role:
+            case Qt.ItemDataRole.CheckStateRole:
+                if index.column() == self.C_VISIBLE:
+                    self._data.catalogue.mask[index.row()] = value
+                    self._data.mask[index.row()] = value
+                    self.dataChanged.emit(index, index)
+                    return True
+        return False
+
+class CatalogueProxy(QSortFilterProxyModel):
+    def lessThan(self, left, right):
+        l = self.sourceModel().data(left, Qt.ItemDataRole.EditRole)
+        r = self.sourceModel().data(right, Qt.ItemDataRole.EditRole)
+        return l < r

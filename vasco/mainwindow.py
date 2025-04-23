@@ -10,7 +10,7 @@ import dotmap
 from PyQt6 import QtCore
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
-from PyQt6.QtCore import QDateTime, Qt, QSignalBlocker
+from PyQt6.QtCore import QDateTime, Qt, QSortFilterProxyModel, QModelIndex
 
 from astropy import units as u
 from astropy.coordinates import EarthLocation
@@ -22,12 +22,13 @@ from amosutils.projections import BorovickaProjection
 
 from export.base import Exporter
 from export.csv import DSVExporter
+from export.xml import XMLExporter
 from models import Matcher
-from models.qcataloguemodel import QCatalogueModel
+from models.qcataloguemodel import QCatalogueModel, CatalogueProxy
 from models.qstarmodel import QStarModel
 from plotting import MainWindowPlots
 from models import SensorData, QMeteorModel
-from export import XMLExporter
+from utilities import mask_sparse
 
 import colour as c
 from amos import AMOS, Station
@@ -36,8 +37,8 @@ mpl.use('Qt5Agg')
 
 log = logging.getLogger('vasco')
 
-VERSION = "0.9.1"
-DATE = "2025-03-12"
+VERSION = "0.9.2"
+DATE = "2025-04-23"
 
 np.set_printoptions(edgeitems=50, linewidth=256, formatter=dict(float=lambda x: f"{x:.6f}"))
 
@@ -505,7 +506,7 @@ class MainWindow(MainWindowPlots):
     def update_stars_table(self):
         self.tv_sensor.setModel(QStarModel(self.matcher.build_stars_table(self.projection)))
 
-        for i, width in enumerate([40, 120, 120, 120, 120, 120, 120, 40, 40, 120, 120, 120]):
+        for i, width in enumerate([40, 80, 80, 120, 120, 120, 120, 40, 40, 120, 120, 120]):
             self.tv_sensor.setColumnWidth(i, width)
 
     def update_meteor_table(self):
@@ -516,9 +517,15 @@ class MainWindow(MainWindowPlots):
             self.tv_meteor.setColumnWidth(i, width)
 
     def update_catalogue_table(self):
-        self.tv_catalogue.setModel(QCatalogueModel(self.matcher.build_catalogue_table()))
+        model = QCatalogueModel(self.matcher.build_catalogue_table())
+        proxy = CatalogueProxy()
+        proxy.setSourceModel(model)
+        proxy.setSortRole(Qt.ItemDataRole.EditRole)
 
-        for i, width in enumerate([40, 120, 120, 120, 120, 80]):
+        model.dataChanged.connect(self.refresh_catalogue_model)
+
+        self.tv_catalogue.setModel(proxy)
+        for i, width in enumerate([40, 120, 120, 120, 120, 80, 32]):
             self.tv_catalogue.setColumnWidth(i, width)
 
     def reset_sensor_mask(self):
@@ -538,11 +545,8 @@ class MainWindow(MainWindowPlots):
         limit = self.dsb_sensor_limit_alt.value()
         self._mask_sensor(positions[..., 0] > np.radians(limit), f"altitude < {c.num(f'{limit:.1f}°')}")
 
-    def _mask_sensor(self, masked_mask: np.ndarray, message: str):
-        midx = self.matcher.sensor_data.stars.mask.nonzero()[0]
-        idx = np.zeros(self.matcher.sensor_data.stars.count, dtype=bool)
-        idx[midx[masked_mask]] = True
-        self.matcher.mask_sensor_data(idx)
+    def _mask_sensor(self, sparse_mask: np.ndarray, message: str):
+        self.matcher.mask_sensor_data(mask_sparse(self.matcher.sensor_data.stars, sparse_mask))
 
         log.info(f"Masked reference dots: {message}: "
                  f"{c.num(self.matcher.sensor_data.stars.count_visible)} are valid")
@@ -568,11 +572,8 @@ class MainWindow(MainWindowPlots):
         self.update_plots()
         self.show_counts()
 
-    def _mask_catalogue(self, masked_mask: np.ndarray, message: str):
-        midx = self.matcher.catalogue.mask.nonzero()[0]
-        idx = np.zeros(self.matcher.catalogue.count, dtype=bool)
-        idx[midx[masked_mask]] = True
-        self.matcher.mask_catalogue(idx)
+    def _mask_catalogue(self, sparse_mask: np.ndarray, message: str):
+        self.matcher.mask_catalogue(mask_sparse(self.matcher.catalogue, sparse_mask))
 
         log.info(f"Masked the catalogue: {message}: "
                  f"{c.num(self.matcher.catalogue.count_visible)} stars visible")
@@ -607,7 +608,7 @@ class MainWindow(MainWindowPlots):
     @QtCore.pyqtSlot()
     def show_counts(self) -> None:
         # FixMe make this depend on pairing
-        paired = False
+        paired = self.matcher.pairing_fixed
         self.lb_mode.setText(f"{'' if paired else 'un'}paired")
 
         self.lb_catalogue_total.setText(f'{self.matcher.catalogue.count}')
@@ -635,6 +636,14 @@ class MainWindow(MainWindowPlots):
     def on_pair_clicked(self):
         self.matcher.fix_pairing(not self.matcher.pairing_fixed)
         self.lb_mode.setText(f"{'' if self.matcher.pairing_fixed else 'un'}paired")
+
+    def refresh_catalogue_model(self):
+        log.debug("Refreshing the catalogue model")
+        self.matcher.update_pairing()
+        self.compute_position_errors()
+        self.compute_magnitude_errors()
+        self.show_errors()
+        self.show_counts()
 
     def display_about(self):
         msg = QMessageBox(self, text="VASCO Virtual All-Sky CorrectOr plate")
