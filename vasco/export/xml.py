@@ -1,4 +1,5 @@
 from .base import Exporter
+from utilities import fix_octal_no
 
 
 class XMLExporter(Exporter):
@@ -22,7 +23,7 @@ f"""<?xml version="1.0" encoding="UTF-8" ?>
     cx="{self.matcher.sensor_data.rect.xmax}" cy="{self.matcher.sensor_data.rect.ymax}"
     fps="{self.matcher.sensor_data.fps}" interlaced="0" bbf="0"
     frames="{self.matcher.sensor_data.meteor.count}"
-    head="{self.matcher.sensor_data.meteor.fnos(False)[0] - 1}"
+    head="{fix_octal_no(self.matcher.sensor_data.meteor.fnos(False)[0]) - 1}"
     tail="0" drop="-1"
     dlev="0" dsize="0" sipos="0" sisize="0"
     trig="0" observer="{self.matcher.sensor_data.station}" cam="" lens=""
@@ -77,7 +78,7 @@ f"""<?xml version="1.0" encoding="UTF-8" ?>
             magB="0"
             magR2="0"
             magS="0"
-            usingPrecession="False">
+            usingPrecession="True">
 """)
             file.write(self.print_meteor())
             file.write("""

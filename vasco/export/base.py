@@ -9,6 +9,7 @@ from amosutils.projections import BorovickaProjection
 from models import Matcher
 from photometry import Calibration
 from astropy.coordinates import EarthLocation
+from utilities import fix_octal
 
 
 class Exporter(metaclass=ABCMeta):
@@ -36,7 +37,7 @@ class Exporter(metaclass=ABCMeta):
         df['ev'] = data.position_corrected.alt.degree
         df['az_r'] = np.fmod(data.position_raw.az.degree, 360)
         df['az'] = np.fmod(data.position_corrected.az.degree, 360)
-        df['fno'] = data.fnos
+        df['fno'] = fix_octal(data.fnos)
         df['b'] = 0
         df['bm'] = 0
         df['Lsum'] = 0

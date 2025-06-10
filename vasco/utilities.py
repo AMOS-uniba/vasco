@@ -114,3 +114,30 @@ def mask_sparse(array: Catalogue | SensorData, sparse_mask: NDArray) -> NDArray:
     idx = np.zeros(array.count, dtype=bool)
     idx[mask[sparse_mask]] = True
     return idx
+
+
+def fix_octal(fnos):
+    good_fnos = np.array([], dtype=int)
+    for fno in fnos:
+        octfno = int(oct(int(fno))[2:])
+        decfno = int(fno)
+        if decfno < 78:
+            if fno[0] == "0":
+                good_fnos = np.append(good_fnos, decfno)
+            else:
+                good_fnos = np.append(good_fnos, octfno)
+        else:
+            good_fnos = np.append(good_fnos, decfno)
+    return good_fnos
+
+def fix_octal_no(fno):
+    octfno = int(oct(int(fno))[2:])
+    decfno = int(fno)
+    if decfno < 78:
+        if fno[0] == "0":
+            good_fno = decfno
+        else:
+            good_fno = octfno
+    else:
+        good_fno = decfno
+    return good_fno

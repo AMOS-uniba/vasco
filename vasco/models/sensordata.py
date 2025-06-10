@@ -55,7 +55,7 @@ class SensorData:
         meteor = DotCollection(
             np.asarray([[snapshot.xc, snapshot.yc] for snapshot in data.Trail]),
             np.asarray([snapshot.intensity for snapshot in data.Trail]),
-            fnos=np.asarray([snapshot.fno for snapshot in data.Trail], dtype=int)
+            fnos=np.asarray([snapshot.fno for snapshot in data.Trail], dtype=str)
         )
         timestamp = datetime.datetime.strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f")
         location = EarthLocation(data.Longitude * u.deg, data.Latitude * u.deg, data.Altitude * u.m)

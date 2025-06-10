@@ -355,7 +355,7 @@ class MainWindow(MainWindowPlots):
 
     def _export_projection_parameters(self, filename):
         try:
-            with open(filename, 'w+') as file:
+            with open(filename, 'w+', encoding='utf-8') as file:
                 stars = self.matcher.build_stars_table(self.projection)
 
                 yaml.dump(dict(

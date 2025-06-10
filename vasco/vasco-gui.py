@@ -27,10 +27,10 @@ if __name__ == '__main__':
     log.debug("vasco is starting")
 
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon('assets/vasco.png'))
+    app.setWindowIcon(QIcon('../assets/vasco.png'))
 
     window = MainWindow(args)
-    window.setWindowIcon(QIcon('assets/vasco.png'))
+    window.setWindowIcon(QIcon('../assets/vasco.png'))
     window.show()
     #window.showMaximized()
 
