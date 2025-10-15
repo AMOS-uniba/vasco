@@ -38,6 +38,20 @@ def unit_grid(res, *, masked: bool):
         return x, y
 
 
+def unit_grid(res, *, masked: bool):
+    s = np.linspace(-2, 2, res)
+    x, y = np.meshgrid(s, s)
+    y *= np.sqrt(3) / 2
+    x += y / 2
+    if masked:
+        xx = np.ma.masked_array(x, x**2 + y**2 > 1)
+        yy = np.ma.masked_array(y, x**2 + y**2 > 1)
+    else:
+        xx = np.ma.masked_array(x, x**2 > 1)
+        yy = np.ma.masked_array(y, y**2 > 1)
+    return xx, yy
+
+
 def spherical_altaz(x: AltAz, y: AltAz) -> u.Quantity:
     return x.separation(y)
 

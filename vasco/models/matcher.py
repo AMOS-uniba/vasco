@@ -310,6 +310,7 @@ class Matcher:
 
     @staticmethod
     def _grid(smoother, resolution=21, *, masked: bool):
+        """ Build a grid for the matcher """
         xx, yy = unit_grid(resolution, masked=masked)
         nodes = np.ma.stack((xx.ravel(), yy.ravel()), axis=1)
         return smoother(nodes).reshape(resolution, resolution, -1)

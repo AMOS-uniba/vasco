@@ -92,7 +92,6 @@ class BaseCorrectionPlot(BasePlot):
 
     def update_grid(self, x, y, grid, *, limit: float = 1, **kwargs):
         self._update_grid(x, y, grid, limit=limit, **kwargs)
-
         self._valid_grid = True
 
     @abstractmethod
