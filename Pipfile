@@ -20,4 +20,4 @@ pytest = "*"
 pyside6 = "*"
 
 [requires]
-python_version = "3"
+python_version = "3.13"
