@@ -17,7 +17,7 @@ f"""<?xml version="1.0" encoding="UTF-8" ?>
     h="{self._time.strftime("%H")}"
     m="{self._time.strftime("%M")}"
     s="{self._time.strftime('%S.%f')}"
-    tz="0" tme="0" lid="{self.matcher.sensor_data.station}" sid="kvant"
+    tz="0" tme="0" lid="{self.matcher.sensor_data.station}" sid=""
     lng="{self._location.lon.value}" lat="{self._location.lat.value}" alt="{self._location.height.value}"
     cx="{self.matcher.sensor_data.rect.xmax}" cy="{self.matcher.sensor_data.rect.ymax}"
     fps="{self.matcher.sensor_data.fps}" interlaced="0" bbf="0"

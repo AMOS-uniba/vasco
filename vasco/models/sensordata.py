@@ -30,7 +30,7 @@ class SensorData:
                  bounds: Optional[Rect] = None,
                  fps: int = 1):
         self.rect = Rect(-1, 1, -1, 1) if bounds is None else bounds
-        self.shifter = ScalingShifter(x0=800, y0=600, xs=0.0044, ys=0.0044)
+        self.shifter = ScalingShifter(x0=self.rect.xcen, y0=self.rect.ycen, xs=0.0044, ys=0.0044)
 
         self._stars_raw = DotCollection() if stars is None else stars
         self._stars_scaled = DotCollection() if stars is None else stars
