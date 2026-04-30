@@ -3,7 +3,7 @@ import math
 import numpy as np
 import logging
 
-from amosutils.projections import Projection
+from demeteor.projections import Projection
 from photometry import Calibration
 
 log = logging.getLogger('vasco')

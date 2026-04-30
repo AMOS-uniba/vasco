@@ -11,9 +11,9 @@ from pathlib import Path
 from astropy.coordinates import EarthLocation, AltAz
 from astropy.time import Time
 
-from amosutils.catalogue import Catalogue
-from amosutils.projections import Projection, BorovickaProjection
-from amosutils.metrics import spherical, euclidean
+from demeteor.catalogue import Catalogue
+from demeteor.projections import Projection, BorovickaProjection
+from demeteor.metrics import spherical, euclidean
 from numpy.typing import NDArray
 
 from correctors import KernelSmoother, kernels

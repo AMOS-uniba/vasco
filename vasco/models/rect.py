@@ -1,6 +1,6 @@
 import numpy as np
 
-from amosutils.projections.shifters import ScalingShifter
+from demeteor.projections.shifters import ScalingShifter
 
 
 class Rect:

@@ -10,8 +10,8 @@ from pathlib import Path
 from models import SensorData
 from matchers import Matchmaker, Counsellor
 
-from amosutils.projections import BorovickaProjection
-from amosutils.catalogue import Catalogue
+from demeteor.projections import BorovickaProjection
+from demeteor.catalogue import Catalogue
 
 import colour as c
 

@@ -9,7 +9,7 @@ from typing import Optional
 from astropy.coordinates import EarthLocation
 import astropy.units as u
 
-from amosutils.projections.shifters import ScalingShifter
+from demeteor.projections.shifters import ScalingShifter
 from .dotcollection import DotCollection
 from .rect import Rect
 

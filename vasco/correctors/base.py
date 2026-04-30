@@ -3,7 +3,7 @@ from typing import Callable
 
 from numpy.typing import NDArray
 
-from amosutils.metrics import euclidean
+from demeteor.metrics import euclidean
 
 
 class BaseCorrector(ABC):

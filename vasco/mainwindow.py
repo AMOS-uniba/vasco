@@ -18,7 +18,7 @@ from pathlib import Path
 import matplotlib as mpl
 from astropy.time import Time
 
-from amosutils.projections import BorovickaProjection
+from demeteor.projections import BorovickaProjection
 
 from export.base import Exporter
 from export.csv import DSVExporter

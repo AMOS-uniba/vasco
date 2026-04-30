@@ -5,7 +5,7 @@ from typing import Callable
 
 from .base import BaseCorrector
 from . import kernels
-from amosutils.metrics import spherical, euclidean
+from demeteor.metrics import spherical, euclidean
 
 
 class KernelSmoother(BaseCorrector):

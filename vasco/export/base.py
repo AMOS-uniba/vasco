@@ -4,7 +4,7 @@ import pandas as pd
 
 from abc import ABCMeta, abstractmethod
 
-from amosutils.projections import BorovickaProjection
+from demeteor.projections import BorovickaProjection
 
 from models import Matcher
 from photometry import Calibration

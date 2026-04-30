@@ -9,7 +9,7 @@ from astropy.coordinates import AltAz
 import astropy.units as u
 
 from models.sensordata import SensorData
-from amosutils.catalogue import Catalogue
+from demeteor.catalogue import Catalogue
 
 QuarterTau = math.tau / 4
 

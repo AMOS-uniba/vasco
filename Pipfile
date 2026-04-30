@@ -11,13 +11,12 @@ scipy = "*"
 matplotlib = "*"
 pyyaml = "*"
 lxml = "*"
-amosutils = {file = "../amosutils", editable = true}
 colorama = "*"
 dotmap = "*"
+demetria = "*"
 
 [dev-packages]
 pytest = "*"
-pyside6 = "*"
 
 [requires]
 python_version = "3.13"
