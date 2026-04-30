@@ -1,3 +1,5 @@
+MAKEFLAGS += --no-builtin-rules --no-builtin-variables
+
 all: \
 	vasco/widgets/qparameterwidget_ui.py \
 	vasco/main_ui.py ;
