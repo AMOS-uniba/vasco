@@ -19,7 +19,8 @@ class MagnitudeCorrectionPlot(BaseCorrectionPlot):
     def _update_scatter(self, scatter, pos_obs, mag_obs, dmags, *, cmap):
         scatter.set_offsets(pos_obs)
         scatter.set_sizes(np.exp(-mag_obs / 3) * 100)
-        scatter.set_facecolors(cmap(self.norm_grid(dmags)))
+        if len(pos_obs) > 0:
+            scatter.set_facecolors(cmap(self.norm_grid(dmags)))
 
     def _update_dots(self, pos_obs, pos_cat, mag_obs, mag_cat, *, limit, scale):
         self._update_scatter(self.scatter_dots, pos_obs, mag_obs, mag_cat - mag_obs, cmap=self.cmap_dots)

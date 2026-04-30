@@ -32,4 +32,7 @@ class KernelSmoother(BaseCorrector):
         # Calculate the overall sum of weights for normalization
         sums = np.expand_dims(np.sum(infl, axis=0), 1)
         #print("Result: ", (votes / sums).shape, votes / sums)
-        return votes / sums
+        if len(self.points) > 0 and len(nodes) > 0:
+            return votes / sums
+        else:
+            return np.zeros_like(votes)

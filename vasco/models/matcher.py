@@ -40,7 +40,7 @@ class Matcher:
         self._altaz_numpy: Optional[NDArray] = None
         self._vmag: Optional[NDArray] = None
 
-        self.pairing: Optional[NDArray] = None
+        self.pairing: NDArray = np.empty((0,), dtype=int)
         self.pairing_fixed: bool = False
 
         self.position_smoother = KernelSmoother(np.zeros(shape=(1, 2), dtype=float),
@@ -49,7 +49,7 @@ class Matcher:
                                                  NDArray(shape=(1,), dtype=float))
 
         self.projection_cls: type[Projection] = projection_cls
-        self._projection: Optional[Projection] = None
+        self._projection: Optional[Projection] = projection_cls()
         self._calibration: Optional[Calibration] = LogCalibration(zero=8000)
 
         self.location: Optional[EarthLocation] = None
@@ -57,6 +57,7 @@ class Matcher:
         self.catalogue = Catalogue() if catalogue is None else catalogue
         self.sensor_data = SensorData() if sensor_data is None else sensor_data
         self.update_location_time(location, time)
+        self.update_pairing()
 
         log.debug(f"Created a Matcher ({self.projection_cls.__qualname__})")
 
@@ -117,7 +118,8 @@ class Matcher:
         """
 
         altaz = self.catalogue_altaz(masked=masked)
-        return np.array([altaz.alt.radian, altaz.az.radian], dtype=float).T
+        r = np.array([altaz.alt.radian, altaz.az.radian], dtype=float).T
+        return r
 
     def catalogue_altaz_paired(self) -> NDArray:
         return self.catalogue_altaz_np(masked=False)[self.pairing]
@@ -158,8 +160,10 @@ class Matcher:
             pairing = np.argmin(dist, axis=1)
         else:
             empty = np.empty(shape=(dist.shape[0]), dtype=int)
-            empty[...] = np.nan
+            empty[...] = -1
             pairing = empty
+
+        log.debug(f"Computed the pairing {pairing.shape}")
 
         return pairing
 

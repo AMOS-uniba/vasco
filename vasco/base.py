@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import QMainWindow, QDoubleSpinBox, QLabel
 from main_ui import Ui_MainWindow
 
 from photometry import LogCalibration
+from demeteor.projections import BorovickaProjection
 
 
 class MainWindowBase(QMainWindow, Ui_MainWindow):
@@ -18,10 +19,10 @@ class MainWindowBase(QMainWindow, Ui_MainWindow):
 
         plt.style.use('dark_background')
         self.position_errors = None
-        self.magnitude_errors = None
+        self.magnitude_errors = np.ndarray(shape=(0,))
         self.location = None
         self.time = None
-        self.projection = None
+        self.projection = BorovickaProjection()
         self.calibration = None
         self.matcher = None
 

@@ -95,10 +95,11 @@ class BaseSkyPlot(BasePlot):
         log.debug("Updating dots")
         self.scatter_dots.set_offsets(self.to_chart(positions))
 
-        self.scatter_dots.set_facecolors(self.cmap_stars(self.norm(limit)(errors)))
-        self.scatter_dots.set_sizes(0.03 * magnitudes)
+        if len(errors) > 0:
+            self.scatter_dots.set_facecolors(self.cmap_stars(self.norm(limit)(errors)))
+            self.scatter_dots.set_sizes(0.03 * magnitudes)
 
-        self._valid_dots = True
+            self._valid_dots = True
 
     def update_meteor(self, positions, magnitudes):
         log.debug("Updating meteor")

@@ -83,19 +83,23 @@ def altaz_to_disk(altaz: Optional[AltAz]) -> np.ndarray:
 
 
 def numpy_to_disk(altaz: np.ndarray) -> np.ndarray:
+    """ Transform from az coordinates to xy coordinates """
     return np.stack(
-        (
+        [
             np.sin(altaz[..., 1]) * (QuarterTau - altaz[..., 0]) / QuarterTau,
             -np.cos(altaz[..., 1]) * (QuarterTau - altaz[..., 0]) / QuarterTau,
-        ), axis=1,
+        ], axis=1,
     )
 
 
 def disk_to_numpy(xy: np.ndarray) -> np.ndarray:
-    return np.stack((
-        (QuarterTau + np.arctan2(xy[..., 1], xy[..., 0])),
-        (1 - np.sqrt(xy[..., 0] ** 2 + xy[..., 1] ** 2)) * QuarterTau
-    ), axis=1)
+    """ Transform from xy coordinates to az coordinates """
+    return np.stack(
+        [
+            QuarterTau + np.arctan2(xy[..., 1], xy[..., 0]),
+            (1 - np.sqrt(xy[..., 0] ** 2 + xy[..., 1] ** 2)) * QuarterTau,
+        ], axis=1,
+    )
 
 
 def disk_to_altaz(xy: np.ndarray) -> AltAz:

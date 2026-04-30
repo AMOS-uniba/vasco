@@ -57,13 +57,13 @@ class MainWindow(MainWindowPlots):
             self.matcher.load_catalogue(args.catalogue.name)
         if args.sighting:
             self._load_sighting(args.sighting.name)
-            self.update_time()
-            self.update_location()
         if args.projection:
             self._import_projection_parameters(args.projection.name)
-            self.update_scaling()
-            self.update_projection()
 
+        self.update_time()
+        self.update_location()
+        self.update_scaling()
+        self.update_projection()
         self.update_matcher()
 
         self.compute_position_errors()
@@ -225,7 +225,7 @@ class MainWindow(MainWindowPlots):
     def update_scaling(self):
         self.matcher.sensor_data.set_shifter_scales(
             self.dsb_xs.value() / 1000,
-            self.dsb_ys.value() / 1000
+            self.dsb_ys.value() / 1000,
         )
 
     def on_scaling_changed(self):
@@ -234,6 +234,7 @@ class MainWindow(MainWindowPlots):
 
     def update_matcher(self):
         log.info(f"Time / location changed: {self.time}, {self.location}")
+        self.matcher.update_pairing()
         self.matcher.update_location_time(self.location, Time(self.time))
         self.matcher.update_position_smoother()
 

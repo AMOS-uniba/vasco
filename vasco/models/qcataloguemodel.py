@@ -1,5 +1,9 @@
+import logging
+
 from PyQt6.QtCore import Qt, QModelIndex, QAbstractTableModel, QSortFilterProxyModel, QVariant
 from PyQt6.QtGui import QColor
+
+log = logging.getLogger('vasco')
 
 
 class QCatalogueModel(QAbstractTableModel):
@@ -24,7 +28,6 @@ class QCatalogueModel(QAbstractTableModel):
             case _:
                 return None
 
-
     def columnCount(self, parent=None):
         return len(self.COLUMNS)
 
@@ -34,10 +37,10 @@ class QCatalogueModel(QAbstractTableModel):
     def data(self, index: QModelIndex, role: int = ...):
         row = index.row()
         column = index.column()
+
         match role:
             case Qt.ItemDataRole.EditRole:
                 # This is very hacky for now but I cannot get it to work with floats
-                # See
                 match column:
                     case self.C_ID:
                         return row
@@ -91,7 +94,7 @@ class QCatalogueModel(QAbstractTableModel):
         return flags
 
     def setData(self, index, value, role: int = ...):
-        print("Setting data for CatalogueModel...", index.row(), index.column(), value, role)
+        log.debug("Setting data for CatalogueModel...", index.row(), index.column(), value, role)
         match role:
             case Qt.ItemDataRole.CheckStateRole:
                 if index.column() == self.C_VISIBLE:
@@ -105,4 +108,4 @@ class CatalogueProxy(QSortFilterProxyModel):
     def lessThan(self, left, right):
         l = self.sourceModel().data(left, Qt.ItemDataRole.EditRole)
         r = self.sourceModel().data(right, Qt.ItemDataRole.EditRole)
-        return l < r
+        return bool(l < r)

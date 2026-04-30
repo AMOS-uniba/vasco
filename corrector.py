@@ -11,7 +11,6 @@ from matplotlib import pyplot as plt
 import argparsedirs
 from utilities import by_azimuth, polar_to_cart
 
-
 from correctors import Interpolator, ZernikeExpander, KernelSmoother, kernels
 
 mpl.use('Agg')

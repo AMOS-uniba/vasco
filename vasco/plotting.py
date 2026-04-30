@@ -1,4 +1,5 @@
 import logging
+from types import NoneType
 
 import numpy as np
 
@@ -29,7 +30,7 @@ class MainWindowPlots(MainWindowBase):
         self.position_correction_plot = PositionCorrectionPlot(self.tab_correction_positions)
         self.magnitude_correction_plot = MagnitudeCorrectionPlot(self.tab_correction_magnitudes)
 
-        self.plots: [Optional[BasePlot]] = [
+        self.plots: list[Optional[BasePlot]] = [
             self.sensor_plot,
             None,
             self.position_sky_plot,
@@ -45,7 +46,7 @@ class MainWindowPlots(MainWindowBase):
         # List of links: when the i-th tab is active and update_plots is called,
         # iterate over the i-th element here and for every pair `(condition, action)`
         # perform the `action` if `condition` is False
-        self.updateable: [(Callable[[], bool], Callable)] = [
+        self.updateable: list[list[tuple[Callable, Callable]]] = [
             [
                 (self.sensor_plot.valid, self.plot_sensor_data),
             ],
@@ -134,7 +135,7 @@ class MainWindowPlots(MainWindowBase):
     def _plot_catalogue_stars(self, plot):
         plot.update_stars(
             self.matcher.catalogue_altaz_np(masked=True),
-            self.matcher.catalogue_vmag(masked=True)
+            self.matcher.catalogue_vmag(masked=True),
         )
 
     def plot_catalogue_stars_positions(self):
@@ -210,10 +211,15 @@ class MainWindowPlots(MainWindowBase):
     def plot_magnitude_correction_meteor(self) -> None:
         self._plot_correction_meteor(self.magnitude_correction_plot)
 
-    def _plot_correction_grid(self, plot, grid, *, masked: bool, **kwargs):
+    def _plot_correction_grid(self,
+                              plot,
+                              grid_function: Callable,
+                              *,
+                              masked: bool,
+                              **kwargs):
         if self.cb_show_grid.isChecked():
             xx, yy = unit_grid(self.grid_resolution, masked=masked)
-            plot.update_grid(xx, yy, grid(resolution=self.grid_resolution), **kwargs)
+        #    plot.update_grid(xx, yy, grid_function(resolution=self.grid_resolution), **kwargs)
         else:
             plot.clear_grid()
 
