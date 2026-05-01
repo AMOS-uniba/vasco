@@ -77,7 +77,7 @@ class SensorData:
 
         self.rescale_stars()
         self.rescale_meteor()
-        log.debug(f"Set shifter scales to xs = {xs:.6f}, ys = {ys:.6f}")
+        log.debug(f"Set shifter scales to xs = {xs:.6f} mm, ys = {ys:.6f} mm")
 
     def rescale_stars(self):
         self._stars_scaled = DotCollection(

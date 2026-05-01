@@ -10,7 +10,7 @@ import dotmap
 from PyQt6 import QtCore
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
-from PyQt6.QtCore import QDateTime, Qt, QSortFilterProxyModel, QModelIndex
+from PyQt6.QtCore import QDateTime, Qt
 
 from astropy import units as u
 from astropy.coordinates import EarthLocation
@@ -426,6 +426,7 @@ class MainWindow(MainWindowPlots):
         self.sensor_plot.invalidate()
 
         self.matcher.sensor_data = SensorData.load_YAML(file)
+        self.update_scaling()
 
         log.info(f"Loaded a sighting from {file}: "
                  f"{self.matcher.sensor_data.stars.count} stars, "
