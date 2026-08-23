@@ -46,7 +46,7 @@ class Matcher:
         self.position_smoother = KernelSmoother(np.zeros(shape=(1, 2), dtype=float),
                                                 np.zeros(shape=(1, 2), dtype=float))
         self.magnitude_smoother = KernelSmoother(np.zeros(shape=(1, 2), dtype=float),
-                                                 NDArray(shape=(1,), dtype=float))
+                                                 np.zeros(shape=(1,), dtype=float))
 
         self.projection_cls: type[Projection] = projection_cls
         self._projection: Optional[Projection] = projection_cls()
