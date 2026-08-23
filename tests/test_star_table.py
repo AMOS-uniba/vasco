@@ -121,3 +121,87 @@ class TestColumnWidths:
                       if isinstance(node, ast.List))
 
         assert len(widths.elts) == len(QStarModel.COLUMNS)
+
+
+class TestCatalogueNames:
+    """
+    Turning a pairing index into a name.
+
+    The pairing indexes the catalogue as Catalogue builds it, which is planets first and then
+    stars. Nothing in vasco chooses that order and nothing here should assume it silently, so the
+    test checks the alignment against vmag() -- the same array, the same order -- rather than only
+    that the lengths agree, which an off-by-seven would satisfy.
+    """
+    SIX_COLUMN = ("#\n"
+                  "ra\tdec\tdist\tvmag\tabsmag\tname\n"
+                  "101.287215\t-16.716116\t2.6371\t-1.44\tSirius\n")
+
+    @pytest.fixture
+    def catalogue(self, tmp_path):
+        """ A catalogue of three stars, written here so the test needs no data files. """
+        from demeteor.catalogue import Catalogue
+
+        path = tmp_path / 'tiny.tsv'
+        path.write_text(
+            "#\n"
+            "ra\tdec\tdist\tvmag\tabsmag\tname\n"
+            "101.287215\t-16.716116\t2.6371\t-1.44\t1.454\tSirius\n"
+            "95.987925\t-52.69566\t94.7867\t-0.62\t-5.504\tCanopus\n"
+            "213.91545\t19.18241\t11.2575\t-0.05\t-0.307\tunnamed\n",
+            encoding='utf-8')
+        return Catalogue(path)
+
+    @pytest.fixture
+    def matcher(self, catalogue):
+        import datetime
+
+        import astropy.units as u
+        from astropy.coordinates import EarthLocation
+        from astropy.time import Time
+        from models.matcher import Matcher
+
+        where = EarthLocation(17.27 * u.deg, 48.37 * u.deg, 531 * u.m)
+        when = Time(datetime.datetime(2024, 9, 25, 21, 56, 37, tzinfo=datetime.UTC))
+        return Matcher(where, when, catalogue=catalogue)
+
+    def test_there_is_one_name_per_catalogue_entry(self, matcher):
+        assert len(matcher.catalogue_names()) == matcher.catalogue.count
+
+    def test_the_planets_come_first(self, matcher):
+        from demeteor.catalogue import Catalogue
+
+        names = matcher.catalogue_names()
+
+        assert list(names[:len(Catalogue.PLANETS)]) == [p.title() for p in Catalogue.PLANETS]
+
+    def test_the_stars_follow(self, matcher):
+        from demeteor.catalogue import Catalogue
+
+        names = matcher.catalogue_names()
+
+        assert list(names[len(Catalogue.PLANETS):]) == ['Sirius', 'Canopus', 'unnamed']
+
+    def test_it_lines_up_with_the_magnitudes(self, matcher):
+        """
+        The alignment that matters: an off-by-seven passes a length check and fails this.
+
+        Note that the brightest object is not the brightest star -- Venus outshines Sirius by
+        two and a half magnitudes -- which is the planets being genuinely in the array rather
+        than an artefact of the indexing.
+        """
+        from demeteor.catalogue import Catalogue
+
+        names = matcher.catalogue_names()
+        vmags = matcher.catalogue.vmag(matcher.location, matcher.time, masked=False)
+        planets = len(Catalogue.PLANETS)
+
+        assert len(names) == len(vmags)
+        assert names[vmags.argmin()] in [p.title() for p in Catalogue.PLANETS]
+        assert names[planets + vmags[planets:].argmin()] == 'Sirius'
+
+    def test_an_index_resolves_to_the_object_at_that_index(self, matcher):
+        names = matcher.catalogue_names()
+        stars = matcher.catalogue.stars.name.to_numpy()
+
+        for i, name in enumerate(stars):
+            assert names[len(matcher.catalogue.planets) + i] == name

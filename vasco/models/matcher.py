@@ -2,6 +2,7 @@ import logging
 import math
 import dotmap
 import numpy as np
+import pandas as pd
 import scipy as sp
 
 from typing import Callable, Optional
@@ -342,16 +343,29 @@ class Matcher:
             az=np.degrees(positions[..., 1]),
             intensity=intensity,
             star=self.pairing,
-            # The pairing is an index into the catalogue, which is a number nobody can read. The
-            # names come from the catalogue itself rather than being looked up here, because the
-            # index space is planets first and then stars and only it knows that.
-            name=self.catalogue.names(masked=False)[self.pairing],
+            # The pairing is an index into the catalogue, which is a number nobody can read
+            name=self.catalogue_names()[self.pairing],
             mask=self.sensor_data.stars.mask,
             count=self.sensor_data.stars.count,
             scalar_errors=np.degrees(self.distance_sky(masked=False)),
             vector_errors=np.degrees(self.vector_errors_full()),
             _dynamic=False,
         )
+
+    def catalogue_names(self) -> NDArray:
+        """
+        The name of every object in the catalogue, in the order the pairing indexes.
+
+        That order is planets first and then stars, which is not ours to choose: it is how
+        Catalogue builds `mask`, `count`, `vmag()` and `radec()`, and the pairing is an index into
+        it. Getting it wrong labels every star seven places off, which is why the test for this
+        checks the alignment against vmag() rather than merely the length.
+
+        demeteor grew a Catalogue.names() that does exactly this, and this should collapse into a
+        call to it -- but not before that version is on PyPI. Writing against an unpublished API is
+        how this file ended up raising AttributeError on a released demeteor.
+        """
+        return pd.concat([self.catalogue.planets, self.catalogue.stars]).name.to_numpy()
 
     def build_catalogue_table(self) -> dotmap.DotMap:
         log.debug("Building a catalogue model table")
