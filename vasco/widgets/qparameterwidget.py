@@ -22,6 +22,7 @@ class QParameterWidget(QWidget, Ui_Form):
               step: float = 0.001,
               decimals: int = 6,
               initial_value: float = 0,
+              wrapping: bool = False,
               display_to_true: Callable[[float], float] = lambda x: x,
               true_to_display: Callable[[float], float] = lambda x: x):
         self.lb_title.setText(title)
@@ -32,6 +33,8 @@ class QParameterWidget(QWidget, Ui_Form):
         self.dsb_value.setMaximum(maximum)
         self.dsb_value.setSingleStep(step)
         self.dsb_value.setDecimals(decimals)
+        # An azimuth is circular, so stepping past the end should come round rather than stop.
+        self.dsb_value.setWrapping(wrapping)
         self.dsb_value.setValue(initial_value)
 
         self.display_to_true = display_to_true
@@ -52,4 +55,10 @@ class QParameterWidget(QWidget, Ui_Form):
         return float(self.display_to_true(self.display_value))
 
     def set_true_value(self, new_value: float):
+        """
+        Note that QDoubleSpinBox.setValue() clamps to [minimum, maximum] without a word, so a value
+        from outside the widget's range does not arrive here intact. Normalise a whole projection
+        before writing it back -- an angle cannot be brought into range one parameter at a time,
+        since epsilon and E have to move together.
+        """
         self.set_display_value(self.true_to_display(new_value))

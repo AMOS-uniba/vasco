@@ -82,12 +82,13 @@ class MainWindow(MainWindowPlots):
         self.pw_y0.setup(title="V shift", symbol="y<sub>0</sub>", unit="mm",
                          minimum=-10, maximum=10, step=0.001, initial_value=0)
         self.pw_a0.setup(title="rotation", symbol="a<sub>0</sub>", unit="°",
-                         minimum=0, maximum=359.999999, step=0.2, initial_value=0,
+                         minimum=0, maximum=359.999999, step=0.2, initial_value=0, wrapping=True,
                          display_to_true=np.radians, true_to_display=np.degrees)
 
         self.pw_A.setup(title="amplitude", symbol="A", unit="",
                         minimum=-1, maximum=1, step=0.001)
         self.pw_F.setup(title="phase", symbol="F", unit="°", minimum=0, maximum=359.999999, step=1,
+                        wrapping=True,
                         display_to_true=np.radians, true_to_display=np.degrees)
 
         self.pw_V.setup(title="linear", symbol="&V", unit="rad/mm",
@@ -101,9 +102,14 @@ class MainWindow(MainWindowPlots):
         self.pw_Q.setup(title="biexp exp", symbol="&Q", unit="mm<sup>-2</sup>",
                         minimum=-100, maximum=100, step=0.0001)
 
-        self.pw_epsilon.setup(title="zenith angle", symbol="ε", unit="°", minimum=0, maximum=90, step=0.1,
+        # 180 and not 90: a normalised zenith distance can be anything up to half a turn, and a
+        # spinbox that cannot hold the value it is given clamps it silently. A real camera sits
+        # near zero; the range is here to keep a number from being quietly replaced, not as a
+        # plausibility check.
+        self.pw_epsilon.setup(title="zenith angle", symbol="ε", unit="°", minimum=0, maximum=180, step=0.1,
                               display_to_true=np.radians, true_to_display=np.degrees)
         self.pw_E.setup(title="azimuth", symbol="E", unit="°", minimum=0, maximum=359.999999, step=1,
+                        wrapping=True,
                         display_to_true=np.radians, true_to_display=np.degrees)
 
         for widget in self.param_widgets.values():
@@ -444,10 +450,16 @@ class MainWindow(MainWindowPlots):
             with open(filename, 'r') as file:
                 try:
                     data = dotmap.DotMap(yaml.safe_load(file), _dynamic=False)
-                    for param, widget in self.param_widgets.items():
-                        widget.set_display_value(widget.true_to_display(data.projection.parameters[param]))
-                        self.dsb_xs.setValue(data.pixels.xs)
-                        self.dsb_ys.setValue(data.pixels.ys)
+                    # Normalised for the same reason as a fit result: a stored file may hold
+                    # anything, and a widget that cannot represent it clamps in silence. The
+                    # OrderedDict is in the order BorovickaProjection takes its parameters.
+                    stored = BorovickaProjection(
+                        *(data.projection.parameters[param] for param in self.param_widgets)
+                    ).normalised()
+                    for value, widget in zip(stored.as_tuple(), self.param_widgets.values()):
+                        widget.set_true_value(value)
+                    self.dsb_xs.setValue(data.pixels.xs)
+                    self.dsb_ys.setValue(data.pixels.ys)
                     log.info(f"Imported projection parameters from {filename}")
                 except yaml.YAMLError as exc:
                     log.error(f"Could not parse file {filename} as YAML: {exc}")
@@ -493,6 +505,13 @@ class MainWindow(MainWindowPlots):
             mask=np.array([widget.is_checked() for widget in self.param_widgets.values()], dtype=bool),
             callback=callback,
         )
+
+        # The fitter is unbounded in the angles, so a result can sit past a whole turn or below
+        # zero -- and QDoubleSpinBox.setValue() clamps to its range without a word. Since the
+        # widgets are read straight back as the model (get_projection_parameters), the clamp
+        # *became* the plate: a fit that crossed zero came back pinned at exactly zero. Normalise
+        # first, as a whole projection, because epsilon and E have to move together.
+        result = BorovickaProjection(*result).normalised().as_tuple()
 
         self._block_parameter_signals(True)
         for value, widget in zip(result, self.param_widgets.values()):
