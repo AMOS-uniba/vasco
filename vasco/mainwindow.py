@@ -2,7 +2,6 @@ import logging
 
 import math
 import yaml
-import pytz
 import datetime
 import numpy as np
 import dotmap
@@ -428,7 +427,8 @@ class MainWindow(MainWindowPlots):
     def _load_sighting(self, file):
         data = dotmap.DotMap(yaml.safe_load(open(file, 'r')), _dynamic=False)
         self.set_location(data.Latitude, data.Longitude, data.Altitude)
-        self.set_time(pytz.UTC.localize(datetime.datetime.strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f")))
+        self.set_time(datetime.datetime.strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f")
+                      .replace(tzinfo=datetime.UTC))
         self.sensor_plot.invalidate()
 
         self.matcher.sensor_data = SensorData.load_YAML(file)
@@ -453,11 +453,9 @@ class MainWindow(MainWindowPlots):
                     # Normalised for the same reason as a fit result: a stored file may hold
                     # anything, and a widget that cannot represent it clamps in silence. The
                     # OrderedDict is in the order BorovickaProjection takes its parameters.
-                    stored = BorovickaProjection(
-                        *(data.projection.parameters[param] for param in self.param_widgets)
-                    ).normalised()
-                    for value, widget in zip(stored.as_tuple(), self.param_widgets.values()):
-                        widget.set_true_value(value)
+                    self.set_projection_parameters(
+                        [data.projection.parameters[param] for param in self.param_widgets]
+                    )
                     self.dsb_xs.setValue(data.pixels.xs)
                     self.dsb_ys.setValue(data.pixels.ys)
                     log.info(f"Imported projection parameters from {filename}")
@@ -484,6 +482,34 @@ class MainWindow(MainWindowPlots):
 
     def get_projection_parameters(self):
         return np.array([widget.true_value for widget in self.param_widgets.values()], dtype=float)
+
+    def set_projection_parameters(self, values) -> tuple[float, ...]:
+        """
+        Write a set of plate parameters into the widgets, normalised first.
+
+        The only way parameters are ever written, because a QDoubleSpinBox will not hold a value
+        outside its range and does not say so when it refuses: measured against Qt 6.11, a fit
+        returning a0 = -2.8648 deg is held as exactly 0. Since get_projection_parameters() reads
+        these widgets straight back as the model, whatever the widget holds instead *becomes* the
+        plate.
+
+        Turning wrapping on -- which those widgets do have, so that a person can turn past
+        359.999999 -- is not the fix, however much it looks like one: the same value then comes
+        back as 359.999999, an error of 2.8648 deg rather than 357.1352, which is worse in the only
+        way that counts because nobody would notice it. Normalising has to happen on the whole
+        projection at once in any case, since epsilon and E move together and no per-widget setting
+        can express that.
+
+        Returns what was actually written.
+        """
+        normalised = BorovickaProjection(*values).normalised().as_tuple()
+
+        self._block_parameter_signals(True)
+        for value, widget in zip(normalised, self.param_widgets.values()):
+            widget.set_true_value(value)
+        self._block_parameter_signals(False)
+
+        return normalised
 
     def optimize(self) -> None:
         self.w_input.setEnabled(False)
@@ -517,12 +543,7 @@ class MainWindow(MainWindowPlots):
         # 2.8648 deg instead of 357.1352, which is worse in the way that matters, since nobody
         # would notice it. Normalise first, as a whole projection, because epsilon and E have to
         # move together and no per-widget setting can express that.
-        result = BorovickaProjection(*result).normalised().as_tuple()
-
-        self._block_parameter_signals(True)
-        for value, widget in zip(result, self.param_widgets.values()):
-            widget.set_true_value(value)
-        self._block_parameter_signals(False)
+        self.set_projection_parameters(result)
 
         self.pg_optimize.setValue(maxiters)
         self.gb_identify.setTitle(original_title)
