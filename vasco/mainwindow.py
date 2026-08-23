@@ -507,10 +507,16 @@ class MainWindow(MainWindowPlots):
         )
 
         # The fitter is unbounded in the angles, so a result can sit past a whole turn or below
-        # zero -- and QDoubleSpinBox.setValue() clamps to its range without a word. Since the
-        # widgets are read straight back as the model (get_projection_parameters), the clamp
-        # *became* the plate: a fit that crossed zero came back pinned at exactly zero. Normalise
-        # first, as a whole projection, because epsilon and E have to move together.
+        # zero -- and QDoubleSpinBox.setValue() will not hold a value outside its range, without a
+        # word about it. Since the widgets are read straight back as the model
+        # (get_projection_parameters), whatever it holds instead *becomes* the plate: measured
+        # against Qt 6.11, a fit returning a0 = -2.8648 deg came back as exactly 0.
+        #
+        # Note that enabling wrapping on those widgets is not the fix, however much it looks like
+        # one. With it on the same value comes back as 359.999999 rather than 0 -- an error of
+        # 2.8648 deg instead of 357.1352, which is worse in the way that matters, since nobody
+        # would notice it. Normalise first, as a whole projection, because epsilon and E have to
+        # move together and no per-widget setting can express that.
         result = BorovickaProjection(*result).normalised().as_tuple()
 
         self._block_parameter_signals(True)
