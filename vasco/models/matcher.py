@@ -375,6 +375,7 @@ class Matcher:
 
         return dotmap.DotMap(
             catalogue=self.catalogue,
+            name=self.catalogue_names(),
             dec=radec.dec.degree,
             ra=radec.ra.degree,
             alt=altaz.alt.degree,

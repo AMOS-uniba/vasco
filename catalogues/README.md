@@ -21,8 +21,8 @@ This file is a modified version of the original, not a copy of it:
 - reduced to six of the original columns — `ra`, `dec`, `dist`, `vmag`, `absmag`, `name`;
 - rewritten as tab-separated values with a comment line in front of the header;
 - ordered brightest first;
-- stars with no proper name in HYG carry the literal `unnamed` in the `name` column, which is 4642
-  of the 5070. `dist` is HYG's sentinel of 100000 parsecs on the 104 stars with no parallax, and
+- stars with no proper name in HYG carry an em dash in the `name` column, which is 4642 of the
+  5070; the column is never empty, so its dtype stays a string. `dist` is HYG's sentinel of 100000 parsecs on the 104 stars with no parallax, and
   `absmag` on those rows is derived from that sentinel rather than measured.
 
 `tools/build_catalogue.py` in this repository does exactly these steps, so the file can be rebuilt

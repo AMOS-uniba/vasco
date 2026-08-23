@@ -16,6 +16,9 @@ from PyQt6.QtWidgets import QApplication
 
 from models.qstarmodel import QStarModel
 
+#: What the catalogue shows for a star with no proper name
+NO_NAME = '\u2014'
+
 
 @pytest.fixture(scope='session')
 def qt_app():
@@ -147,7 +150,7 @@ class TestCatalogueNames:
             "ra\tdec\tdist\tvmag\tabsmag\tname\n"
             "101.287215\t-16.716116\t2.6371\t-1.44\t1.454\tSirius\n"
             "95.987925\t-52.69566\t94.7867\t-0.62\t-5.504\tCanopus\n"
-            "213.91545\t19.18241\t11.2575\t-0.05\t-0.307\tunnamed\n",
+            "213.91545\t19.18241\t11.2575\t-0.05\t-0.307\t\u2014\n",
             encoding='utf-8')
         return Catalogue(path)
 
@@ -179,7 +182,7 @@ class TestCatalogueNames:
 
         names = matcher.catalogue_names()
 
-        assert list(names[len(Catalogue.PLANETS):]) == ['Sirius', 'Canopus', 'unnamed']
+        assert list(names[len(Catalogue.PLANETS):]) == ['Sirius', 'Canopus', NO_NAME]
 
     def test_it_lines_up_with_the_magnitudes(self, matcher):
         """
@@ -205,3 +208,78 @@ class TestCatalogueNames:
 
         for i, name in enumerate(stars):
             assert names[len(matcher.catalogue.planets) + i] == name
+
+
+class TestCatalogueTableColumns:
+    """
+    The [0] Catalogue tab, which lists the catalogue itself rather than what was matched.
+
+    Its model addresses columns by name (C_NAME and friends) rather than by integer literal, so
+    inserting one is a matter of renumbering the constants alone -- but the column widths in
+    MainWindow are still a positional list, and the sort proxy reads EditRole, so both are checked.
+    """
+    @pytest.fixture
+    def model(self, qt_app):
+        import numpy as np
+        from models.qcataloguemodel import QCatalogueModel
+
+        return QCatalogueModel(dotmap.DotMap(
+            name=np.array(['Venus', 'Sirius', '—']),
+            dec=np.array([1.0, 2.0, 3.0]), ra=np.array([4.0, 5.0, 6.0]),
+            alt=np.array([7.0, 8.0, 9.0]), az=np.array([10.0, 11.0, 12.0]),
+            vmag=np.array([-4.0, -1.44, 5.5]),
+            mask=np.array([True, True, False]),
+            count=3,
+            _dynamic=False,
+        ))
+
+    def test_the_count_follows_the_headings(self, model):
+        from models.qcataloguemodel import QCatalogueModel
+
+        assert model.columnCount() == len(QCatalogueModel.COLUMNS)
+
+    def test_the_name_is_shown(self, model):
+        from models.qcataloguemodel import QCatalogueModel
+
+        assert cell(model, QCatalogueModel.C_NAME, 1) == 'Sirius'
+
+    def test_a_nameless_star_shows_the_dash(self, model):
+        from models.qcataloguemodel import QCatalogueModel
+
+        assert cell(model, QCatalogueModel.C_NAME, 2) == NO_NAME
+
+    def test_it_is_sortable(self, model):
+        """ The proxy sorts on EditRole, so a column that only renders cannot be ordered. """
+        from models.qcataloguemodel import QCatalogueModel
+
+        value = model.data(model.index(0, QCatalogueModel.C_NAME), Qt.ItemDataRole.EditRole)
+
+        assert value == 'Venus'
+
+    def test_it_reads_left_to_right_unlike_the_numbers(self, model):
+        from models.qcataloguemodel import QCatalogueModel
+
+        alignment = model.data(model.index(0, QCatalogueModel.C_NAME),
+                               Qt.ItemDataRole.TextAlignmentRole)
+
+        assert alignment == (Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+
+    def test_the_other_columns_still_land_on_their_own_fields(self, model):
+        from models.qcataloguemodel import QCatalogueModel
+
+        assert cell(model, QCatalogueModel.C_DEC, 0) == '1.000000°'
+        assert cell(model, QCatalogueModel.C_RA, 0) == '4.000000°'
+        assert cell(model, QCatalogueModel.C_VMAG, 0) == '-4.000m'
+
+    def test_mainwindow_sets_one_width_per_column(self):
+        import ast
+        import inspect
+
+        import mainwindow
+        from models.qcataloguemodel import QCatalogueModel
+
+        source = inspect.getsource(mainwindow.MainWindow.update_catalogue_table)
+        widths = next(node for node in ast.walk(ast.parse(source.strip()))
+                      if isinstance(node, ast.List))
+
+        assert len(widths.elts) == len(QCatalogueModel.COLUMNS)

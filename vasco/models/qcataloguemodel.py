@@ -7,14 +7,15 @@ log = logging.getLogger('vasco')
 
 
 class QCatalogueModel(QAbstractTableModel):
-    COLUMNS = ["id", "dec", "ra", "alt", "az", "vmag", "use"]
+    COLUMNS = ["id", "name", "dec", "ra", "alt", "az", "vmag", "use"]
     C_ID = 0
-    C_DEC = 1
-    C_RA = 2
-    C_ALT = 3
-    C_AZ = 4
-    C_VMAG = 5
-    C_VISIBLE = 6
+    C_NAME = 1
+    C_DEC = 2
+    C_RA = 3
+    C_ALT = 4
+    C_AZ = 5
+    C_VMAG = 6
+    C_VISIBLE = 7
 
     def __init__(self, data=None, parent=None):
         super().__init__(parent)
@@ -44,6 +45,8 @@ class QCatalogueModel(QAbstractTableModel):
                 match column:
                     case self.C_ID:
                         return row
+                    case self.C_NAME:
+                        return self._data.name[row]
                     case self.C_DEC:
                         return self._data.dec[row]
                     case self.C_RA:
@@ -62,6 +65,8 @@ class QCatalogueModel(QAbstractTableModel):
                 match column:
                     case self.C_ID:
                         return f"{row:d}"
+                    case self.C_NAME:
+                        return f"{self._data.name[row]}"
                     case self.C_DEC:
                         return f"{self._data.dec[row]:.6f}°"
                     case self.C_RA:
@@ -75,6 +80,8 @@ class QCatalogueModel(QAbstractTableModel):
                     case _:
                         return None
             case Qt.ItemDataRole.TextAlignmentRole:
+                if column == self.C_NAME:
+                    return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
             case Qt.ItemDataRole.CheckStateRole:
                 match column:

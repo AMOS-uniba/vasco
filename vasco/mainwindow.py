@@ -574,7 +574,8 @@ class MainWindow(MainWindowPlots):
         model.dataChanged.connect(self.refresh_catalogue_model)
 
         self.tv_catalogue.setModel(proxy)
-        for i, width in enumerate([40, 120, 120, 120, 120, 80, 32]):
+        # One per column of QCatalogueModel.COLUMNS, in order
+        for i, width in enumerate([40, 140, 120, 120, 120, 120, 80, 32]):
             self.tv_catalogue.setColumnWidth(i, width)
 
     def reset_sensor_mask(self):
