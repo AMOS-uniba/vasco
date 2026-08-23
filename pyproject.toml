@@ -3,6 +3,7 @@ name = "vasco"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "argparsedirs>=0.2.1",
     "astropy>=8.0.1",
     "colorama>=0.4.6",
     "demeteor>=0.2.0",

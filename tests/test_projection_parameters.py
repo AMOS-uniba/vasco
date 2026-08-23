@@ -187,6 +187,14 @@ class TestSetProjectionParameters:
         assert written[A0] == pytest.approx(KY[A0])
         assert written == BorovickaProjection(*replaced(A0, KY[A0] - TAU)).normalised().as_tuple()
 
+    def test_it_leaves_the_widget_signals_unblocked(self, window):
+        # It blocks them while writing, and blockSignals does not nest, so anything that blocked
+        # around a call to this would have had its guarantee cancelled. Nothing does now.
+        write(window, KY)
+
+        for name, widget in window.param_widgets.items():
+            assert not widget.dsb_value.signalsBlocked(), name
+
     def test_writing_twice_settles(self, window):
         once = write(window, replaced(A0, -0.05))
         twice = write(window, once)

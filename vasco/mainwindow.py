@@ -445,8 +445,10 @@ class MainWindow(MainWindowPlots):
         self.on_projection_parameters_changed()
 
     def _import_projection_parameters(self, filename: Path):
+        # No blocking here: set_projection_parameters does it, and blockSignals does not nest --
+        # an inner unblock cancels an outer block rather than decrementing it. Nothing else in
+        # this function writes a parameter widget.
         try:
-            self._block_parameter_signals(True)
             with open(filename, 'r') as file:
                 try:
                     data = dotmap.DotMap(yaml.safe_load(file), _dynamic=False)
@@ -465,8 +467,6 @@ class MainWindow(MainWindowPlots):
             log.error(f"File not found: {filename}")
         except Exception as exc:
             log.error(f"Could not import projection parameters: {exc}")
-        finally:
-            self._block_parameter_signals(False)
 
     def _block_parameter_signals(self, block: bool) -> None:
         for widget in self.param_widgets.values():
