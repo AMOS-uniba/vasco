@@ -342,6 +342,10 @@ class Matcher:
             az=np.degrees(positions[..., 1]),
             intensity=intensity,
             star=self.pairing,
+            # The pairing is an index into the catalogue, which is a number nobody can read. The
+            # names come from the catalogue itself rather than being looked up here, because the
+            # index space is planets first and then stars and only it knows that.
+            name=self.catalogue.names(masked=False)[self.pairing],
             mask=self.sensor_data.stars.mask,
             count=self.sensor_data.stars.count,
             scalar_errors=np.degrees(self.distance_sky(masked=False)),

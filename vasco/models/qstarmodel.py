@@ -4,7 +4,7 @@ from PyQt6.QtGui import QColor
 
 class QStarModel(QAbstractTableModel):
     COLUMNS = ["#", "x [px]", "y [px]", "x [mm]", "y [mm]",
-               "alt", "az", "used", "star",
+               "alt", "az", "used", "star", "name",
                "alt error", "az error", "total error"]
 
     def __init__(self, data=None, parent=None):
@@ -21,7 +21,7 @@ class QStarModel(QAbstractTableModel):
 
 
     def columnCount(self, parent=None):
-        return 12
+        return len(QStarModel.COLUMNS)
 
     def rowCount(self, parent=None):
         return self._data.count
@@ -53,10 +53,14 @@ class QStarModel(QAbstractTableModel):
                         else:
                             return f"{self._data.star[row]}"
                     case 9:
-                        return f"{self._data.vector_errors[row, 0]:.6f}°"
+                        if self._data.name is None:
+                            return "-"
+                        return f"{self._data.name[row]}"
                     case 10:
-                        return f"{self._data.vector_errors[row, 1]:.6f}°"
+                        return f"{self._data.vector_errors[row, 0]:.6f}°"
                     case 11:
+                        return f"{self._data.vector_errors[row, 1]:.6f}°"
+                    case 12:
                         return f"{self._data.scalar_errors[row]:.6f}°"
                     case _:
                         return None
@@ -64,13 +68,16 @@ class QStarModel(QAbstractTableModel):
                 match index.column():
                     case 7:
                         return Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter
+                    case 9:
+                        # A name reads left to right, unlike every number in this table
+                        return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
                     case _:
                         return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
             case Qt.ItemDataRole.ForegroundRole:
                 match index.column():
                     case 7:
                         return QColor('green') if self._data.mask[index.row()] else QColor('red')
-                    case 11:
+                    case 12:
                         if (value := self._data.scalar_errors[index.row()]) < 0.2:
                             h = int((0.2 - value) * 600)
                         else:

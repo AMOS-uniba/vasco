@@ -554,7 +554,8 @@ class MainWindow(MainWindowPlots):
     def update_stars_table(self):
         self.tv_sensor.setModel(QStarModel(self.matcher.build_stars_table(self.projection)))
 
-        for i, width in enumerate([40, 80, 80, 120, 120, 120, 120, 40, 40, 120, 120, 120]):
+        # One per column of QStarModel.COLUMNS, in order; the wide one is the name
+        for i, width in enumerate([40, 80, 80, 120, 120, 120, 120, 40, 40, 140, 120, 120, 120]):
             self.tv_sensor.setColumnWidth(i, width)
 
     def update_meteor_table(self):
