@@ -130,10 +130,10 @@ class TestCatalogueNames:
     """
     Turning a pairing index into a name.
 
-    The pairing indexes the catalogue as Catalogue builds it, which is planets first and then
-    stars. Nothing in vasco chooses that order and nothing here should assume it silently, so the
-    test checks the alignment against vmag() -- the same array, the same order -- rather than only
-    that the lengths agree, which an off-by-seven would satisfy.
+    The lookup is demeteor's now, and demeteor tests the ordering itself. What is still worth
+    checking here is that vasco asks for it the way the pairing indexes it -- unmasked -- because
+    a masked lookup would be shorter than the index space and mislabel everything past the first
+    hidden object.
     """
     SIX_COLUMN = ("#\n"
                   "ra\tdec\tdist\tvmag\tabsmag\tname\n"
@@ -168,19 +168,19 @@ class TestCatalogueNames:
         return Matcher(where, when, catalogue=catalogue)
 
     def test_there_is_one_name_per_catalogue_entry(self, matcher):
-        assert len(matcher.catalogue_names()) == matcher.catalogue.count
+        assert len(matcher.catalogue.names(masked=False)) == matcher.catalogue.count
 
     def test_the_planets_come_first(self, matcher):
         from demeteor.catalogue import Catalogue
 
-        names = matcher.catalogue_names()
+        names = matcher.catalogue.names(masked=False)
 
         assert list(names[:len(Catalogue.PLANETS)]) == [p.title() for p in Catalogue.PLANETS]
 
     def test_the_stars_follow(self, matcher):
         from demeteor.catalogue import Catalogue
 
-        names = matcher.catalogue_names()
+        names = matcher.catalogue.names(masked=False)
 
         assert list(names[len(Catalogue.PLANETS):]) == ['Sirius', 'Canopus', NO_NAME]
 
@@ -194,7 +194,7 @@ class TestCatalogueNames:
         """
         from demeteor.catalogue import Catalogue
 
-        names = matcher.catalogue_names()
+        names = matcher.catalogue.names(masked=False)
         vmags = matcher.catalogue.vmag(matcher.location, matcher.time, masked=False)
         planets = len(Catalogue.PLANETS)
 
@@ -202,8 +202,15 @@ class TestCatalogueNames:
         assert names[vmags.argmin()] in [p.title() for p in Catalogue.PLANETS]
         assert names[planets + vmags[planets:].argmin()] == 'Sirius'
 
+    def test_a_masked_lookup_would_be_the_wrong_length(self, matcher):
+        """ Which is why build_stars_table asks for masked=False; the pairing indexes all of it. """
+        matcher.catalogue.mask = np.array([False] * 3 + [True] * (matcher.catalogue.count - 3))
+
+        assert len(matcher.catalogue.names(masked=True)) < matcher.catalogue.count
+        assert len(matcher.catalogue.names(masked=False)) == matcher.catalogue.count
+
     def test_an_index_resolves_to_the_object_at_that_index(self, matcher):
-        names = matcher.catalogue_names()
+        names = matcher.catalogue.names(masked=False)
         stars = matcher.catalogue.stars.name.to_numpy()
 
         for i, name in enumerate(stars):

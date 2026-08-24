@@ -52,8 +52,8 @@ class MainWindow(MainWindowPlots):
         self.update_time()
         self.reset_matcher()
 
-        if args.catalogue:
-            self.matcher.load_catalogue(args.catalogue.name)
+        # The bundled catalogue unless told otherwise, so that vasco has stars on startup
+        self.matcher.load_catalogue(args.catalogue.name if args.catalogue else None)
         if args.sighting:
             self._load_sighting(args.sighting.name)
         if args.projection:
