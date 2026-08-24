@@ -874,7 +874,7 @@ requires-dist = [
     { name = "argparsedirs", specifier = ">=0.2.1" },
     { name = "astropy", specifier = ">=8.0.1" },
     { name = "colorama", specifier = ">=0.4.6" },
-    { name = "demeteor", specifier = ">=0.2.0" },
+    { name = "demeteor", specifier = ">=0.2.2" },
     { name = "demetria", specifier = ">=0.1.0" },
     { name = "dotmap", specifier = ">=1.3.30" },
     { name = "matplotlib", specifier = ">=3.11.1" },

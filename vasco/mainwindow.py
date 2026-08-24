@@ -200,11 +200,9 @@ class MainWindow(MainWindowPlots):
         self.on_location_changed()
 
     def on_time_changed(self):
-        self.update_time()
         self.on_location_time_changed()
 
     def on_location_changed(self):
-        self.update_location()
         self.on_location_time_changed()
 
     def set_location(self, lat, lon, alt):
@@ -267,6 +265,17 @@ class MainWindow(MainWindowPlots):
         self.update_plots()
 
     def on_location_time_changed(self):
+        """
+        Take the location and the time from the widgets and push them through everything.
+
+        Reading the widgets here rather than trusting self.location and self.time to be current is
+        what makes this safe to call after a blocked write. load_sighting() blocks the location and
+        time signals while it fills those widgets from the file, so the handlers that would have
+        refreshed the two attributes never ran: the widgets showed the sighting and every plot was
+        still drawn for wherever and whenever vasco had started up.
+        """
+        self.update_location()
+        self.update_time()
         self.update_matcher()
         self.position_sky_plot.invalidate_stars()
         self.position_sky_plot.invalidate_dots()
