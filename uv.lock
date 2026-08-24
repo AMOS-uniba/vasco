@@ -149,7 +149,7 @@ wheels = [
 
 [[package]]
 name = "demeteor"
-version = "0.2.1"
+version = "0.2.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astropy" },
@@ -159,9 +159,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "scipy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/04/d5/745744019dfb0c1b540a29723110a770d9f746eb47e4f7b1e2fed8eedc79/demeteor-0.2.1.tar.gz", hash = "sha256:5c85e650b38cadefe3ac8a8a0bfb15643a52b444228f4a20ae31c68f8af126f0", size = 126300, upload-time = "2026-08-23T20:23:22.153Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f4/c7/76c70039218724ef7c6b799e5978095a363a7b2e265551b9c4f68709bc9c/demeteor-0.2.2.tar.gz", hash = "sha256:dc667f98f9bd6c9087fa1e0f32cc32100e58aa33f5a3e159ea7671c2479e94f1", size = 125064, upload-time = "2026-08-24T10:49:44.701Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/49/3d/040090035246106002b45342dc964c4673dac96205681cd8016bee585601/demeteor-0.2.1-py3-none-any.whl", hash = "sha256:949a91575f15bb49037ef1faceb12756158519c3eb6f29c581ccc04851a2ac4b", size = 133078, upload-time = "2026-08-23T20:23:20.507Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/00/c57b6188242789d0301ea2396fa3a620f8d71b1cdfa40548101029171eee/demeteor-0.2.2-py3-none-any.whl", hash = "sha256:29af70314b0c14b98878e598c0b749ab4f46f992f2a907505e00b070945ad69b", size = 131902, upload-time = "2026-08-24T10:49:43.373Z" },
 ]
 
 [[package]]
