@@ -14,7 +14,7 @@ import pytest
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication
 
-from models.qstarmodel import QStarModel
+from vasco.qtmodels import QStarModel
 
 #: What the catalogue shows for a star with no proper name
 NO_NAME = '\u2014'
@@ -117,7 +117,7 @@ class TestColumnWidths:
         import ast
         import inspect
 
-        import mainwindow
+        from vasco import mainwindow
 
         source = inspect.getsource(mainwindow.MainWindow.update_stars_table)
         widths = next(node for node in ast.walk(ast.parse(source.strip()))
@@ -161,7 +161,7 @@ class TestCatalogueNames:
         import astropy.units as u
         from astropy.coordinates import EarthLocation
         from astropy.time import Time
-        from models.matcher import Matcher
+        from demeteor.matching import Matcher
 
         where = EarthLocation(17.27 * u.deg, 48.37 * u.deg, 531 * u.m)
         when = Time(datetime.datetime(2024, 9, 25, 21, 56, 37, tzinfo=datetime.UTC))
@@ -228,7 +228,7 @@ class TestCatalogueTableColumns:
     @pytest.fixture
     def model(self, qt_app):
         import numpy as np
-        from models.qcataloguemodel import QCatalogueModel
+        from vasco.qtmodels import QCatalogueModel
 
         return QCatalogueModel(dotmap.DotMap(
             name=np.array(['Venus', 'Sirius', '—']),
@@ -241,30 +241,30 @@ class TestCatalogueTableColumns:
         ))
 
     def test_the_count_follows_the_headings(self, model):
-        from models.qcataloguemodel import QCatalogueModel
+        from vasco.qtmodels import QCatalogueModel
 
         assert model.columnCount() == len(QCatalogueModel.COLUMNS)
 
     def test_the_name_is_shown(self, model):
-        from models.qcataloguemodel import QCatalogueModel
+        from vasco.qtmodels import QCatalogueModel
 
         assert cell(model, QCatalogueModel.C_NAME, 1) == 'Sirius'
 
     def test_a_nameless_star_shows_the_dash(self, model):
-        from models.qcataloguemodel import QCatalogueModel
+        from vasco.qtmodels import QCatalogueModel
 
         assert cell(model, QCatalogueModel.C_NAME, 2) == NO_NAME
 
     def test_it_is_sortable(self, model):
         """ The proxy sorts on EditRole, so a column that only renders cannot be ordered. """
-        from models.qcataloguemodel import QCatalogueModel
+        from vasco.qtmodels import QCatalogueModel
 
         value = model.data(model.index(0, QCatalogueModel.C_NAME), Qt.ItemDataRole.EditRole)
 
         assert value == 'Venus'
 
     def test_it_reads_left_to_right_unlike_the_numbers(self, model):
-        from models.qcataloguemodel import QCatalogueModel
+        from vasco.qtmodels import QCatalogueModel
 
         alignment = model.data(model.index(0, QCatalogueModel.C_NAME),
                                Qt.ItemDataRole.TextAlignmentRole)
@@ -272,7 +272,7 @@ class TestCatalogueTableColumns:
         assert alignment == (Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
     def test_the_other_columns_still_land_on_their_own_fields(self, model):
-        from models.qcataloguemodel import QCatalogueModel
+        from vasco.qtmodels import QCatalogueModel
 
         assert cell(model, QCatalogueModel.C_DEC, 0) == '1.000000°'
         assert cell(model, QCatalogueModel.C_RA, 0) == '4.000000°'
@@ -282,8 +282,8 @@ class TestCatalogueTableColumns:
         import ast
         import inspect
 
-        import mainwindow
-        from models.qcataloguemodel import QCatalogueModel
+        from vasco import mainwindow
+        from vasco.qtmodels import QCatalogueModel
 
         source = inspect.getsource(mainwindow.MainWindow.update_catalogue_table)
         widths = next(node for node in ast.walk(ast.parse(source.strip()))

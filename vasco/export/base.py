@@ -6,8 +6,8 @@ from abc import ABCMeta, abstractmethod
 
 from demeteor.projections import BorovickaProjection
 
-from vasco.models import Matcher
-from vasco.photometry import Calibration
+from demeteor.matching import Matcher
+from demeteor.photometry import Calibration
 from astropy.coordinates import EarthLocation
 
 

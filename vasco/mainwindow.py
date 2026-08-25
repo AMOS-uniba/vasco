@@ -21,16 +21,16 @@ from demeteor.projections import BorovickaProjection
 from vasco.export.base import Exporter
 from vasco.export.csv import DSVExporter
 from vasco.export.xml import XMLExporter
-from vasco.models import Matcher
-from vasco.models.qcataloguemodel import QCatalogueModel, CatalogueProxy
-from vasco.models.qstarmodel import QStarModel
+from demeteor.matching import Matcher
+from vasco.qtmodels import CatalogueProxy, QCatalogueModel
+from vasco.qtmodels import QStarModel
 from vasco.plotting import MainWindowPlots
-from vasco.models import SensorData
-from vasco.models.qmeteormodel import QMeteorModel
-from vasco.utilities import mask_sparse
+from vasco.qtmodels import QMeteorModel
+from demeteor.sensor import mask_sparse
 
 from vasco import colour as c
-from vasco import yaml_io
+from vasco import tables, yaml_io
+from vasco.io import load_sighting as read_sighting
 from vasco.amos import AMOS, Station
 
 mpl.use('Qt5Agg')
@@ -372,7 +372,7 @@ class MainWindow(MainWindowPlots):
     def _export_projection_parameters(self, filename):
         try:
             with open(filename, 'w+') as file:
-                stars = self.matcher.build_stars_table(self.projection)
+                stars = tables.stars(self.matcher, self.projection)
 
                 yaml_io.dump(dict(
                     projection=dict(
@@ -441,7 +441,7 @@ class MainWindow(MainWindowPlots):
                       .replace(tzinfo=datetime.UTC))
         self.sensor_plot.invalidate()
 
-        self.matcher.sensor_data = SensorData.load_YAML(file)
+        self.matcher.sensor_data = read_sighting(file)
         self.update_scaling()
 
         log.info(f"Loaded a sighting from {file}: "
@@ -562,7 +562,7 @@ class MainWindow(MainWindowPlots):
         self.on_projection_parameters_changed()
 
     def update_stars_table(self):
-        self.tv_sensor.setModel(QStarModel(self.matcher.build_stars_table(self.projection)))
+        self.tv_sensor.setModel(QStarModel(tables.stars(self.matcher, self.projection)))
 
         # One per column of QStarModel.COLUMNS, in order; the wide one is the name
         for i, width in enumerate([40, 80, 80, 120, 120, 120, 120, 40, 40, 140, 120, 120, 120]):
@@ -576,7 +576,7 @@ class MainWindow(MainWindowPlots):
             self.tv_meteor.setColumnWidth(i, width)
 
     def update_catalogue_table(self):
-        model = QCatalogueModel(self.matcher.build_catalogue_table())
+        model = QCatalogueModel(tables.catalogue(self.matcher))
         proxy = CatalogueProxy()
         proxy.setSourceModel(model)
         proxy.setSortRole(Qt.ItemDataRole.EditRole)

@@ -10,7 +10,7 @@ from vasco.plots.base import BasePlot
 from vasco.plots.sky import PositionSkyPlot, MagnitudeSkyPlot
 from vasco.plots.errors import PositionErrorPlot, MagnitudeErrorPlot
 from vasco.plots.correction import BaseCorrectionPlot, PositionCorrectionPlot, MagnitudeCorrectionPlot
-from vasco.utilities import unit_grid
+from vasco.plots import grid
 
 from vasco.base import MainWindowBase
 
@@ -218,7 +218,7 @@ class MainWindowPlots(MainWindowBase):
                               masked: bool,
                               **kwargs):
         if self.cb_show_grid.isChecked():
-            xx, yy = unit_grid(self.grid_resolution, masked=masked)
+            xx, yy = grid.lattice(self.grid_resolution, masked=masked)
         #    plot.update_grid(xx, yy, grid_function(resolution=self.grid_resolution), **kwargs)
         else:
             plot.clear_grid()

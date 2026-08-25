@@ -5,7 +5,7 @@ from matplotlib.ticker import FuncFormatter
 
 from vasco.plots.errors.base import BaseErrorPlot
 from vasco.plots.base import cmap_gyr
-from vasco.models import Matcher
+from demeteor.matching import Matcher
 
 
 class PositionErrorPlot(BaseErrorPlot):

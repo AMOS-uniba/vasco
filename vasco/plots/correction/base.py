@@ -4,7 +4,7 @@ import matplotlib as mpl
 from abc import abstractmethod
 
 from vasco.plots.base import BasePlot
-from vasco.utilities import altaz_to_disk, proj_to_disk, numpy_to_disk
+from demeteor.sensor import altaz_to_disk, numpy_to_disk, proj_to_disk
 
 
 class BaseCorrectionPlot(BasePlot):

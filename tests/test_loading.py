@@ -25,7 +25,7 @@ def qt_app():
 
 @pytest.fixture
 def window(qt_app):
-    from mainwindow import MainWindow
+    from vasco.mainwindow import MainWindow
 
     return MainWindow(types.SimpleNamespace(debug=False, catalogue=None,
                                             sighting=None, projection=None))

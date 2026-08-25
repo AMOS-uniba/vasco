@@ -17,7 +17,7 @@ import io
 import pytest
 
 from vasco import yaml_io
-from vasco.models.sensordata import SensorData
+from vasco.io import load_sighting
 
 SIGHTING = 'data/M20151105_231201_KNM__00033.yaml'
 
@@ -29,7 +29,7 @@ class TestZeroPaddingIsNotOctal:
         assert document == dict(a=15, b=20, c=100, d=18)
 
     def test_a_real_trail_comes_out_in_order_and_without_repeats(self):
-        data = SensorData.load_YAML(SIGHTING)
+        data = load_sighting(SIGHTING)
         fnos = data.meteor.fnos(masked=False).tolist()
 
         assert fnos == sorted(fnos)

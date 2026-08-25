@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
 from vasco.plots.errors.base import BaseErrorPlot
-from vasco.models import Matcher
+from demeteor.matching import Matcher
 
 
 class MagnitudeErrorPlot(BaseErrorPlot):

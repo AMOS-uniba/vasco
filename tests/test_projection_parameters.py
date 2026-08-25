@@ -19,8 +19,8 @@ from demeteor.projections import BorovickaProjection
 from demeteor.projections.base import TAU
 from PyQt6.QtWidgets import QApplication
 
-from mainwindow import MainWindow
-from widgets.qparameterwidget import QParameterWidget
+from vasco.mainwindow import MainWindow
+from vasco.widgets.qparameterwidget import QParameterWidget
 
 #: In the order BorovickaProjection takes its parameters, which is the order the widgets are in
 NAMES = ('x0', 'y0', 'a0', 'A', 'F', 'V', 'S', 'D', 'P', 'Q', 'epsilon', 'E')
