@@ -1,0 +1,63 @@
+# The window is tested here too, headless. Four of the test modules open one, and they are the ones
+# that exercise the interfaces demeteor and demetria now own -- a run without them would pass while
+# the plots were broken.
+name: tests
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      # No display, and none wanted. The same platform the tests are run under locally.
+      QT_QPA_PLATFORM: offscreen
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+
+      # PyQt6 bundles Qt itself, but not what Qt links against, and a runner image carries none of
+      # it. offscreen still wants EGL and xkbcommon -- it renders, it just renders nowhere.
+      - name: Install the libraries Qt links against
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libegl1 libgl1 libxkbcommon0 libdbus-1-3
+
+      # --extra gui, because PyQt6 is optional here: vasco-fit is a filter with no window and runs
+      # where Qt is not installed. Without it the four window tests cannot even be imported.
+      # --locked fails on a lockfile that disagrees with pyproject.toml, which is worth failing on:
+      # uv sync refuses it at deploy time as well. uv reads requires-python and fetches 3.14 itself.
+      - name: Install the project
+        run: uv sync --locked --extra gui
+
+      # *_ui.py is generated from *.ui and is gitignored, so a fresh checkout has no window classes
+      # at all. pyuic6 comes with PyQt6. A developer who edits a .ui runs exactly these two lines.
+      - name: Generate the Qt forms
+        run: |
+          uv run --no-sync pyuic6 -o vasco/main_ui.py vasco/ui/main.ui
+          uv run --no-sync pyuic6 -o vasco/widgets/qparameterwidget_ui.py vasco/ui/qparameterwidget.ui
+
+      # Two passes, as the flake8 step this replaces had: the first is for things that are bugs
+      # whatever anyone's taste, the second is advisory and annotates the diff instead of failing.
+      - name: Lint for the errors that are errors
+        run: uvx ruff check --select=E9,F63,F7,F82 .
+
+      - name: Lint for everything else, without failing
+        run: uvx ruff check --output-format=github --exit-zero .
+
+      # --no-sync matters: a plain `uv run` re-syncs to the default extras and would uninstall PyQt6
+      # between the step above and this one.
+      - name: Test
+        run: uv run --no-sync pytest
