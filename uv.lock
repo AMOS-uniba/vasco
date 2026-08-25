@@ -92,7 +92,7 @@ wheels = [
 
 [[package]]
 name = "demeteor"
-version = "0.3.0"
+version = "0.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astropy" },
@@ -103,9 +103,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "scipy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/49/a6/16c973ca6154447df532355056b5bb1ed79e7f9894b09966cc41a7889d40/demeteor-0.3.0.tar.gz", hash = "sha256:3519d21965447b98acc145467574d92e61bbc94f896bd3748f194b0b54abcf70", size = 140742, upload-time = "2026-08-25T16:02:22.882Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c2/c5/f4179675f178184e3ff51628ab378bbef1cbcd681da0a8f1bf96582b6ea6/demeteor-0.3.1.tar.gz", hash = "sha256:4cb8b98e8a4d0748152065b12f7bcd18492a535464db4ffeaa3cead0e13a9f42", size = 141792, upload-time = "2026-08-25T17:43:27.817Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ad/d1/695988c36c85e3e2af2800d4103a554fda1b04c5d70922705b2bd85da590/demeteor-0.3.0-py3-none-any.whl", hash = "sha256:b3fd0af2857d16bf76ae02bdc07a2bf0556e5eec38052f98e4fb052c2ee72414", size = 151272, upload-time = "2026-08-25T16:02:21.663Z" },
+    { url = "https://files.pythonhosted.org/packages/5f/4f/d44e3f4ab9192b409a72493402f51bfe7873db3d1b4ea5c2e76299e93f59/demeteor-0.3.1-py3-none-any.whl", hash = "sha256:f2d6fbdf3315c5d26b5c09b82e9db495ab3badf15bdcab4adaa09542cbce6465", size = 152517, upload-time = "2026-08-25T17:43:26.627Z" },
 ]
 
 [[package]]
@@ -622,7 +622,7 @@ dev = [
 requires-dist = [
     { name = "astropy", specifier = ">=8.0.1" },
     { name = "colorama", specifier = ">=0.4.6" },
-    { name = "demeteor", specifier = ">=0.3.0" },
+    { name = "demeteor", specifier = ">=0.3.1" },
     { name = "dotmap", specifier = ">=1.3.30" },
     { name = "matplotlib", marker = "extra == 'gui'", specifier = ">=3.11.1" },
     { name = "numpy", specifier = ">=2.5.2" },
