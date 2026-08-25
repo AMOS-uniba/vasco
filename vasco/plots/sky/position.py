@@ -1,7 +1,7 @@
 import matplotlib as mpl
 
-from plots.sky.base import BaseSkyPlot
-from plots.base import cmap_gyr
+from vasco.plots.sky.base import BaseSkyPlot
+from vasco.plots.base import cmap_gyr
 
 
 class PositionSkyPlot(BaseSkyPlot):

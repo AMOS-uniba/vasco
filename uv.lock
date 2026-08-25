@@ -11,27 +11,6 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "argparse"
-version = "1.4.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/18/dd/e617cfc3f6210ae183374cd9f6a26b20514bbb5a792af97949c5aacddf0f/argparse-1.4.0.tar.gz", hash = "sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4", size = 70508, upload-time = "2015-09-12T20:22:16.217Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f2/94/3af39d34be01a24a6e65433d19e107099374224905f1e0cc6bbe1fd22a2f/argparse-1.4.0-py2.py3-none-any.whl", hash = "sha256:c31647edb69fd3d465a847ea3157d37bed1f95f19760b11a47aa91c04b666314", size = 23000, upload-time = "2015-09-14T16:03:16.137Z" },
-]
-
-[[package]]
-name = "argparsedirs"
-version = "0.2.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "argparse" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/6a/1c/1d37d36110e15a2fbc2d5b67d943d94aa6507c2a608cc990ec620eaff2a3/argparsedirs-0.2.1.tar.gz", hash = "sha256:3db491a9a6735c25cb46aab161551b1f910a1747e2768b469a92189ed65a5ea9", size = 1465, upload-time = "2025-12-03T16:02:46.93Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c3/5c/f13a1c0e338143824bc24964dfccf0622047ef21e20cb35e1a0fdd620155/argparsedirs-0.2.1-py3-none-any.whl", hash = "sha256:c9a243110a8af10e297deb5a3602d8860909563ab240de0753f4a1275965163c", size = 2167, upload-time = "2025-12-03T16:02:44.833Z" },
-]
-
-[[package]]
 name = "astropy"
 version = "8.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -849,19 +828,22 @@ wheels = [
 [[package]]
 name = "vasco"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
-    { name = "argparsedirs" },
     { name = "astropy" },
     { name = "colorama" },
     { name = "demeteor" },
     { name = "demetria" },
     { name = "dotmap" },
-    { name = "matplotlib" },
     { name = "numpy" },
-    { name = "pyqt6" },
     { name = "ruamel-yaml" },
     { name = "scipy" },
+]
+
+[package.optional-dependencies]
+gui = [
+    { name = "matplotlib" },
+    { name = "pyqt6" },
 ]
 
 [package.dev-dependencies]
@@ -871,18 +853,18 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "argparsedirs", specifier = ">=0.2.1" },
     { name = "astropy", specifier = ">=8.0.1" },
     { name = "colorama", specifier = ">=0.4.6" },
     { name = "demeteor", specifier = ">=0.2.2" },
     { name = "demetria", specifier = ">=0.1.0" },
     { name = "dotmap", specifier = ">=1.3.30" },
-    { name = "matplotlib", specifier = ">=3.11.1" },
+    { name = "matplotlib", marker = "extra == 'gui'", specifier = ">=3.11.1" },
     { name = "numpy", specifier = ">=2.5.2" },
-    { name = "pyqt6", specifier = ">=6.11.0" },
+    { name = "pyqt6", marker = "extra == 'gui'", specifier = ">=6.11.0" },
     { name = "ruamel-yaml", specifier = ">=0.19.1" },
     { name = "scipy", specifier = ">=1.18.1" },
 ]
+provides-extras = ["gui"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=9.1.1" }]

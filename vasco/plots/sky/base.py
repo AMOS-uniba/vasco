@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 
 from abc import abstractmethod
 
-from plots.base import BasePlot
+from vasco.plots.base import BasePlot
 
 log = logging.getLogger('vasco')
 

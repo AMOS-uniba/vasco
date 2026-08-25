@@ -7,9 +7,9 @@ from matplotlib import pyplot as plt
 from collections import OrderedDict
 
 from PyQt6.QtWidgets import QMainWindow, QDoubleSpinBox, QLabel
-from main_ui import Ui_MainWindow
+from vasco.main_ui import Ui_MainWindow
 
-from photometry import LogCalibration
+from vasco.photometry import LogCalibration
 from demeteor.projections import BorovickaProjection
 
 

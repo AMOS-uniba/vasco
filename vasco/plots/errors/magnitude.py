@@ -3,8 +3,8 @@ import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
-from plots.errors.base import BaseErrorPlot
-from models import Matcher
+from vasco.plots.errors.base import BaseErrorPlot
+from vasco.models import Matcher
 
 
 class MagnitudeErrorPlot(BaseErrorPlot):

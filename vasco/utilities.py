@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import matplotlib as mpl
 
 from typing import Tuple, Optional
 from numpy._typing import NDArray
@@ -8,7 +7,7 @@ from numpy._typing import NDArray
 from astropy.coordinates import AltAz
 import astropy.units as u
 
-from models.sensordata import SensorData
+from vasco.models.sensordata import SensorData
 from demeteor.catalogue import Catalogue
 
 QuarterTau = math.tau / 4
@@ -19,6 +18,11 @@ def polar_to_cart(z: np.ndarray, a: np.ndarray) -> Tuple[np.ndarray, np.ndarray]
 
 
 def by_azimuth(uv):
+    # matplotlib is the `gui` extra, and this module is on the path vasco-fit imports: Matcher
+    # needs it for the disk transforms, and a headless install has no matplotlib. This is the only
+    # function here that wants one, and only for a colour wheel a plot uses.
+    import matplotlib as mpl
+
     uv = np.nan_to_num(uv, nan=0)
     r = np.sqrt(np.sum(np.square(uv), axis=-1))
     f = (np.arctan2(uv[..., 1], uv[..., 0]) + math.tau) % math.tau

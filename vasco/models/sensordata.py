@@ -2,7 +2,6 @@ import copy
 import datetime
 import logging
 import dotmap
-import yaml
 import numpy as np
 
 from typing import Optional
@@ -10,6 +9,7 @@ from astropy.coordinates import EarthLocation
 import astropy.units as u
 
 from demeteor.projections.shifters import ScalingShifter
+from vasco import yaml_io
 from .dotcollection import DotCollection
 from .rect import Rect
 
@@ -45,7 +45,7 @@ class SensorData:
 
     @staticmethod
     def load_YAML(file):
-        data = dotmap.DotMap(yaml.safe_load(open(file, 'r')), _dynamic=False)
+        data = dotmap.DotMap(yaml_io.load(file), _dynamic=False)
 
         w, h = tuple(map(int, data.Resolution.split('x')))
         stars = DotCollection(

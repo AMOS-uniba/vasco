@@ -1,7 +1,7 @@
 import logging
 import time
 
-import colour as c
+from vasco import colour as c
 
 
 class VascoFormatter(logging.Formatter):

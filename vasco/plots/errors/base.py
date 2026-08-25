@@ -4,7 +4,7 @@ import matplotlib as mpl
 from abc import abstractmethod
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 
-from plots.base import BasePlot
+from vasco.plots.base import BasePlot
 
 
 class BaseErrorPlot(BasePlot):

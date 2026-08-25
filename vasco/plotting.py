@@ -5,14 +5,14 @@ import numpy as np
 
 from typing import Callable, Optional
 
-from plots import SensorPlot
-from plots.base import BasePlot
-from plots.sky import PositionSkyPlot, MagnitudeSkyPlot
-from plots.errors import PositionErrorPlot, MagnitudeErrorPlot
-from plots.correction import BaseCorrectionPlot, PositionCorrectionPlot, MagnitudeCorrectionPlot
-from utilities import unit_grid
+from vasco.plots import SensorPlot
+from vasco.plots.base import BasePlot
+from vasco.plots.sky import PositionSkyPlot, MagnitudeSkyPlot
+from vasco.plots.errors import PositionErrorPlot, MagnitudeErrorPlot
+from vasco.plots.correction import BaseCorrectionPlot, PositionCorrectionPlot, MagnitudeCorrectionPlot
+from vasco.utilities import unit_grid
 
-from base import MainWindowBase
+from vasco.base import MainWindowBase
 
 
 log = logging.getLogger('vasco')

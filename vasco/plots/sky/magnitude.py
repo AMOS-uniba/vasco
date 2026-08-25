@@ -1,6 +1,6 @@
 import matplotlib as mpl
 
-from plots.sky.base import BaseSkyPlot
+from vasco.plots.sky.base import BaseSkyPlot
 
 
 class MagnitudeSkyPlot(BaseSkyPlot):

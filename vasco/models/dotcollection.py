@@ -4,7 +4,7 @@ import numpy as np
 import logging
 
 from demeteor.projections import Projection
-from photometry import Calibration
+from vasco.photometry import Calibration
 
 log = logging.getLogger('vasco')
 

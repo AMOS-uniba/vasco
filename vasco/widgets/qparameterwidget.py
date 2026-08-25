@@ -1,7 +1,7 @@
 from typing import Callable
 from PyQt6.QtWidgets import QWidget
 
-from widgets.qparameterwidget_ui import Ui_Form
+from vasco.widgets.qparameterwidget_ui import Ui_Form
 
 
 class QParameterWidget(QWidget, Ui_Form):

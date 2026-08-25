@@ -2,21 +2,38 @@
 name = "vasco"
 version = "0.1.0"
 requires-python = ">=3.12"
+# What fitting a plate needs, and nothing more. PyQt6 is under [gui] below: vasco-fit is the same
+# fitting code with no window, and it runs on a headless server where Qt is neither installed nor
+# wanted. `uv sync --extra gui` for the window.
 dependencies = [
-    "argparsedirs>=0.2.1",
     "astropy>=8.0.1",
     "colorama>=0.4.6",
     "demeteor>=0.2.2",   # Catalogue.names() and the bundled star catalogue
-    "demetria>=0.1.0",
+    "demetria>=0.1.0",   # for the Zernike expander, which correctors/__init__.py still has off
     "dotmap>=1.3.30",
-    "matplotlib>=3.11.1",
     "numpy>=2.5.2",
-    "pyqt6>=6.11.0",
-    "ruamel-yaml>=0.19.1",
+    "ruamel-yaml>=0.19.1",   # YAML 1.2, so that a zero-padded fno is not octal
     "scipy>=1.18.1",
 ]
+
+[project.optional-dependencies]
+gui = [
+    "matplotlib>=3.11.1",
+    "pyqt6>=6.11.0",
+]
+
+[project.scripts]
+vasco-fit = "vasco.cli.fit:main"
+vasco-gui = "vasco.cli.gui:main"
 
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["vasco"]

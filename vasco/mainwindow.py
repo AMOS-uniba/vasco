@@ -1,7 +1,6 @@
 import logging
 
 import math
-import yaml
 import datetime
 import numpy as np
 import dotmap
@@ -19,18 +18,20 @@ from astropy.time import Time
 
 from demeteor.projections import BorovickaProjection
 
-from export.base import Exporter
-from export.csv import DSVExporter
-from export.xml import XMLExporter
-from models import Matcher
-from models.qcataloguemodel import QCatalogueModel, CatalogueProxy
-from models.qstarmodel import QStarModel
-from plotting import MainWindowPlots
-from models import SensorData, QMeteorModel
-from utilities import mask_sparse
+from vasco.export.base import Exporter
+from vasco.export.csv import DSVExporter
+from vasco.export.xml import XMLExporter
+from vasco.models import Matcher
+from vasco.models.qcataloguemodel import QCatalogueModel, CatalogueProxy
+from vasco.models.qstarmodel import QStarModel
+from vasco.plotting import MainWindowPlots
+from vasco.models import SensorData
+from vasco.models.qmeteormodel import QMeteorModel
+from vasco.utilities import mask_sparse
 
-import colour as c
-from amos import AMOS, Station
+from vasco import colour as c
+from vasco import yaml_io
+from vasco.amos import AMOS, Station
 
 mpl.use('Qt5Agg')
 
@@ -373,7 +374,7 @@ class MainWindow(MainWindowPlots):
             with open(filename, 'w+') as file:
                 stars = self.matcher.build_stars_table(self.projection)
 
-                yaml.dump(dict(
+                yaml_io.dump(dict(
                     projection=dict(
                         name='Borovička',
                         parameters={param: widget.true_value for param, widget in self.param_widgets.items()},
@@ -434,7 +435,7 @@ class MainWindow(MainWindowPlots):
         self.update_plots()
 
     def _load_sighting(self, file):
-        data = dotmap.DotMap(yaml.safe_load(open(file, 'r')), _dynamic=False)
+        data = dotmap.DotMap(yaml_io.load(file), _dynamic=False)
         self.set_location(data.Latitude, data.Longitude, data.Altitude)
         self.set_time(datetime.datetime.strptime(data.EventStartTime, "%Y-%m-%d %H:%M:%S.%f")
                       .replace(tzinfo=datetime.UTC))
@@ -460,7 +461,7 @@ class MainWindow(MainWindowPlots):
         try:
             with open(filename, 'r') as file:
                 try:
-                    data = dotmap.DotMap(yaml.safe_load(file), _dynamic=False)
+                    data = dotmap.DotMap(yaml_io.load(file), _dynamic=False)
                     # Normalised for the same reason as a fit result: a stored file may hold
                     # anything, and a widget that cannot represent it clamps in silence. The
                     # OrderedDict is in the order BorovickaProjection takes its parameters.
@@ -470,7 +471,7 @@ class MainWindow(MainWindowPlots):
                     self.dsb_xs.setValue(data.pixels.xs)
                     self.dsb_ys.setValue(data.pixels.ys)
                     log.info(f"Imported projection parameters from {filename}")
-                except yaml.YAMLError as exc:
+                except yaml_io.YAMLError as exc:
                     log.error(f"Could not parse file {filename} as YAML: {exc}")
         except FileNotFoundError:
             log.error(f"File not found: {filename}")

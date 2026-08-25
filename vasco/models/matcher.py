@@ -16,10 +16,10 @@ from demeteor.projections import Projection, BorovickaProjection
 from demeteor.metrics import spherical, euclidean
 from numpy.typing import NDArray
 
-from correctors import KernelSmoother, kernels
-from photometry import Calibration, LogCalibration
-from models.sensordata import SensorData
-from utilities import hash_numpy, proj_to_disk, altaz_to_disk, disk_to_altaz, unit_grid, numpy_to_disk
+from vasco.correctors import KernelSmoother, kernels
+from vasco.photometry import Calibration, LogCalibration
+from vasco.models.sensordata import SensorData
+from vasco.utilities import hash_numpy, proj_to_disk, altaz_to_disk, disk_to_altaz, unit_grid, numpy_to_disk
 
 log = logging.getLogger('vasco')
 
@@ -98,6 +98,12 @@ class Matcher:
 
         if self.catalogue.populated:
             self.invalidate_altaz()
+
+    @property
+    def projection(self) -> Projection:
+        """ The plate currently in use. There was a setter and no getter, so every caller
+            outside this class reached for _projection. """
+        return self._projection
 
     def update_projection(self, projection: Projection):
         self._projection = projection
@@ -422,7 +428,9 @@ class Matcher:
             args,
             method='Nelder-Mead',
             bounds=self.get_optimization_bounds(mask),
-            options=dict(maxiter=maxiter, disp=True),
+            # Never disp: scipy writes its summary to stdout, and stdout is where vasco-fit
+            # puts the document it is asked for. The caller logs what it wants to say.
+            options=dict(maxiter=maxiter, disp=False),
             callback=callback,
         )
 
