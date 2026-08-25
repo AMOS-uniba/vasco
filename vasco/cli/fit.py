@@ -29,6 +29,7 @@ from demeteor.catalogue import Catalogue
 from demeteor.projections import BorovickaProjection
 
 from vasco import logger, yaml_io
+from vasco.correctors import bandwidth as bandwidth_selection
 from vasco.models.dotcollection import DotCollection
 from vasco.models.matcher import Matcher
 from vasco.models.sensordata import SensorData
@@ -57,7 +58,11 @@ ANGLES = ('a0', 'F', 'epsilon', 'E')
 DEMETEOR = ('x0', 'y0', 'a0', 'A', 'F', 'V', 'S', 'D', 'P', 'Q', 'epsilon', 'E')
 DOCUMENT = ('x0', 'y0', 'a0', 'a', 'f', 'v', 's', 'd', 'p', 'q', 'epsilon', 'e')
 
-DEFAULTS = dict(method='raw', iterations=10000, pre_iterations=0, bandwidth=0.1,
+#: 'auto' means leave-one-out cross-validation over the range below, which is what a bandwidth
+#: should be chosen by; a number pins it. It used to be 0.1 and nothing else, inherited from the
+#: window's spinbox default -- a number nobody had a reason for, on a night nobody had measured.
+DEFAULTS = dict(method='raw', iterations=10000, pre_iterations=0,
+                bandwidth='auto', bandwidth_min=0.005, bandwidth_max=2.0, bandwidth_steps=25,
                 mask_low=10.0, mask_distant=0.5, sigma_clip=3.0, clip_rounds=2,
                 min_stars=8)
 
@@ -113,6 +118,19 @@ def dots(entries: list, *, fnos: bool) -> DotCollection:
     intensity = np.array([float(dot.get('intensity') or 0) for dot in entries], dtype=float)
     numbers = (np.array([int(dot['fno']) for dot in entries], dtype=int) if fnos else None)
     return DotCollection(xy, intensity, fnos=numbers)
+
+
+def frame_times(entries: list) -> dict:
+    """
+    When the caller says each frame was, by frame number, to be handed back untouched.
+
+    The reduction format carries a time per position, and the server checks it against the
+    identification's own -- a station whose clock is off has reduced a different moment of sky than
+    it identified, which no amount of correct astrometry fixes. Here the two are the same clock, so
+    echoing them keeps that check meaningful instead of making it warn on every automatic fit.
+    """
+    return {int(entry['fno']): entry['time']
+            for entry in entries if 'fno' in entry and entry.get('time') is not None}
 
 
 def build_matcher(job: dict) -> Matcher:
@@ -216,8 +234,32 @@ def optimise(matcher: Matcher, start: BorovickaProjection, options: dict) -> Bor
     return projection
 
 
+def bandwidths(matcher: Matcher, options: dict) -> dict:
+    """
+    A bandwidth for each smoother, chosen or pinned.
+
+    Two of them, and not one shared: the position residuals and the magnitude residuals are
+    different fields over the same points, and nothing says the scale over which one varies is the
+    scale over which the other does.
+    """
+    requested = options['bandwidth']
+    if requested != 'auto':
+        value = float(requested)
+        return {'position': value, 'magnitude': value,
+                'position_score': None, 'magnitude_score': None, 'chosen': False}
+
+    grid = dict(minimum=options['bandwidth_min'], maximum=options['bandwidth_max'],
+                steps=options['bandwidth_steps'])
+    position, position_score, _ = bandwidth_selection.select(*matcher.position_smoother_data(),
+                                                            **grid)
+    magnitude, magnitude_score, _ = bandwidth_selection.select(*matcher.magnitude_smoother_data(),
+                                                               **grid)
+    return {'position': position, 'magnitude': magnitude,
+            'position_score': position_score, 'magnitude_score': magnitude_score, 'chosen': True}
+
+
 def reduction(matcher: Matcher, projection: BorovickaProjection, job: dict,
-              *, method: str, meteor: list) -> dict:
+              *, method: str, meteor: list, smoothing: dict | None = None) -> dict:
     """
     One amos-reduction/1 document, which is what the server already knows how to read.
 
@@ -239,8 +281,17 @@ def reduction(matcher: Matcher, projection: BorovickaProjection, job: dict,
         'method': method,
         'baseline': job.get('baseline_code'),
         'projection': plate_to_degrees(projection),
+        # What it took to get here, for a person and for the next version of this program. The
+        # bandwidth in particular: the correction field cannot be stored, so the number it was
+        # built with is part of what makes a smoothed reduction reproducible at all.
         'fit': {
             'stars': int(errors.size),
+            **({'bandwidth': smoothing['position'],
+                'bandwidth_magnitude': smoothing['magnitude'],
+                'bandwidth_chosen': smoothing['chosen'],
+                **({'bandwidth_loo_mse': smoothing['position_score']}
+                   if smoothing['position_score'] is not None else {})}
+               if smoothing else {}),
             # Degrees, which is the unit Reduction.quality takes and what the window displays.
             # Matcher works in radians throughout; this is the one place it is converted.
             'residual_rms': float(np.degrees(matcher.rms_error(np.radians(errors))))
@@ -252,7 +303,7 @@ def reduction(matcher: Matcher, projection: BorovickaProjection, job: dict,
     }
 
 
-def meteor_positions(matcher: Matcher, projection: BorovickaProjection,
+def meteor_positions(matcher: Matcher, projection: BorovickaProjection, times: dict,
                      *, corrected: bool) -> list:
     """
     Where the meteor was, frame by frame, keyed by the frame number the station gave it.
@@ -273,6 +324,7 @@ def meteor_positions(matcher: Matcher, projection: BorovickaProjection,
 
     return [
         {'fno': int(fno),
+         **({'time': times[int(fno)]} if int(fno) in times else {}),
          'alt': float(alt), 'az': float(az % 360.0),
          'magnitude': float(magnitude) if np.isfinite(magnitude) else None}
         for fno, alt, az, magnitude
@@ -287,6 +339,7 @@ def fit(job: dict) -> dict:
     options = {**DEFAULTS, **(job.get('options') or {})}
     baseline = plate_from_degrees(job.get('baseline') or {})
 
+    times = frame_times(job.get('meteor') or [])
     matcher = build_matcher(job)
     if matcher.sensor_data.stars.count < options['min_stars']:
         raise JobError(f"{matcher.sensor_data.stars.count} reference dots is fewer than the "
@@ -299,16 +352,19 @@ def fit(job: dict) -> dict:
     projection = optimise(matcher, baseline, options)
 
     reductions = [reduction(matcher, projection, job, method='vasco',
-                           meteor=meteor_positions(matcher, projection, corrected=False))]
+                           meteor=meteor_positions(matcher, projection, times, corrected=False))]
 
     if options['method'] == 'kernel':
         # The parametric fit first and the field on top of it, which is why one process does both:
         # the smoother is built from the residuals the fit was left with.
         matcher.update_projection(projection)
-        matcher.update_position_smoother(bandwidth=options['bandwidth'])
-        matcher.update_magnitude_smoother(bandwidth=options['bandwidth'])
+        smoothing = bandwidths(matcher, options)
+        matcher.update_position_smoother(bandwidth=smoothing['position'])
+        matcher.update_magnitude_smoother(bandwidth=smoothing['magnitude'])
         reductions.append(reduction(matcher, projection, job, method='vasco-ks',
-                                    meteor=meteor_positions(matcher, projection, corrected=True)))
+                                    meteor=meteor_positions(matcher, projection, times,
+                                                            corrected=True),
+                                    smoothing=smoothing))
 
     return {'format': RESULT_FORMAT, 'reductions': reductions}
 

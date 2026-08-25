@@ -247,23 +247,39 @@ class Matcher:
         cat = self.catalogue_vmag_paired()[self.sensor_data.stars.mask]
         return obs - cat
 
-    def update_position_smoother(self, *, bandwidth: float = 0.1):
-        log.debug(f"Updating position smoother (bandwidth = {bandwidth})")
+    def position_smoother_data(self) -> tuple[NDArray, NDArray]:
+        """
+        Where the position residuals were measured, and what they were.
+
+        Split out of update_position_smoother because choosing a bandwidth needs exactly this and
+        nothing else: cross-validating on data assembled slightly differently from the data the
+        smoother is then built on would answer a question about the wrong field.
+        """
         cat = numpy_to_disk(self.catalogue_altaz_paired())[self.sensor_data.stars.mask]
         obs = proj_to_disk(self.sensor_data.stars.project(self._projection, masked=True))
+        return obs, obs - cat
+
+    def magnitude_smoother_data(self) -> tuple[NDArray, NDArray]:
+        """ The same, for the magnitude residuals: one component instead of two. """
+        mcat = self.catalogue_vmag_paired()[self.sensor_data.stars.mask]
+        obs = proj_to_disk(self.sensor_data.stars.project(self._projection, masked=True))
+        mobs = self._calibration(self.sensor_data.stars.intensities(masked=True))
+        return obs, np.expand_dims(mobs - mcat, 1)
+
+    def update_position_smoother(self, *, bandwidth: float = 0.1):
+        log.debug(f"Updating position smoother (bandwidth = {bandwidth})")
+        obs, values = self.position_smoother_data()
         self.position_smoother = KernelSmoother(
-            obs, obs - cat,
+            obs, values,
             kernel=kernels.nexp,
             bandwidth=bandwidth,
         )
 
     def update_magnitude_smoother(self, *, bandwidth: float = 0.1):
         log.debug(f"Updating magnitude smoother (bandwidth = {bandwidth})")
-        mcat = self.catalogue_vmag_paired()[self.sensor_data.stars.mask]
-        obs = proj_to_disk(self.sensor_data.stars.project(self._projection, masked=True))
-        mobs = self._calibration(self.sensor_data.stars.intensities(masked=True))
+        obs, values = self.magnitude_smoother_data()
         self.magnitude_smoother = KernelSmoother(
-            obs, np.expand_dims(mobs - mcat, 1),
+            obs, values,
             kernel=kernels.nexp,
             bandwidth=bandwidth,
         )
