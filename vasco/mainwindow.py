@@ -21,7 +21,7 @@ from demeteor.projections import BorovickaProjection
 from vasco.export.base import Exporter
 from vasco.export.csv import DSVExporter
 from vasco.export.xml import XMLExporter
-from demeteor.matching import Matcher
+from demeteor.matching import Matcher, NothingToPair
 from vasco.qtmodels import CatalogueProxy, QCatalogueModel
 from vasco.qtmodels import QStarModel
 from vasco.plotting import MainWindowPlots
@@ -633,7 +633,15 @@ class MainWindow(MainWindowPlots):
         self.show_counts()
 
     def _mask_catalogue(self, sparse_mask: np.ndarray, message: str):
-        self.matcher.mask_catalogue(mask_sparse(self.matcher.catalogue, sparse_mask))
+        try:
+            self.matcher.mask_catalogue(mask_sparse(self.matcher.catalogue, sparse_mask))
+        except NothingToPair:
+            # Three buttons reach here with a spinbox limit a person typed, and magnitude 0 or
+            # altitude 89 leaves nothing. demeteor refuses the mask without applying it, so saying
+            # so and returning leaves the window exactly as the person found it. It used to be an
+            # IndexError out of a Qt slot.
+            log.warning(f"Not masking the catalogue: {message} would leave no stars at all")
+            return
 
         log.info(f"Masked the catalogue: {message}: "
                  f"{c.num(self.matcher.catalogue.count_visible)} stars visible")

@@ -13,7 +13,7 @@ requires-python = ">=3.14"
 dependencies = [
     "astropy>=8.0.1",
     "colorama>=0.4.6",
-    "demeteor>=0.3.0",
+    "demeteor>=0.3.1",
     "dotmap>=1.3.30",
     "numpy>=2.5.2",
     "ruamel-yaml>=0.19.1",   # YAML 1.2, so that a zero-padded fno is not octal
