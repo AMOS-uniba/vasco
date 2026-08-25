@@ -15,6 +15,8 @@ import pytest
 import yaml
 from PyQt6.QtWidgets import QApplication
 
+from .base import load_sighting
+
 SIGHTING = 'data/M20120922_225744_AGO__00007.yaml'
 
 
@@ -38,16 +40,7 @@ def sighting():
 
 def load(window):
     """ What load_sighting() does either side of the file dialog. """
-    window._block_parameter_signals(True)
-    window._block_location_time_signals(True)
-    window._block_pixel_scales_signals(True)
-
-    window._load_sighting(SIGHTING)
-
-    window._block_parameter_signals(False)
-    window._block_location_time_signals(False)
-    window._block_pixel_scales_signals(False)
-    window.on_location_time_changed()
+    load_sighting(window, SIGHTING)
 
 
 class TestLoadingASighting:

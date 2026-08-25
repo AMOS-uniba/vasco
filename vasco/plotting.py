@@ -213,21 +213,45 @@ class MainWindowPlots(MainWindowBase):
 
     def _plot_correction_grid(self,
                               plot,
-                              grid_function: Callable,
+                              smoother,
                               *,
                               masked: bool,
+                              lattice: str = grid.DEFAULT,
                               **kwargs):
-        if self.cb_show_grid.isChecked():
-            xx, yy = grid.lattice(self.grid_resolution, masked=masked)
-        #    plot.update_grid(xx, yy, grid_function(resolution=self.grid_resolution), **kwargs)
-        else:
+        """
+        Draw the correction field itself, sampled on a lattice.
+
+        This was switched off: the line that drew it was commented out, so the lattice was computed
+        and thrown away and Matcher's grid methods were never called at all. Switched back on, with
+        the sampling moved to vasco.plots.grid -- a library hands back a field, and where to look at
+        it is a question about the picture.
+
+        Raveled, because the quiver takes u and v raveled out of the (R, R, 2) the smoother returns
+        and x and y have to match; clear_grid passes empty 1-D arrays for the same reason.
+        """
+        if not self.cb_show_grid.isChecked():
             plot.clear_grid()
+            return
+
+        xx, yy = grid.lattice(self.grid_resolution, masked=masked, kind=lattice)
+        sampled = grid.sample(smoother, self.grid_resolution, masked=masked, kind=lattice)
+        plot.update_grid(xx.ravel(), yy.ravel(), sampled, **kwargs)
 
     def plot_position_correction_grid(self):
         log.debug("Plotting position correction grid")
-        self._plot_correction_grid(self.position_correction_plot, self.matcher.position_grid, masked=True)
+        self._plot_correction_grid(self.position_correction_plot,
+                                   self.matcher.position_smoother, masked=True)
 
     def plot_magnitude_correction_grid(self):
+        """
+        Square lattice, and unmasked, and neither is a choice.
+
+        This plot is an imshow over extent [-1, 1], so it needs a regular grid aligned to the axes
+        and every cell of it filled -- a triangular lattice drawn that way would be stretched and
+        sheared into nonsense, and a masked one would have holes. The triangular option is for the
+        quiver above, where the arrows carry their own positions.
+        """
         log.debug("Plotting magnitude correction grid")
-        self._plot_correction_grid(self.magnitude_correction_plot, self.matcher.magnitude_grid, masked=False,
+        self._plot_correction_grid(self.magnitude_correction_plot,
+                                   self.matcher.magnitude_smoother, masked=False, lattice='square',
                                    interpolation=self.cb_interpolation.currentText())
